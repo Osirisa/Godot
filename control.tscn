@@ -1,0 +1,30 @@
+[gd_scene load_steps=3 format=3 uid="uid://bwwfei0xtaahp"]
+
+[ext_resource type="Script" path="res://test.gd" id="1_ipyfc"]
+[ext_resource type="Script" path="res://addons/osirisas_ui_extension/table_widget/table_widget.gd" id="2_sux1g"]
+
+[node name="Control" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_ipyfc")
+
+[node name="ScrollContainer2" type="ScrollContainer" parent="."]
+layout_mode = 0
+offset_right = 1007.0
+offset_bottom = 276.0
+
+[node name="Table Widget" type="Control" parent="ScrollContainer2"]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("2_sux1g")
+headers = ["header0", "header1", "header2", "header3", "header4", "header5"]
+cell_widths = [80.0, 150.0, 100.0, 80.0, 120.0, 80.0]
+standard_body_cell_height = 30.0
+background_color_header = Color(0.164706, 0.380392, 0.301961, 1)
+background_color_body = Color(0, 0.717647, 0.407843, 1)
+margin = Vector4(3, 8, 1, 5)
+resizing = true
