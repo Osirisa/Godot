@@ -5,24 +5,21 @@ var table: TableWidget = %"Table Widget"
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	var label = Label.new()
-	label.text = "test"
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	#label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	var button = Button.new()
-	button.text = "test2"
 	
-	var lineEdit = LineEdit.new()
-	lineEdit.text = "Test3"
+	for i in 250:
+		var label = Label.new()
+		var button = Button.new()
+		var label2 = Label.new()
+		var cb = MenuButton.new()
 		
-	table.add_row([label,button,lineEdit])
-	table.add_row([Label.new(),Label.new(),Button.new()])
-	
-	table.clear()
-
-
-	
-
+		label.text = "test: " + str(i)
+		label2.text = "going strong"
+		
+		button.text = "press me " + str(i)
+		cb.text = "combobox?"
+		
+		table.add_row([label,button,label2,cb])
+		
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta):
 	pass

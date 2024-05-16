@@ -55,7 +55,7 @@ class_name TableWidget
 
 
 var columns: int
-var rows := []
+var rows :Array[Array]= []
 
 var body_cell_heights:= []
 
@@ -88,22 +88,28 @@ func _ready():
 	update_layout()
 	queue_redraw()
 
-#---------------------Public methods-------------------------------------
-## Adds a row to the table
-func add_row(data: Array, height: float = standard_body_cell_height) -> void:
+#---------------------------Public methods-------------------------------------
+## Adds a row to the table directly below the previous row can also called with no data, then it fills the row with empty labels
+func add_row(data: Array[Control] = [], clip_text:bool = true, height: float = standard_body_cell_height) -> void:
 	#print("Adding row with data: ", data)  # <- DEBUG:: Check what data is received
 	var row = []
 	body_cell_heights.append(height)
-	
-	for i in range(data.size()):
-		var widget = data[i]
+	var widget
+	for i in columns:
+		if i < data.size():
+			widget = data[i]
+		else:
+			widget = Label.new()
+			widget.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		
 		var margin_parent = MarginContainer.new()
 		
 		if  widget is LineEdit:
 			#print(child.get_minimum_size())
 			pass
 		elif widget is Label or Button:
-			widget.clip_text = true
+			if clip_text:
+				widget.clip_text = true
 		
 		if body_theme:
 			widget.theme = body_theme
@@ -131,13 +137,41 @@ func clear() -> void:
 	init_h_seperators()
 	update_layout()
 
-func get_row() -> Array:
-	#TBD::
-	return[]
+func get_row(row:int) -> Array:
+	var row_contens: Array = []
+	for i in rows[row]:
+		row_contens.append(i.get_child(0))
+	
+	return row_contens
 
-func get_widget_from_cell() -> Control:
-	return Button.new()
+func get_cell(row:int, column:int) -> Control:
+	return rows[row][column].get_child(0)
 
+func set_cell(node:Control,row:int, column:int, remain_clip_setting:bool = true) -> void:
+	var new_val = MarginContainer.new()
+	
+	if node is LineEdit:
+		pass
+	elif node is Button or Label:
+		if remain_clip_setting:
+			node.clip_text = rows[row][column].get_child(0).clip_text
+	#var w:=[]
+	
+	new_val.theme = body_theme
+	new_val.add_child(node)
+	new_val.custom_minimum_size = Vector2(cell_widths[column], body_cell_heights[row])
+	
+	
+	rows[row][column].queue_free()
+	rows[row].remove_at(column)
+	body_group.add_child(new_val)
+	rows[row].insert(column,new_val)
+	update_layout()
+
+func set_row(data:Array[Control],row:int) -> void:
+	for i in range(data.size()):
+		set_cell(data[i],row,i)
+#---------------------------Private methods-------------------------------------
 func init_Table() -> void:
 	
 	panel_header.name = "HeaderPanel"
