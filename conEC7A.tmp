@@ -1,0 +1,66 @@
+[gd_scene load_steps=9 format=3 uid="uid://bwwfei0xtaahp"]
+
+[ext_resource type="Script" path="res://test.gd" id="1_ipyfc"]
+[ext_resource type="Script" path="res://addons/osirisas_ui_extension/table_node/table_node.gd" id="2_sux1g"]
+
+[sub_resource type="Theme" id="Theme_yqqdk"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_r21kg"]
+bg_color = Color(0.952941, 0.952941, 0.952941, 0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0pnpd"]
+bg_color = Color(0.856469, 0.908251, 0.98973, 1)
+
+[sub_resource type="Theme" id="Theme_sv4ih"]
+Button/colors/font_color = Color(0, 0, 0, 1)
+Button/font_sizes/font_size = 12
+Button/styles/normal = SubResource("StyleBoxFlat_r21kg")
+Panel/styles/panel = SubResource("StyleBoxFlat_0pnpd")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_k6pim"]
+bg_color = Color(0.96352, 0.953996, 0.948951, 1)
+
+[sub_resource type="Theme" id="Theme_yqn8f"]
+Button/colors/font_color = Color(0, 0, 0, 1)
+Button/colors/font_focus_color = Color(0, 0, 0, 1)
+Button/colors/font_hover_color = Color(0.0313726, 0.701961, 0.94902, 1)
+Button/colors/font_hover_pressed_color = Color(0.0313726, 0.701961, 0.94902, 1)
+Label/colors/font_color = Color(0, 0, 0, 1)
+MarginContainer/constants/margin_left = 3
+MarginContainer/constants/margin_right = 3
+Panel/styles/panel = SubResource("StyleBoxFlat_k6pim")
+
+[node name="Control" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_ipyfc")
+
+[node name="ScrollContainer2" type="ScrollContainer" parent="."]
+layout_mode = 0
+offset_right = 1007.0
+offset_bottom = 276.0
+
+[node name="Table Node" type="Control" parent="ScrollContainer2"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(610, 20)
+layout_mode = 2
+theme = SubResource("Theme_yqqdk")
+script = ExtResource("2_sux1g")
+headers = ["header0", "header1", "header2", "header3", "header4", "header5"]
+cell_widths = [80.0, 150.0, 100.0, 80.0, 120.0, 80.0]
+standard_body_cell_height = 30.0
+resizing = true
+header_theme = SubResource("Theme_sv4ih")
+body_theme = SubResource("Theme_yqn8f")
+
+[node name="Button" type="Button" parent="."]
+layout_mode = 0
+offset_right = 8.0
+offset_bottom = 8.0
+
+[connection signal="cell_clicked" from="ScrollContainer2/Table Node" to="." method="_on_table_widget_cell_clicked"]
+[connection signal="pressed" from="Button" to="." method="_on_button_pressed"]

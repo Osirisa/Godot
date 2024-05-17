@@ -6,7 +6,7 @@ var table: TableNode = %"Table Node"
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	
-	for i in 250:
+	for i in 4:
 		var label = Label.new()
 		var button = Button.new()
 		var label2 = Label.new()
@@ -22,17 +22,18 @@ func _ready():
 		cb.text = "combobox?"
 		
 		table.add_row([label,button,line_edit,label2,cb])
-		
-		
-		
+	
 	table.set_cell(Button.new(),0,0)
 	
-	table.visibility_column(3,false)
+	#table.visibility_column(3,false)
 	table.visibility_row(1,false)
 	
 	var test = table.get_cell(0,0)
 	
-	table.remove_row(33)
+	table.remove_row(1)
+	
+	table.visibility_row(1, false)
+	
 	print(test)
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta):

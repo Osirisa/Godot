@@ -66,10 +66,9 @@ signal cell_edited(row:int,column:int)
 var columns: int
 
 #TBD:: maybe use dictionary or Class for data glue instead of every data for itself (for sorting and so on)
-var rows :Array[Array]= []
+var rows :Array[RowContent]= []
 
 #TBD:: Change it so it automatically updates its size with rows array / headers array
-var row_visiblity:Array[bool] =[]
 var column_visiblity:Array[bool] =[]
 
 var body_cell_heights:= []
@@ -107,43 +106,43 @@ func _ready():
 ## Adds a row to the table directly below the previous row can also called with no data, then it fills the row with empty labels
 func add_row(data: Array[Control] = [], clip_text:bool = true, height: float = standard_body_cell_height) -> void:
 	#print("Adding row with data: ", data)  # <- DEBUG:: Check what data is received
-	var row = []
+	var new_row := RowContent.new()
+	var node:Control
 	body_cell_heights.append(height)
-	var widget
+	
 	for i in columns:
 		if i < data.size():
-			widget = data[i]
+			node = data[i]
 		else:
-			widget = Label.new()
-			widget.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		
+			node = Label.new()
+			node.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			
 		var margin_parent = MarginContainer.new()
 		
-		if  widget is LineEdit:
+		if  node is LineEdit:
 			#print(child.get_minimum_size())
 			pass
-		elif widget is Label or Button:
+		elif node is Label or Button:
 			if clip_text:
-				widget.clip_text = true
+				node.clip_text = true
 		
 		if body_theme:
-			widget.theme = body_theme
+			node.theme = body_theme
 			margin_parent.theme = body_theme
 		
-		margin_parent.add_child(widget)
 		
-		#print("Label text set to: ", label.text)  # <- DEBUG:: Verify label text
+		margin_parent.add_child(node)
 		margin_parent.custom_minimum_size = Vector2(cell_widths[i], body_cell_heights[rows.size()])
 		
-		var callable = Callable(self,"_on_cell_gui_input").bind(rows.size(),i)
+		var callable = Callable(self,"_on_cell_gui_input").bind(new_row)
 		margin_parent.connect("gui_input",callable)
 		
-		row_visiblity.append(true)
-		
 		body_group.add_child(margin_parent)
-		row.append(margin_parent)
+		new_row.nodes.append(node)
+		new_row.editable.append(true)
+		new_row.row_visible = true
 	
-	rows.append(row)
+	rows.append(new_row)
 	#print("Current rows: ", rows)  # <- DEBUG:: Verify rows content 
 	
 	init_h_seperators() # Updates the separators for the new row
@@ -151,9 +150,11 @@ func add_row(data: Array[Control] = [], clip_text:bool = true, height: float = s
 
 func clear() -> void:
 	for row in rows:
-		for cell in row:
-			cell.queue_free()
+		for node in row.nodes:
+			node.queue_free()
+	
 	rows.clear()
+	
 	init_h_seperators()
 	update_layout()
 
@@ -163,8 +164,8 @@ func get_row(row:int) -> Array:
 		return []
 	
 	var row_contens: Array = []
-	for i in rows[row]:
-		row_contens.append(i.get_child(0))
+	for node in rows[row].nodes:
+		row_contens.append(node)
 	
 	return row_contens
 
@@ -176,7 +177,7 @@ func get_cell(row:int, column:int) -> Control:
 		push_error("ERROR, parameter column: " + str(column) + " exceeds Columns size index: " + str(columns-1))
 		return Label.new()
 	
-	return rows[row][column].get_child(0)
+	return rows[row].nodes[column]
 
 func set_cell(node:Control,row:int, column:int, remain_clip_setting:bool = true) -> void:
 	if !(rows.size() > row):
@@ -186,7 +187,7 @@ func set_cell(node:Control,row:int, column:int, remain_clip_setting:bool = true)
 		push_error("ERROR, parameter column: " + str(column) + " exceeds Columns size index: " + str(columns-1))
 		return
 	
-	var margin_parent:MarginContainer = rows[row][column]
+	var margin_parent:MarginContainer = rows[row].nodes[column].get_parent()
 	var old_child = margin_parent.get_child(0)
 	
 	if node is LineEdit:
@@ -201,6 +202,10 @@ func set_cell(node:Control,row:int, column:int, remain_clip_setting:bool = true)
 			node.clip_text = old_child.clip_text
 	
 	margin_parent.remove_child(old_child)
+	
+	rows[row].nodes.remove_at(column)
+	rows[row].nodes.insert(column,node)
+	
 	old_child.queue_free()
 	margin_parent.add_child(node)
 	update_layout()
@@ -217,20 +222,21 @@ func remove_row(row:int) -> void:
 	if !(rows.size() > row):
 		push_error("ERROR, parameter row: " + str(row) + " exceeds Array size index: "+ str(rows.size()-1))
 		return
-	var i_row = rows[row]
-	for content:Control in i_row:
-		content.queue_free()
+	var i_row = rows[row].nodes
+	for node: Control in i_row:
+		node.queue_free()
 	rows.remove_at(row)
+	init_h_seperators()
 	update_layout()
 
 func visibility_row(row:int,visible:bool) -> void:
 	if !(rows.size() > row):
 		push_error("ERROR, parameter row: " + str(row) + " exceeds Array size index: "+ str(rows.size()-1))
 		return
-	for cell in rows[row]:
-		cell.visible = visible
+	for node: Control in rows[row].nodes:
+		node.visible = visible
 	
-	row_visiblity[row] = visible
+	rows[row].row_visible = visible
 	update_layout()
 
 func visibility_column(column:int, visible:bool) -> void:
@@ -244,13 +250,13 @@ func visibility_column(column:int, visible:bool) -> void:
 			if(column == index):
 				child.visible = visible
 	for row in rows:
-		row[column].visible = visible
+		row.nodes[column].visible = visible
 		
 	column_visiblity[column] = visible
 	update_layout()
 
 func get_visibility_row(row:int) -> bool:
-	return column_visiblity[row]
+	return rows[row].row_visible
 
 func get_visibility_column(column:int) -> bool:
 	return column_visiblity[column]
@@ -287,7 +293,7 @@ func init_v_separators() -> void:
 		v_sep.queue_free()
 	vertical_separators.clear()
 		
-	for i in range(columns - 1):  # No separator after the last column
+	for i in range(columns):  # No separator after the last column
 		var sep = VSeparator.new()
 		sep.name = "VSep%d" % i
 		sep.mouse_default_cursor_shape = Control.CURSOR_HSIZE
@@ -304,7 +310,7 @@ func init_h_seperators() -> void:
 		sep.queue_free()
 	horizontal_separators.clear()
 	
-	for i in range(rows.size()):  # No separator after the last column
+	for i in range(rows.size()):  # No separator after the last row
 		var sep = HSeparator.new()
 		sep.name = "HSep%d" % i
 		sep.mouse_default_cursor_shape = Control.CURSOR_VSIZE
@@ -346,10 +352,10 @@ func update_layout() -> void:
 func layout_rows() -> void:
 	var yOffset = header_cell_height
 	for j in range(rows.size()):
-		if row_visiblity[j]:
-			for i in range(rows[j].size()):
+		if rows[j].row_visible:
+			for i in range(rows[j].nodes.size()):
 				
-				var margin_parent:MarginContainer = rows[j][i]
+				var margin_parent:MarginContainer = rows[j].nodes[i].get_parent()
 				if margin_parent.visible:
 					margin_parent.position = Vector2(get_x_offset(i), yOffset)
 					margin_parent.custom_minimum_size = Vector2(cell_widths[i],body_cell_heights[j])
@@ -393,9 +399,13 @@ func update_h_separators() -> void:
 	var y_offset = getSizeVecOfHeader().y - 2
 	
 	for i in range (horizontal_separators.size()):
-		pos += body_cell_heights[i]
-		horizontal_separators[i].position = Vector2(0, y_offset + pos)
-		horizontal_separators[i].set_size(Vector2(getSizeVecOfHeader().x, 1))
+		if rows[i].row_visible:
+			pos += body_cell_heights[i]
+			horizontal_separators[i].position = Vector2(0, y_offset + pos)
+			horizontal_separators[i].set_size(Vector2(getSizeVecOfHeader().x, 1))
+			horizontal_separators[i].visible = true
+		else:
+			horizontal_separators[i].visible = false
 
 func get_total_height() -> float:
 	var total_body_height = getSizeVecOfBody().y
@@ -421,7 +431,7 @@ func getSizeVecOfBody() -> Vector2:
 		if header_group.get_child(i).visible:
 			sizeVec.x += cell_widths[i]
 	for i in range(rows.size()):
-		if row_visiblity[i]:
+		if rows[i].row_visible:
 			sizeVec.y += body_cell_heights[i]
 		
 	return sizeVec
@@ -484,7 +494,9 @@ func _get_minimum_size() -> Vector2:
 
 	return min_size
 
-func _on_cell_gui_input(event: InputEvent, row: int,column: int) -> void:
+func _on_cell_gui_input(event: InputEvent,row_c:RowContent) -> void:
+	var row = rows.find(row_c)
+	
 	if event is InputEventMouseButton and event.double_click:
 		_edit_cell(row,column)
 		#print("doubleclick")
@@ -513,3 +525,8 @@ func _on_text_entered(new_text:String, row:int, column:int, line_edit:LineEdit) 
 	label.horizontal_alignment = line_edit.alignment
 	set_cell(label,row,column)
 	emit_signal("cell_edited")
+
+class RowContent:
+	var nodes :Array[Control] = []
+	var row_visible := true
+	var editable: Array[bool] = []
