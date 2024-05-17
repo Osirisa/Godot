@@ -64,7 +64,13 @@ signal cell_edited(row:int,column:int)
 
 
 var columns: int
+
+#TBD:: maybe use dictionary or Class for data glue instead of every data for itself (for sorting and so on)
 var rows :Array[Array]= []
+
+#TBD:: Change it so it automatically updates its size with rows array / headers array
+var row_visiblity:Array[bool] =[]
+var column_visiblity:Array[bool] =[]
 
 var body_cell_heights:= []
 
@@ -131,6 +137,8 @@ func add_row(data: Array[Control] = [], clip_text:bool = true, height: float = s
 		
 		var callable = Callable(self,"_on_cell_gui_input").bind(rows.size(),i)
 		margin_parent.connect("gui_input",callable)
+		
+		row_visiblity.append(true)
 		
 		body_group.add_child(margin_parent)
 		row.append(margin_parent)
@@ -221,6 +229,8 @@ func visibility_row(row:int,visible:bool) -> void:
 		return
 	for cell in rows[row]:
 		cell.visible = visible
+	
+	row_visiblity[row] = visible
 	update_layout()
 
 func visibility_column(column:int, visible:bool) -> void:
@@ -235,7 +245,15 @@ func visibility_column(column:int, visible:bool) -> void:
 				child.visible = visible
 	for row in rows:
 		row[column].visible = visible
+		
+	column_visiblity[column] = visible
 	update_layout()
+
+func get_visibility_row(row:int) -> bool:
+	return column_visiblity[row]
+
+func get_visibility_column(column:int) -> bool:
+	return column_visiblity[column]
 
 #---------------------------Private methods-------------------------------------
 func init_Table() -> void:
@@ -298,13 +316,6 @@ func init_h_seperators() -> void:
 		sep.connect("gui_input", callable)
 
 func _on_separator_input(event, index, type) -> void:
-	
-	#if event is InputEventMouseMotion:
-		#if type == VSeparator:
-			#mouse_default_cursor_shape = Control.CURSOR_HSIZE
-		#if type == HSeparator:
-			#mouse_default_cursor_shape = Control.CURSOR_VSIZE
-			
 	if event is InputEventMouseMotion and event.button_mask & MOUSE_BUTTON_LEFT and resizing:
 		# Adjust the column width based on mouse movement
 		if type == VSeparator:
@@ -335,7 +346,7 @@ func update_layout() -> void:
 func layout_rows() -> void:
 	var yOffset = header_cell_height
 	for j in range(rows.size()):
-		if rows[j][0].visible:
+		if row_visiblity[j]:
 			for i in range(rows[j].size()):
 				
 				var margin_parent:MarginContainer = rows[j][i]
@@ -410,10 +421,7 @@ func getSizeVecOfBody() -> Vector2:
 		if header_group.get_child(i).visible:
 			sizeVec.x += cell_widths[i]
 	for i in range(rows.size()):
-		var total_row_visible:int
-		for cell in rows[i]:
-			total_row_visible += int(cell.visible)
-		if total_row_visible > 0:
+		if row_visiblity[i]:
 			sizeVec.y += body_cell_heights[i]
 		
 	return sizeVec
@@ -439,13 +447,15 @@ func create_headers() -> void:
 		if headers[i]:
 			var margin_container = MarginContainer.new()
 			var header = Button.new()
-				
+			
+			column_visiblity.append(true)
+			
 			margin_container.name = "Header_" + str(i)
 			header.text = headers[i]
 			margin_container.custom_minimum_size = Vector2(cell_widths[i], header_cell_height)
 			margin_container.position = Vector2(get_x_offset(i), 0)
 			header.clip_text = true
-			margin_container.add_child(header)			
+			margin_container.add_child(header)
 			header_group.add_child(margin_container)
 
 func update_headers() -> void:

@@ -42,3 +42,7 @@ func _process(_delta):
 func _on_table_widget_cell_clicked(row, column):
 	print(str(row) + " " + str(column))
 	
+
+
+func _on_button_pressed():
+	table.visibility_column(3,true)

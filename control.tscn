@@ -63,3 +63,4 @@ offset_right = 8.0
 offset_bottom = 8.0
 
 [connection signal="cell_clicked" from="ScrollContainer2/Table Node" to="." method="_on_table_widget_cell_clicked"]
+[connection signal="pressed" from="Button" to="." method="_on_button_pressed"]
