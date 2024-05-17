@@ -1,6 +1,6 @@
 @tool
 extends Control
-class_name TableWidget
+class_name TableNode
 
 #Signals
 ##Signal when the user clicks on a cell
@@ -150,6 +150,10 @@ func clear() -> void:
 	update_layout()
 
 func get_row(row:int) -> Array:
+	if !(rows.size() > row):
+		push_error("ERROR, parameter row: " + str(row) + " exceeds Array size index: "+ str(rows.size()-1))
+		return []
+	
 	var row_contens: Array = []
 	for i in rows[row]:
 		row_contens.append(i.get_child(0))
@@ -157,9 +161,23 @@ func get_row(row:int) -> Array:
 	return row_contens
 
 func get_cell(row:int, column:int) -> Control:
+	if !(rows.size() > row):
+		push_error("ERROR, parameter row: " + str(row) + " exceeds Array size index: "+ str(rows.size()-1))
+		return Label.new()
+	if !(columns > column):
+		push_error("ERROR, parameter column: " + str(column) + " exceeds Columns size index: " + str(columns-1))
+		return Label.new()
+	
 	return rows[row][column].get_child(0)
 
 func set_cell(node:Control,row:int, column:int, remain_clip_setting:bool = true) -> void:
+	if !(rows.size() > row):
+		push_error("ERROR, parameter row: " + str(row) + " exceeds Array size index: "+ str(rows.size()-1))
+		return
+	if !(columns > column):
+		push_error("ERROR, parameter column: " + str(column) + " exceeds Columns size index: " + str(columns-1))
+		return
+	
 	var margin_parent:MarginContainer = rows[row][column]
 	var old_child = margin_parent.get_child(0)
 	
@@ -180,16 +198,45 @@ func set_cell(node:Control,row:int, column:int, remain_clip_setting:bool = true)
 	update_layout()
 
 func set_row(data:Array[Control],row:int) -> void:
+	if !(rows.size() > row):
+		push_error("ERROR, parameter row: " + str(row) + " exceeds Array size index: "+ str(rows.size()-1))
+		return
+		
 	for i in range(data.size()):
 		set_cell(data[i],row,i)
 
-func remove_row(row:int):
+func remove_row(row:int) -> void:
+	if !(rows.size() > row):
+		push_error("ERROR, parameter row: " + str(row) + " exceeds Array size index: "+ str(rows.size()-1))
+		return
 	var i_row = rows[row]
-	
 	for content:Control in i_row:
 		content.queue_free()
 	rows.remove_at(row)
 	update_layout()
+
+func visibility_row(row:int,visible:bool) -> void:
+	if !(rows.size() > row):
+		push_error("ERROR, parameter row: " + str(row) + " exceeds Array size index: "+ str(rows.size()-1))
+		return
+	for cell in rows[row]:
+		cell.visible = visible
+	update_layout()
+
+func visibility_column(column:int, visible:bool) -> void:
+	if !(columns > column):
+		push_error("ERROR, parameter column: " + str(column) + " exceeds Columns size index: " + str(columns-1))
+		return
+	var children = header_group.get_children()
+	for child: MarginContainer in children:
+		if(child.name.begins_with("Header_")):
+			var index = int(child.name.substr(child.name.length() -1,1))
+			if(column == index):
+				child.visible = visible
+	for row in rows:
+		row[column].visible = visible
+	update_layout()
+
 #---------------------------Private methods-------------------------------------
 func init_Table() -> void:
 	
@@ -288,18 +335,18 @@ func update_layout() -> void:
 func layout_rows() -> void:
 	var yOffset = header_cell_height
 	for j in range(rows.size()):
-		for i in range(rows[j].size()):
-			var margin_parent:MarginContainer = rows[j][i]
-			#var child = margin_parent.get_child(0)
-			
-			#var child = LineEdit.new()
-			margin_parent.position = Vector2(get_x_offset(i), yOffset)
-			margin_parent.custom_minimum_size = Vector2(cell_widths[i],body_cell_heights[j])
-			margin_parent.minimum_size_changed.emit()
-			margin_parent.set_size(Vector2(cell_widths[i],body_cell_heights[j]))
-			
-			#add_child(child)
-		yOffset += body_cell_heights[j]
+		if rows[j][0].visible:
+			for i in range(rows[j].size()):
+				
+				var margin_parent:MarginContainer = rows[j][i]
+				if margin_parent.visible:
+					margin_parent.position = Vector2(get_x_offset(i), yOffset)
+					margin_parent.custom_minimum_size = Vector2(cell_widths[i],body_cell_heights[j])
+					margin_parent.minimum_size_changed.emit()
+					margin_parent.set_size(Vector2(cell_widths[i],body_cell_heights[j]))
+				
+			yOffset += body_cell_heights[j]
+
 func update_panels() -> void:
 	panel_header.set_size(getSizeVecOfHeader())
 	
@@ -308,24 +355,30 @@ func update_panels() -> void:
 
 func get_x_offset(col_index:int) -> float:
 	var offset = 0.0
+	
 	for i in range (col_index):
-		offset += cell_widths[i]
+		if header_group.get_child(i).visible:
+			offset += cell_widths[i]
+	
 	return offset
 
 func update_v_separators() -> void:
+	#needs a litle offset for it to look good here: -2.5px
 	var pos = -2.5
 	
-	#TBD:: ???
-	#var x_offset = -margin.x
-	#x_offset = 0.0 #<- debug
-	
 	for i in range(vertical_separators.size()):
-		pos+=cell_widths[i]
-		vertical_separators[i].position = Vector2(pos,0)
-		vertical_separators[i].set_size(Vector2(1,get_total_height()))
+		if header_group.get_child(i).visible:
+			pos += cell_widths[i]
+			vertical_separators[i].position = Vector2(pos, 0)
+			vertical_separators[i].set_size(Vector2(1, get_total_height()))
+			vertical_separators[i].visible = true
+		else:
+			vertical_separators[i].visible = false
 
-func update_h_separators() -> void:
+func update_h_separators() -> void:	
 	var pos = 0.0
+	
+	#needs a litle offset for it to look good here: -2px
 	var y_offset = getSizeVecOfHeader().y - 2
 	
 	for i in range (horizontal_separators.size()):
@@ -345,7 +398,8 @@ func _notification(what):
 func getSizeVecOfHeader() -> Vector2:
 	var sizeVec: Vector2 = Vector2(0,0)
 	for i in range(cell_widths.size()):
-		sizeVec.x += cell_widths[i]
+		if header_group.get_child(i).visible:
+			sizeVec.x += cell_widths[i]
 	
 	sizeVec.y = header_cell_height
 	return sizeVec
@@ -353,9 +407,14 @@ func getSizeVecOfHeader() -> Vector2:
 func getSizeVecOfBody() -> Vector2:
 	var sizeVec: Vector2 = Vector2(0,0)
 	for i in range(cell_widths.size()):
-		sizeVec.x += cell_widths[i]
+		if header_group.get_child(i).visible:
+			sizeVec.x += cell_widths[i]
 	for i in range(rows.size()):
-		sizeVec.y += body_cell_heights[i]
+		var total_row_visible:int
+		for cell in rows[i]:
+			total_row_visible += int(cell.visible)
+		if total_row_visible > 0:
+			sizeVec.y += body_cell_heights[i]
 		
 	return sizeVec
 
@@ -415,7 +474,7 @@ func _get_minimum_size() -> Vector2:
 
 	return min_size
 
-func _on_cell_gui_input(event: InputEvent, row: int,column: int):
+func _on_cell_gui_input(event: InputEvent, row: int,column: int) -> void:
 	if event is InputEventMouseButton and event.double_click:
 		_edit_cell(row,column)
 		#print("doubleclick")
@@ -437,7 +496,7 @@ func _edit_cell(row:int, column:int) -> void:
 		set_cell(line_edit,row,column)
 		line_edit.grab_focus()
 
-func _on_text_entered(new_text:String, row:int, column:int, line_edit:LineEdit):
+func _on_text_entered(new_text:String, row:int, column:int, line_edit:LineEdit) -> void:
 	var label = Label.new()
 	label.text = new_text
 	label.clip_text = line_edit.clip_contents

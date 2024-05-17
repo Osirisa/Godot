@@ -3,13 +3,13 @@ extends EditorPlugin
 
 func _enter_tree():
 	
-	add_custom_type("Table Widget", "Control", preload("res://addons/osirisas_ui_extension/table_widget/table_widget.gd"),preload("res://addons/osirisas_ui_extension/table_widget/Icon_tableWidget.png"))
+	add_custom_type("Table Node", "Control", preload("res://addons/osirisas_ui_extension/table_node/table_node.gd"),preload("res://addons/osirisas_ui_extension/table_node/Icon_tableNode.png"))
 	
 	#var editor_interface = get_editor_interface()
 	#editor_interface.connect("scene_changed",Callable(self,"_on_scene_changed"))
 
 func _exit_tree():
-	remove_custom_type("Table Widget")
+	remove_custom_type("Table Node")
 	
 	#var editor_interface = get_editor_interface()
 	#editor_interface.disconnect("scene_changed", Callable(self, "_on_scene_changed"))

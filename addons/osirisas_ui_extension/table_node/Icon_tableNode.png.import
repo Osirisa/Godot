@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cpmxrqj0wr64s"
-path="res://.godot/imported/Icon_tableWidget.png-46bf2eb57a3d10142ca41d1cba5cdeff.ctex"
+path="res://.godot/imported/Icon_tableNode.png-6edaf7294788b0b9df7bb147e0768962.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://addons/osirisas_ui_extension/table_widget/Icon_tableWidget.png"
-dest_files=["res://.godot/imported/Icon_tableWidget.png-46bf2eb57a3d10142ca41d1cba5cdeff.ctex"]
+source_file="res://addons/osirisas_ui_extension/table_node/Icon_tableNode.png"
+dest_files=["res://.godot/imported/Icon_tableNode.png-6edaf7294788b0b9df7bb147e0768962.ctex"]
 
 [params]
 
