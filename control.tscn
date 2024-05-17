@@ -26,6 +26,8 @@ Button/colors/font_focus_color = Color(0, 0, 0, 1)
 Button/colors/font_hover_color = Color(0.0313726, 0.701961, 0.94902, 1)
 Button/colors/font_hover_pressed_color = Color(0.0313726, 0.701961, 0.94902, 1)
 Label/colors/font_color = Color(0, 0, 0, 1)
+MarginContainer/constants/margin_left = 3
+MarginContainer/constants/margin_right = 3
 Panel/styles/panel = SubResource("StyleBoxFlat_k6pim")
 
 [node name="Control" type="Control"]
@@ -54,3 +56,5 @@ standard_body_cell_height = 30.0
 resizing = true
 header_theme = SubResource("Theme_sv4ih")
 body_theme = SubResource("Theme_yqn8f")
+
+[connection signal="cell_clicked" from="ScrollContainer2/Table Widget" to="." method="_on_table_widget_cell_clicked"]

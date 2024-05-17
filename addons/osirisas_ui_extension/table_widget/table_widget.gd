@@ -2,6 +2,15 @@
 extends Control
 class_name TableWidget
 
+#Signals
+##Signal when the user clicks on a cell
+##Return:	Row:int, Column:int
+signal cell_clicked(row:int, column:int)
+
+##Signal when the user edits a cell
+##Return:	Row:int, Column:int
+signal cell_edited(row:int,column:int)
+
 ##The header Titles
 @export var headers: Array = []: 
 	set(value): 
@@ -120,9 +129,12 @@ func add_row(data: Array[Control] = [], clip_text:bool = true, height: float = s
 		#print("Label text set to: ", label.text)  # <- DEBUG:: Verify label text
 		margin_parent.custom_minimum_size = Vector2(cell_widths[i], body_cell_heights[rows.size()])
 		
+		var callable = Callable(self,"_on_cell_gui_input").bind(rows.size(),i)
+		margin_parent.connect("gui_input",callable)
+		
 		body_group.add_child(margin_parent)
 		row.append(margin_parent)
-
+	
 	rows.append(row)
 	#print("Current rows: ", rows)  # <- DEBUG:: Verify rows content 
 	
@@ -148,29 +160,36 @@ func get_cell(row:int, column:int) -> Control:
 	return rows[row][column].get_child(0)
 
 func set_cell(node:Control,row:int, column:int, remain_clip_setting:bool = true) -> void:
-	var new_val = MarginContainer.new()
+	var margin_parent:MarginContainer = rows[row][column]
+	var old_child = margin_parent.get_child(0)
 	
 	if node is LineEdit:
-		pass
-	elif node is Button or Label:
-		if remain_clip_setting:
-			node.clip_text = rows[row][column].get_child(0).clip_text
-	#var w:=[]
+		if old_child is LineEdit:
+			node.clip_contents = old_child.clip_contents
+		else:
+			node.clip_contents = old_child.clip_text
+	elif (node is Button or Label) and remain_clip_setting:
+		if old_child is LineEdit:
+			node.clip_text = old_child.clip_contents
+		else:
+			node.clip_text = old_child.clip_text
 	
-	new_val.theme = body_theme
-	new_val.add_child(node)
-	new_val.custom_minimum_size = Vector2(cell_widths[column], body_cell_heights[row])
-	
-	
-	rows[row][column].queue_free()
-	rows[row].remove_at(column)
-	body_group.add_child(new_val)
-	rows[row].insert(column,new_val)
+	margin_parent.remove_child(old_child)
+	old_child.queue_free()
+	margin_parent.add_child(node)
 	update_layout()
 
 func set_row(data:Array[Control],row:int) -> void:
 	for i in range(data.size()):
 		set_cell(data[i],row,i)
+
+func remove_row(row:int):
+	var i_row = rows[row]
+	
+	for content:Control in i_row:
+		content.queue_free()
+	rows.remove_at(row)
+	update_layout()
 #---------------------------Private methods-------------------------------------
 func init_Table() -> void:
 	
@@ -323,10 +342,6 @@ func _notification(what):
 	if what == NOTIFICATION_VISIBILITY_CHANGED:
 		update_layout()  # Update layout when the widget's visibility changes
 
-#func _draw():
-	#draw_rect(Rect2(Vector2(), getSizeVecOfHeader()), background_color_header, true)
-	#draw_rect(Rect2(Vector2(0,getSizeVecOfHeader().y), getSizeVecOfBody()), background_color_body, true)
-
 func getSizeVecOfHeader() -> Vector2:
 	var sizeVec: Vector2 = Vector2(0,0)
 	for i in range(cell_widths.size()):
@@ -399,3 +414,33 @@ func _get_minimum_size() -> Vector2:
 	min_size.y += getSizeVecOfBody().y
 
 	return min_size
+
+func _on_cell_gui_input(event: InputEvent, row: int,column: int):
+	if event is InputEventMouseButton and event.double_click:
+		_edit_cell(row,column)
+		#print("doubleclick")
+	if event is InputEventMouseButton and event.pressed and event.button_mask & MOUSE_BUTTON_LEFT:
+		emit_signal("cell_clicked",row,column)
+
+func _edit_cell(row:int, column:int) -> void:
+	var cell = get_cell(row,column)
+	if cell is Label:
+		var line_edit = LineEdit.new()
+		
+		line_edit.clip_contents = cell.clip_text
+		line_edit.alignment = cell.horizontal_alignment
+		line_edit.text = cell.text
+		
+		line_edit.select_all()
+		var callable = Callable(self,"_on_text_entered").bind(row,column,line_edit)
+		line_edit.connect("text_submitted",callable)
+		set_cell(line_edit,row,column)
+		line_edit.grab_focus()
+
+func _on_text_entered(new_text:String, row:int, column:int, line_edit:LineEdit):
+	var label = Label.new()
+	label.text = new_text
+	label.clip_text = line_edit.clip_contents
+	label.horizontal_alignment = line_edit.alignment
+	set_cell(label,row,column)
+	emit_signal("cell_edited")

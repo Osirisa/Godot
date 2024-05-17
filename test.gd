@@ -19,7 +19,18 @@ func _ready():
 		cb.text = "combobox?"
 		
 		table.add_row([label,button,label2,cb])
-		
+	
+	table.set_cell(Button.new(),0,0)
+	
+	var test = table.get_cell(0,0)
+	
+	table.remove_row(33)
+	print(test)
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta):
 	pass
+
+
+func _on_table_widget_cell_clicked(row, column):
+	print(str(row) + " " + str(column))
+	
