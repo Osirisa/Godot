@@ -23,9 +23,13 @@ signal cell_edited(row:int,column:int)
 		if(headers.size()> cell_widths.size()):
 			for i in range(headers.size() - cell_widths.size()):
 				cell_widths.append(standard_cell_width)
-		
+				#cell_widths_temp.append(standard_cell_width)
+			
 		elif headers.size() < cell_widths.size():
 			cell_widths = cell_widths.slice(0,headers.size())
+			#cell_widths_temp = cell_widths.slice(0,headers.size())
+		
+		cell_widths = cell_widths
 		
 		init_v_separators()
 		update_layout()
@@ -41,6 +45,11 @@ signal cell_edited(row:int,column:int)
 @export var cell_widths: Array = []:
 	set(value): 
 		cell_widths = value
+		
+		cell_widths_temp.clear()
+		for width in cell_widths:
+			cell_widths_temp.append(width)
+		
 		update_layout()
 
 ##The standart width of the individual columns to "spawn" with
@@ -61,17 +70,31 @@ signal cell_edited(row:int,column:int)
 		resizing = value
 		update_layout()
 
+##Decides what the minimum size of each cell is (for resizing)
+@export var min_size := Vector2(50,20)
 
+##If not defined, it uses the theme applied to the Tablewidget or its parents
+@export var header_theme: Theme
+
+##If not defined, it uses the theme applied to the Tablewidget or its parents
+@export var body_theme: Theme
+
+##-------------------------------------------
+#@export var debug := true
+#
+#var do_once:= true
+##-------------------------------------------
 
 var columns: int
 
-#TBD:: maybe use dictionary or Class for data glue instead of every data for itself (for sorting and so on)
 var rows :Array[RowContent]= []
 
-#TBD:: Change it so it automatically updates its size with rows array / headers array
 var column_visiblity:Array[bool] =[]
 
-var body_cell_heights:= []
+var body_cell_heights := []
+var body_cell_heights_temp := []
+
+var cell_widths_temp := []
 
 var separator_group : Control = Control.new()
 var vertical_separators := []
@@ -85,10 +108,8 @@ var body_group: Control = Control.new()
 var panel_header: Panel = Panel.new()
 var panel_body: Panel = Panel.new()
 
-##If not defined, it uses the theme applied to the Tablewidget or its parents
-@export var header_theme: Theme
-##If not defined, it uses the theme applied to the Tablewidget or its parents
-@export var body_theme: Theme
+const table_util = preload("res://addons/osirisas_ui_extension/table_node/table_utility.gd")
+
 
 func _enter_tree():
 	pass # Replace with function body.
@@ -99,6 +120,7 @@ func _init():
 func _ready():
 	init_Table()
 	init_v_separators()
+	init_h_separators()
 	update_layout()
 	queue_redraw()
 
@@ -107,8 +129,13 @@ func _ready():
 func add_row(data: Array[Control] = [], clip_text:bool = true, height: float = standard_body_cell_height) -> void:
 	#print("Adding row with data: ", data)  # <- DEBUG:: Check what data is received
 	var new_row := RowContent.new()
-	var node:Control
+	var node: Control
+	
 	body_cell_heights.append(height)
+	body_cell_heights_temp.append(height)
+	rows.append(new_row)
+	
+	new_row.row_visible = true
 	
 	for i in columns:
 		if i < data.size():
@@ -116,8 +143,8 @@ func add_row(data: Array[Control] = [], clip_text:bool = true, height: float = s
 		else:
 			node = Label.new()
 			node.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			
-		var margin_parent = MarginContainer.new()
+		
+		var margin_parent = _create_margin_container(node, i, rows.size() - 1)
 		
 		if  node is LineEdit:
 			#print(child.get_minimum_size())
@@ -126,26 +153,49 @@ func add_row(data: Array[Control] = [], clip_text:bool = true, height: float = s
 			if clip_text:
 				node.clip_text = true
 		
+		node.mouse_filter = Control.MOUSE_FILTER_PASS
+		
 		if body_theme:
 			node.theme = body_theme
 			margin_parent.theme = body_theme
 		
-		
-		margin_parent.add_child(node)
-		margin_parent.custom_minimum_size = Vector2(cell_widths[i], body_cell_heights[rows.size()])
-		
-		var callable = Callable(self,"_on_cell_gui_input").bind(new_row)
-		margin_parent.connect("gui_input",callable)
-		
 		body_group.add_child(margin_parent)
+		
 		new_row.nodes.append(node)
 		new_row.editable.append(true)
-		new_row.row_visible = true
 	
-	rows.append(new_row)
-	#print("Current rows: ", rows)  # <- DEBUG:: Verify rows content 
+	init_h_separators() # Updates the separators for the new row
+	update_layout()
+
+func add_header(title:String, cell_width := standard_cell_width):
 	
-	init_h_seperators() # Updates the separators for the new row
+	cell_widths.append(cell_width)
+	cell_widths_temp.append(cell_width)
+	
+	headers.append(title)
+	columns = headers.size()
+	var margin_parent: MarginContainer
+	var standard_label: Label
+	
+	
+	for i in range(rows.size()):
+		standard_label = Label.new()
+		standard_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		
+		margin_parent = _create_margin_container(standard_label, columns - 1, i)
+		
+		rows[i].nodes.append(standard_label)
+		
+		if body_theme:
+			standard_label.theme = body_theme
+			margin_parent.theme = body_theme
+		
+		margin_parent.visible = rows[i].row_visible
+		rows[i].editable.append(true)
+		
+		body_group.add_child(margin_parent)
+	
+	init_v_separators() # Updates the separators for the new row
 	update_layout()
 
 func clear() -> void:
@@ -155,12 +205,11 @@ func clear() -> void:
 	
 	rows.clear()
 	
-	init_h_seperators()
+	init_h_separators()
 	update_layout()
 
 func get_row(row:int) -> Array:
-	if !(rows.size() > row):
-		push_error("ERROR, parameter row: " + str(row) + " exceeds Array size index: "+ str(rows.size()-1))
+	if not table_util.check_row_input(row, rows.size() - 1):
 		return []
 	
 	var row_contens: Array = []
@@ -170,25 +219,25 @@ func get_row(row:int) -> Array:
 	return row_contens
 
 func get_cell(row:int, column:int) -> Control:
-	if !(rows.size() > row):
-		push_error("ERROR, parameter row: " + str(row) + " exceeds Array size index: "+ str(rows.size()-1))
+	#--check if row and column matches size of the arrays--
+	if not table_util.check_row_input(row, rows.size() - 1):
 		return Label.new()
-	if !(columns > column):
-		push_error("ERROR, parameter column: " + str(column) + " exceeds Columns size index: " + str(columns-1))
+	
+	if not table_util.check_column_input(column, columns - 1):
 		return Label.new()
 	
 	return rows[row].nodes[column]
 
 func set_cell(node:Control,row:int, column:int, remain_clip_setting:bool = true) -> void:
-	if !(rows.size() > row):
-		push_error("ERROR, parameter row: " + str(row) + " exceeds Array size index: "+ str(rows.size()-1))
-		return
-	if !(columns > column):
-		push_error("ERROR, parameter column: " + str(column) + " exceeds Columns size index: " + str(columns-1))
+	if not table_util.check_row_input(row, rows.size() - 1):
 		return
 	
-	var margin_parent:MarginContainer = rows[row].nodes[column].get_parent()
+	if not table_util.check_column_input(column, columns - 1):
+		return
+	
+	var margin_parent: MarginContainer = rows[row].nodes[column].get_parent()
 	var old_child = margin_parent.get_child(0)
+	
 	
 	if node is LineEdit:
 		if old_child is LineEdit:
@@ -201,7 +250,20 @@ func set_cell(node:Control,row:int, column:int, remain_clip_setting:bool = true)
 		else:
 			node.clip_text = old_child.clip_text
 	
+	#margin_parent.disconnect("gui_input")
+	
+	#if debug:
+		#if do_once:
+			#print(margin_parent.get_signal_connection_list("gui_input"))
+			#do_once = false
+			
+	var callable_old = Callable(self,"_on_cell_gui_input").bind(rows[row], old_child)
+	var callable_new = Callable(self,"_on_cell_gui_input").bind(rows[row], node)
+	
+	margin_parent.disconnect("gui_input",callable_old)	
 	margin_parent.remove_child(old_child)
+	
+	margin_parent.connect("gui_input",callable_new)
 	
 	rows[row].nodes.remove_at(column)
 	rows[row].nodes.insert(column,node)
@@ -211,28 +273,28 @@ func set_cell(node:Control,row:int, column:int, remain_clip_setting:bool = true)
 	update_layout()
 
 func set_row(data:Array[Control],row:int) -> void:
-	if !(rows.size() > row):
-		push_error("ERROR, parameter row: " + str(row) + " exceeds Array size index: "+ str(rows.size()-1))
+	if not table_util.check_row_input(row, rows.size() - 1):
 		return
 		
 	for i in range(data.size()):
 		set_cell(data[i],row,i)
 
 func remove_row(row:int) -> void:
-	if !(rows.size() > row):
-		push_error("ERROR, parameter row: " + str(row) + " exceeds Array size index: "+ str(rows.size()-1))
+	if not table_util.check_row_input(row, rows.size() - 1):
 		return
-	var i_row = rows[row].nodes
-	for node: Control in i_row:
+	
+	for node: Control in rows[row].nodes:
 		node.queue_free()
+	
+	
 	rows.remove_at(row)
-	init_h_seperators()
+	init_h_separators()
 	update_layout()
 
 func visibility_row(row:int,visible:bool) -> void:
-	if !(rows.size() > row):
-		push_error("ERROR, parameter row: " + str(row) + " exceeds Array size index: "+ str(rows.size()-1))
+	if not table_util.check_row_input(row, rows.size() - 1):
 		return
+	
 	for node: Control in rows[row].nodes:
 		node.visible = visible
 	
@@ -240,17 +302,18 @@ func visibility_row(row:int,visible:bool) -> void:
 	update_layout()
 
 func visibility_column(column:int, visible:bool) -> void:
-	if !(columns > column):
-		push_error("ERROR, parameter column: " + str(column) + " exceeds Columns size index: " + str(columns-1))
+	if not table_util.check_column_input(column, columns - 1):
 		return
+	
 	var children = header_group.get_children()
 	for child: MarginContainer in children:
 		if(child.name.begins_with("Header_")):
 			var index = int(child.name.substr(child.name.length() -1,1))
 			if(column == index):
-				child.visible = visible
-	for row in rows:
-		row.nodes[column].visible = visible
+				if child.visible != visible:
+					for row in rows:
+						row.nodes[column].visible = visible
+					child.visible = visible
 		
 	column_visiblity[column] = visible
 	update_layout()
@@ -305,7 +368,7 @@ func init_v_separators() -> void:
 		var callable = Callable(self, "_on_separator_input").bind(i,VSeparator)
 		sep.connect("gui_input", callable)
 
-func init_h_seperators() -> void:
+func init_h_separators() -> void:
 	for sep in horizontal_separators:
 		sep.queue_free()
 	horizontal_separators.clear()
@@ -325,11 +388,21 @@ func _on_separator_input(event, index, type) -> void:
 	if event is InputEventMouseMotion and event.button_mask & MOUSE_BUTTON_LEFT and resizing:
 		# Adjust the column width based on mouse movement
 		if type == VSeparator:
-			cell_widths[index] = max(10,cell_widths[index] + event.relative.x)
+			cell_widths_temp[index] = max(min_size.x,cell_widths_temp[index] + event.relative.x)
 			
 		if type == HSeparator:
-			body_cell_heights[index] = max(10,body_cell_heights[index] + event.relative.y)
-		update_layout()  # Redraw layout with new widths
+			body_cell_heights_temp[index] = max(min_size.y,body_cell_heights_temp[index] + event.relative.y)
+		
+		update_layout() 
+	
+	if event is InputEventMouseButton and event.double_click:
+		if type == VSeparator:
+			cell_widths_temp[index] = cell_widths[index]
+			
+		if type == HSeparator:
+			body_cell_heights_temp[index] = body_cell_heights[index]
+		
+		update_layout() 
 
 func update_layout() -> void:
 	create_headers()  # Function to create header labels
@@ -356,13 +429,14 @@ func layout_rows() -> void:
 			for i in range(rows[j].nodes.size()):
 				
 				var margin_parent:MarginContainer = rows[j].nodes[i].get_parent()
-				if margin_parent.visible:
-					margin_parent.position = Vector2(get_x_offset(i), yOffset)
-					margin_parent.custom_minimum_size = Vector2(cell_widths[i],body_cell_heights[j])
-					margin_parent.minimum_size_changed.emit()
-					margin_parent.set_size(Vector2(cell_widths[i],body_cell_heights[j]))
+				if margin_parent:
+					if margin_parent.visible:
+						margin_parent.position = Vector2(get_x_offset(i), yOffset)
+						margin_parent.custom_minimum_size = Vector2(cell_widths_temp[i],body_cell_heights_temp[j])
+						margin_parent.minimum_size_changed.emit()
+						margin_parent.set_size(Vector2(cell_widths_temp[i],body_cell_heights_temp[j]))
 				
-			yOffset += body_cell_heights[j]
+			yOffset += body_cell_heights_temp[j]
 
 func update_panels() -> void:
 	panel_header.set_size(getSizeVecOfHeader())
@@ -375,7 +449,7 @@ func get_x_offset(col_index:int) -> float:
 	
 	for i in range (col_index):
 		if header_group.get_child(i).visible:
-			offset += cell_widths[i]
+			offset += cell_widths_temp[i]
 	
 	return offset
 
@@ -385,7 +459,7 @@ func update_v_separators() -> void:
 	
 	for i in range(vertical_separators.size()):
 		if header_group.get_child(i).visible:
-			pos += cell_widths[i]
+			pos += cell_widths_temp[i]
 			vertical_separators[i].position = Vector2(pos, 0)
 			vertical_separators[i].set_size(Vector2(1, get_total_height()))
 			vertical_separators[i].visible = true
@@ -400,7 +474,7 @@ func update_h_separators() -> void:
 	
 	for i in range (horizontal_separators.size()):
 		if rows[i].row_visible:
-			pos += body_cell_heights[i]
+			pos += body_cell_heights_temp[i]
 			horizontal_separators[i].position = Vector2(0, y_offset + pos)
 			horizontal_separators[i].set_size(Vector2(getSizeVecOfHeader().x, 1))
 			horizontal_separators[i].visible = true
@@ -418,21 +492,21 @@ func _notification(what):
 
 func getSizeVecOfHeader() -> Vector2:
 	var sizeVec: Vector2 = Vector2(0,0)
-	for i in range(cell_widths.size()):
+	for i in range(cell_widths_temp.size()):
 		if header_group.get_child(i).visible:
-			sizeVec.x += cell_widths[i]
+			sizeVec.x += cell_widths_temp[i]
 	
 	sizeVec.y = header_cell_height
 	return sizeVec
 
 func getSizeVecOfBody() -> Vector2:
 	var sizeVec: Vector2 = Vector2(0,0)
-	for i in range(cell_widths.size()):
+	for i in range(cell_widths_temp.size()):
 		if header_group.get_child(i).visible:
-			sizeVec.x += cell_widths[i]
+			sizeVec.x += cell_widths_temp[i]
 	for i in range(rows.size()):
 		if rows[i].row_visible:
-			sizeVec.y += body_cell_heights[i]
+			sizeVec.y += body_cell_heights_temp[i]
 		
 	return sizeVec
 
@@ -462,7 +536,7 @@ func create_headers() -> void:
 			
 			margin_container.name = "Header_" + str(i)
 			header.text = headers[i]
-			margin_container.custom_minimum_size = Vector2(cell_widths[i], header_cell_height)
+			margin_container.custom_minimum_size = Vector2(cell_widths_temp[i], header_cell_height)
 			margin_container.position = Vector2(get_x_offset(i), 0)
 			header.clip_text = true
 			margin_container.add_child(header)
@@ -474,12 +548,12 @@ func update_headers() -> void:
 	var children = header_group.get_children()
 	for child in children:
 		if(child.name.begins_with("Header_")):
-			var index = int(child.name.substr(child.name.length() -1,1))
+			var index = int(child.name.substr(child.name.length() -1, 1))
 			if(headers.size() > index):
 				child.get_child(0).text = headers[index]
-				child.custom_minimum_size = Vector2(cell_widths[index], header_cell_height)
+				child.custom_minimum_size = Vector2(cell_widths_temp[index], header_cell_height)
 				child.minimum_size_changed
-				child.set_size(Vector2(cell_widths[index], header_cell_height))
+				child.set_size(Vector2(cell_widths_temp[index], header_cell_height))
 				child.position = Vector2(get_x_offset(index), 0)
 				
 			else :
@@ -494,8 +568,11 @@ func _get_minimum_size() -> Vector2:
 
 	return min_size
 
-func _on_cell_gui_input(event: InputEvent,row_c:RowContent) -> void:
+#------------------------------------SLOTS------------------------------------#
+
+func _on_cell_gui_input(event: InputEvent,row_c: RowContent, node: Control) -> void:
 	var row = rows.find(row_c)
+	var column = row_c.nodes.find(node)
 	
 	if event is InputEventMouseButton and event.double_click:
 		_edit_cell(row,column)
@@ -511,20 +588,44 @@ func _edit_cell(row:int, column:int) -> void:
 		line_edit.clip_contents = cell.clip_text
 		line_edit.alignment = cell.horizontal_alignment
 		line_edit.text = cell.text
-		
 		line_edit.select_all()
+		
 		var callable = Callable(self,"_on_text_entered").bind(row,column,line_edit)
 		line_edit.connect("text_submitted",callable)
+		
+		var callable_2 = Callable(self,"_on_text_focus_lost").bind(row,column,line_edit)
+		line_edit.connect("focus_exited",callable_2)
+		
 		set_cell(line_edit,row,column)
 		line_edit.grab_focus()
 
 func _on_text_entered(new_text:String, row:int, column:int, line_edit:LineEdit) -> void:
-	var label = Label.new()
+	line_edit.set_block_signals(true)
+	var label := Label.new()
 	label.text = new_text
 	label.clip_text = line_edit.clip_contents
 	label.horizontal_alignment = line_edit.alignment
 	set_cell(label,row,column)
 	emit_signal("cell_edited")
+
+func _on_text_focus_lost(row:int, column:int, line_edit:LineEdit) -> void:
+	var label := Label.new()
+	label.text = line_edit.text
+	label.clip_text = line_edit.clip_contents
+	label.horizontal_alignment = line_edit.alignment
+	
+	set_cell(label,row,column)
+	emit_signal("cell_edited")
+
+func _create_margin_container(node: Control, col_index: int, row_index: int) -> MarginContainer:
+	var margin_parent = MarginContainer.new()
+	margin_parent.add_child(node)
+	margin_parent.custom_minimum_size = Vector2(cell_widths_temp[col_index], body_cell_heights_temp[row_index])
+	
+	var callable = Callable(self, "_on_cell_gui_input").bind(rows[row_index], node)
+	margin_parent.connect("gui_input", callable)
+	
+	return margin_parent
 
 class RowContent:
 	var nodes :Array[Control] = []

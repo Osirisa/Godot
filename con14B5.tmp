@@ -54,7 +54,6 @@ headers = ["header0", "header1", "header2", "header3", "header4", "header5"]
 cell_widths = [80.0, 150.0, 100.0, 80.0, 120.0, 80.0]
 standard_body_cell_height = 30.0
 resizing = true
-min_size = Vector2(50, 30)
 header_theme = SubResource("Theme_sv4ih")
 body_theme = SubResource("Theme_yqn8f")
 
