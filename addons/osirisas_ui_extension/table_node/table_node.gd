@@ -23,11 +23,9 @@ signal cell_edited(row:int,column:int)
 		if(headers.size()> cell_widths.size()):
 			for i in range(headers.size() - cell_widths.size()):
 				cell_widths.append(standard_cell_width)
-				#cell_widths_temp.append(standard_cell_width)
 			
 		elif headers.size() < cell_widths.size():
 			cell_widths = cell_widths.slice(0,headers.size())
-			#cell_widths_temp = cell_widths.slice(0,headers.size())
 		
 		cell_widths = cell_widths
 		
