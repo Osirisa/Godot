@@ -348,6 +348,9 @@ func sort_rows_by_column(column: int, ascending: bool) -> void:
 	var callable = Callable(self, "_sort_thread_function").bind([column, ascending])
 	sort_thread.start(callable)
 
+#TBD:: select row
+#TBD:: select rows
+
 func deselect_all_rows() -> void:
 	for i in range(selected_rows.size()):
 		selected_rows[i] = false
@@ -357,6 +360,8 @@ func select_all_rows() -> void:
 	for i in range(selected_rows.size()):
 		selected_rows[i] = true
 		_update_row_selection_visuals(i)
+
+#TBD:: get selection
 
 
 func getSizeVecOfHeader() -> Vector2:
