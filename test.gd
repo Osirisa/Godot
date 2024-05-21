@@ -6,7 +6,7 @@ var table: TableNode = %"Table Node"
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	
-	for i in 750:
+	for i in 30:
 		var label = Label.new()
 		var button = Button.new()
 		var label2 = Label.new()

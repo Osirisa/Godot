@@ -13,8 +13,9 @@ signal cell_edited(row:int,column:int)
 
 ##Signal when a column sorting was requested
 ##Return:	Column:int, Ascending / Descending (true / false)
-signal column_sort_requested(column: int, ascending: bool)	#TBD: swap out for enum? instead of bool
+signal column_sort_finished(column: int, ascending: bool)	#TBD: swap out for enum? instead of bool
 
+##Signal for stopping the thread and applying the sorted_rows to the normal rows - Array
 signal sorting_complete(sorted_rows)
 
 ##The header Titles
@@ -35,15 +36,15 @@ signal sorting_complete(sorted_rows)
 		
 		cell_widths = cell_widths
 		
-		init_v_separators()
-		update_layout()
+		_init_v_separators()
+		_update_layout()
 		notify_property_list_changed()
 
 ##The height of the header cells
 @export var header_cell_height: float = 20.0:
 	set(value):
 		header_cell_height = value
-		update_layout()
+		_update_layout()
 
 ##The width of the individual columns
 @export var cell_widths: Array = []:
@@ -54,25 +55,25 @@ signal sorting_complete(sorted_rows)
 		for width in cell_widths:
 			cell_widths_temp.append(width)
 		
-		update_layout()
+		_update_layout()
 
 ##The standart width of the individual columns to "spawn" with
 @export var standard_cell_width: float = 150:
 	set(value):
 		standard_cell_width = value
-		update_layout()
+		_update_layout()
 
 ##The standart height of the individual rows to "spawn" with
 @export var standard_body_cell_height: float = 20:
 	set(value):
 		standard_body_cell_height = value
-		update_layout()
+		_update_layout()
 
 ##Checkbox if resizing is allowed
 @export var resizing = false:
 	set(value):
 		resizing = value
-		update_layout()
+		_update_layout()
 
 ##Decides what the minimum size of each cell is (for resizing)
 @export var min_size := Vector2(50,20)
@@ -116,6 +117,12 @@ var panel_body: Panel = Panel.new()
 
 var sort_thread: Thread = null
 
+#selections
+var selected_rows: Array[bool] = []
+var last_selected_row: int = -1
+var current_row: int = -1
+
+
 func _enter_tree():
 	pass # Replace with function body.
 
@@ -126,9 +133,9 @@ func _ready():
 	connect("sorting_complete",Callable(self, "_on_sorting_complete"))
 	
 	init_Table()
-	init_v_separators()
-	init_h_separators()
-	update_layout()
+	_init_v_separators()
+	_init_h_separators()
+	_update_layout()
 	queue_redraw()
 
 #---------------------------Public methods-------------------------------------
@@ -143,6 +150,7 @@ func add_row(data: Array[Control] = [], clip_text:bool = true, height: float = s
 	rows.append(new_row)
 	
 	new_row.row_visible = true
+	selected_rows.append(false) # Add a new entry for the new row
 	
 	for i in columns:
 		if i < data.size():
@@ -171,8 +179,8 @@ func add_row(data: Array[Control] = [], clip_text:bool = true, height: float = s
 		new_row.nodes.append(node)
 		new_row.editable.append(true)
 	
-	init_h_separators() # Updates the separators for the new row
-	update_layout()
+	_init_h_separators() # Updates the separators for the new row
+	_update_layout()
 
 #TBD:: insert_row(title,pos)
 
@@ -204,8 +212,8 @@ func add_header(title:String, cell_width := standard_cell_width):
 		
 		body_group.add_child(margin_parent)
 	
-	init_v_separators() # Updates the separators for the new row
-	update_layout()
+	_init_v_separators() # Updates the separators for the new row
+	_update_layout()
 
 #TBD:: insert_header(title,column_pos)
 #TBD:: remove_header(column_pos)
@@ -217,8 +225,8 @@ func clear() -> void:
 	
 	rows.clear()
 	
-	init_h_separators()
-	update_layout()
+	_init_h_separators()
+	_update_layout()
 
 func get_row(row:int) -> Array:
 	if not table_util.check_row_input(row, rows.size() - 1):
@@ -275,7 +283,7 @@ func set_cell(node:Control,row:int, column:int, remain_clip_setting:bool = true)
 	
 	old_child.queue_free()
 	margin_parent.add_child(node)
-	update_layout()
+	_update_layout()
 
 func set_row(data:Array[Control],row:int) -> void:
 	if not table_util.check_row_input(row, rows.size() - 1):
@@ -293,8 +301,8 @@ func remove_row(row:int) -> void:
 	
 	
 	rows.remove_at(row)
-	init_h_separators()
-	update_layout()
+	_init_h_separators()
+	_update_layout()
 
 func visibility_row(row:int,visible:bool) -> void:
 	if not table_util.check_row_input(row, rows.size() - 1):
@@ -304,7 +312,7 @@ func visibility_row(row:int,visible:bool) -> void:
 		node.visible = visible
 	
 	rows[row].row_visible = visible
-	update_layout()
+	_update_layout()
 
 func visibility_column(column:int, visible:bool) -> void:
 	if not table_util.check_column_input(column, columns - 1):
@@ -321,7 +329,7 @@ func visibility_column(column:int, visible:bool) -> void:
 					child.visible = visible
 		
 	column_visiblity[column] = visible
-	update_layout()
+	_update_layout()
 
 func get_visibility_row(row:int) -> bool:
 	return rows[row].row_visible
@@ -332,7 +340,45 @@ func get_visibility_column(column:int) -> bool:
 #TBD:: set_editable_status_cell -> void:
 #TBD:: get_editable_status_cell -> bool:
 
-#TBD:: sort_column -> void: ? public sort??
+func sort_rows_by_column(column: int, ascending: bool) -> void:
+	if not table_util.check_column_input(column, columns - 1):
+		return
+	
+	sort_thread = Thread.new()
+	var callable = Callable(self, "_sort_thread_function").bind([column, ascending])
+	sort_thread.start(callable)
+
+func deselect_all_rows() -> void:
+	for i in range(selected_rows.size()):
+		selected_rows[i] = false
+		_update_row_selection_visuals(i)
+		
+func select_all_rows() -> void:
+	for i in range(selected_rows.size()):
+		selected_rows[i] = true
+		_update_row_selection_visuals(i)
+
+
+func getSizeVecOfHeader() -> Vector2:
+	var sizeVec: Vector2 = Vector2(0,0)
+	for i in range(cell_widths_temp.size()):
+		if header_group.get_child(i).visible:
+			sizeVec.x += cell_widths_temp[i]
+	
+	sizeVec.y = header_cell_height
+	return sizeVec
+
+func getSizeVecOfBody() -> Vector2:
+	var sizeVec: Vector2 = Vector2(0,0)
+	for i in range(cell_widths_temp.size()):
+		if header_group.get_child(i).visible:
+			sizeVec.x += cell_widths_temp[i]
+	for i in range(rows.size()):
+		if rows[i].row_visible:
+			sizeVec.y += body_cell_heights_temp[i]
+		
+	return sizeVec
+
 
 #---------------------------Private methods-------------------------------------
 func init_Table() -> void:
@@ -361,7 +407,7 @@ func init_Table() -> void:
 	add_child(separator_group)	
 
 
-func init_v_separators() -> void:
+func _init_v_separators() -> void:
 	for v_sep in vertical_separators:
 		v_sep.queue_free()
 	vertical_separators.clear()
@@ -378,7 +424,7 @@ func init_v_separators() -> void:
 		var callable = Callable(self, "_on_separator_input").bind(i,VSeparator)
 		sep.connect("gui_input", callable)
 
-func init_h_separators() -> void:
+func _init_h_separators() -> void:
 	for sep in horizontal_separators:
 		sep.queue_free()
 	horizontal_separators.clear()
@@ -403,7 +449,7 @@ func _on_separator_input(event, index, type) -> void:
 		if type == HSeparator:
 			body_cell_heights_temp[index] = max(min_size.y,body_cell_heights_temp[index] + event.relative.y)
 		
-		update_layout() 
+		_update_layout() 
 	
 	if event is InputEventMouseButton and event.double_click:
 		if type == VSeparator:
@@ -412,18 +458,18 @@ func _on_separator_input(event, index, type) -> void:
 		if type == HSeparator:
 			body_cell_heights_temp[index] = body_cell_heights[index]
 		
-		update_layout() 
+		_update_layout() 
 
-func update_layout() -> void:
-	create_headers()  # Function to create header labels
-	update_headers()
-	layout_rows()     # Lays out the rows
+func _update_layout() -> void:
+	_create_headers()  # Function to create header labels
+	_update_headers()
+	_layout_rows()     # Lays out the rows
 	
 	# Lay out the seperators
-	update_v_separators()
-	update_h_separators()
+	_update_v_separators()
+	_update_h_separators()
 	
-	update_panels()
+	_update_panels()
 	
 	# For all Containers as parents to update
 	custom_minimum_size = Vector2(getSizeVecOfHeader().x, getSizeVecOfHeader().y + getSizeVecOfBody().y)
@@ -432,7 +478,7 @@ func update_layout() -> void:
 	# Redraws the whole widget for all changes to take immediate effect
 	queue_redraw()
 
-func layout_rows() -> void:
+func _layout_rows() -> void:
 	var yOffset = header_cell_height
 	for j in range(rows.size()):
 		if rows[j].row_visible:
@@ -448,7 +494,7 @@ func layout_rows() -> void:
 				
 			yOffset += body_cell_heights_temp[j]
 
-func update_panels() -> void:
+func _update_panels() -> void:
 	panel_header.set_size(getSizeVecOfHeader())
 	
 	panel_body.set_position(Vector2(0,getSizeVecOfHeader().y))
@@ -463,7 +509,7 @@ func get_x_offset(col_index:int) -> float:
 	
 	return offset
 
-func update_v_separators() -> void:
+func _update_v_separators() -> void:
 	#needs a litle offset for it to look good here: -2.5px
 	var pos = -2.5
 	
@@ -476,7 +522,7 @@ func update_v_separators() -> void:
 		else:
 			vertical_separators[i].visible = false
 
-func update_h_separators() -> void:	
+func _update_h_separators() -> void:	
 	var pos = 0.0
 	
 	#needs a litle offset for it to look good here: -2px
@@ -498,36 +544,9 @@ func get_total_height() -> float:
 # Optionally, you might want to trigger layout updates manually or under specific conditions
 func _notification(what):
 	if what == NOTIFICATION_VISIBILITY_CHANGED:
-		update_layout()  # Update layout when the widget's visibility changes
+		_update_layout()  # Update layout when the widget's visibility changes
 
-func getSizeVecOfHeader() -> Vector2:
-	var sizeVec: Vector2 = Vector2(0,0)
-	for i in range(cell_widths_temp.size()):
-		if header_group.get_child(i).visible:
-			sizeVec.x += cell_widths_temp[i]
-	
-	sizeVec.y = header_cell_height
-	return sizeVec
-
-func getSizeVecOfBody() -> Vector2:
-	var sizeVec: Vector2 = Vector2(0,0)
-	for i in range(cell_widths_temp.size()):
-		if header_group.get_child(i).visible:
-			sizeVec.x += cell_widths_temp[i]
-	for i in range(rows.size()):
-		if rows[i].row_visible:
-			sizeVec.y += body_cell_heights_temp[i]
-		
-	return sizeVec
-
-func clear_children() -> void:
-	for child in get_children():
-		if child.name.begins_with("Separator"):
-			continue
-		remove_child(child)
-		#child.queue_free()
-
-func create_headers() -> void:
+func _create_headers() -> void:
 	if !header_group:
 		return
 	var children = header_group.get_children()
@@ -556,7 +575,7 @@ func create_headers() -> void:
 			margin_container.add_child(header)
 			header_group.add_child(margin_container)
 
-func update_headers() -> void:
+func _update_headers() -> void:
 	if !header_group:
 		return
 	var children = header_group.get_children()
@@ -594,6 +613,12 @@ func _on_header_clicked(column: int) -> void:
 	
 	sort_rows_by_column(column, ascending)
 
+func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		deselect_all_rows()
+	elif event.is_action_pressed("ui_text_select_all"):
+		select_all_rows()
+
 func _on_cell_gui_input(event: InputEvent,row_c: RowContent, node: Control) -> void:
 	var row = rows.find(row_c)
 	var column = row_c.nodes.find(node)
@@ -603,6 +628,54 @@ func _on_cell_gui_input(event: InputEvent,row_c: RowContent, node: Control) -> v
 		#print("doubleclick")
 	if event is InputEventMouseButton and event.pressed and event.button_mask & MOUSE_BUTTON_LEFT:
 		emit_signal("cell_clicked",row,column)
+		
+	if event is InputEventMouseButton and event.pressed and event.button_mask & MOUSE_BUTTON_LEFT:
+		if Input.is_key_pressed(KEY_SHIFT):
+			_select_multiple_rows(row)
+		elif Input.is_key_pressed(KEY_CTRL):
+			_toggle_row_selection(row)
+		else:
+			_select_single_row(row)
+
+func _select_single_row(row: int) -> void:
+	deselect_all_rows()
+	selected_rows[row] = true
+	last_selected_row = row
+	current_row = row
+	_update_row_selection_visuals(row)
+
+func _toggle_row_selection(row: int) -> void:
+	selected_rows[row] = not selected_rows[row]
+	last_selected_row = row
+	current_row = row
+	_update_row_selection_visuals(row)
+
+func _select_multiple_rows(row: int) -> void:
+	if last_selected_row == -1:
+		_select_single_row(row)
+		return
+	
+	var start = min(last_selected_row, row)
+	var end = max(last_selected_row, row)
+	
+	for i in range(start, end + 1):
+		selected_rows[i] = true
+		_update_row_selection_visuals(i)
+	
+	current_row = row
+
+func _update_row_selection_visuals(row: int) -> void:
+	var color: Color = Color(1, 1, 1) # Default color (white)
+	if selected_rows[row]:
+		color = Color(0.5, 0.5, 1) # Selected color (light blue)
+
+	for node in rows[row].nodes:
+		if node is Label:
+			node.modulate = color
+		elif node is LineEdit:
+			node.modulate = color
+		elif node is Button:
+			node.modulate = color
 
 func _edit_cell(row:int, column:int) -> void:
 	var cell = get_cell(row,column)
@@ -660,20 +733,27 @@ func _create_margin_container(node: Control, row_index: int, col_index:int) -> M
 	
 	return margin_parent
 
-# Function to sort rows based on a specific column
-#func sort_rows_by_column(column: int, ascending: bool) -> void:
-	#if not table_util.check_column_input(column, columns - 1):
-		#return
-	#
-	#var sorted_rows = rows.duplicate()
-	#
-	#sorted_rows.sort_custom(Sorter.new(column, ascending))
-	#
-	#rows.clear()
-	#rows = sorted_rows
-	#
-	#update_layout()
-	#emit_signal("column_sort_requested", column, ascending)
+func _sort_thread_function(args: Array) -> void:
+	var column = args[0]
+	var ascending = args[1]
+	
+	var sorted_rows = rows.duplicate()
+	
+	var sorter = Sorter.new(column, ascending)
+	sorted_rows.sort_custom(sorter._sort)
+	
+	#var callable = Callable(self, "sorting_complete").bind(sorted_rows)
+	call_deferred("emit_signal", "sorting_complete",sorted_rows)
+
+func _on_sorting_complete(sorted_rows: Array) -> void:
+	rows.clear()
+	rows = sorted_rows
+	
+	sort_thread.wait_to_finish()
+	sort_thread = null
+	
+	_update_layout()
+	emit_signal("column_sort_finished", get_meta("sort_column"), get_meta("sort_ascending"))
 
 class Sorter:
 	var column: int
@@ -694,38 +774,6 @@ class Sorter:
 			return text_a.naturalcasecmp_to(text_b) < 0
 		else:
 			return text_a.naturalcasecmp_to(text_b) > 0
-
-
-func sort_rows_by_column(column: int, ascending: bool) -> void:
-	if not table_util.check_column_input(column, columns - 1):
-		return
-	
-	sort_thread = Thread.new()
-	var callable = Callable(self, "_sort_thread_function").bind([column, ascending])
-	sort_thread.start(callable)
-	
-func _sort_thread_function(args: Array) -> void:
-	var column = args[0]
-	var ascending = args[1]
-	
-	var sorted_rows = rows.duplicate()
-	
-	var sorter = Sorter.new(column, ascending)
-	sorted_rows.sort_custom(sorter._sort)
-	
-	#var callable = Callable(self, "sorting_complete").bind(sorted_rows)
-	call_deferred("emit_signal", "sorting_complete",sorted_rows)
-
-func _on_sorting_complete(sorted_rows: Array) -> void:
-	rows.clear()
-	rows = sorted_rows
-	
-	sort_thread.wait_to_finish()
-	sort_thread = null
-	
-	update_layout()
-	emit_signal("column_sort_requested", get_meta("sort_column"), get_meta("sort_ascending"))
-
 
 class RowContent:
 	var nodes :Array[Control] = []
