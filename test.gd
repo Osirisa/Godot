@@ -6,7 +6,7 @@ var table: TableNode = %"Table Node"
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	
-	for i in 2:
+	for i in 750:
 		var label = Label.new()
 		var button = Button.new()
 		var label2 = Label.new()
@@ -18,7 +18,7 @@ func _ready():
 		label.text = "test: " + str(i)
 		label2.text = "going strong"
 		
-		button.text = "press me " + str(i)
+		button.text = "press me " + str(randi())
 		cb.text = "combobox?"
 		
 		table.add_row([label,button,line_edit,label2,cb])
@@ -32,6 +32,7 @@ func _ready():
 	
 	table.add_header("add header Test",150)
 	table.add_header("add header Test",102)
+	
 	
 	#table.remove_row(1)
 	

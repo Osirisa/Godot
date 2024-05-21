@@ -11,6 +11,12 @@ signal cell_clicked(row:int, column:int)
 ##Return:	Row:int, Column:int
 signal cell_edited(row:int,column:int)
 
+##Signal when a column sorting was requested
+##Return:	Column:int, Ascending / Descending (true / false)
+signal column_sort_requested(column: int, ascending: bool)	#TBD: swap out for enum? instead of bool
+
+signal sorting_complete(sorted_rows)
+
 ##The header Titles
 @export var headers: Array = []: 
 	set(value): 
@@ -83,6 +89,8 @@ signal cell_edited(row:int,column:int)
 #var do_once:= true
 ##-------------------------------------------
 
+const table_util = preload("res://addons/osirisas_ui_extension/table_node/table_utility.gd")
+
 var columns: int
 
 var rows :Array[RowContent]= []
@@ -106,8 +114,7 @@ var body_group: Control = Control.new()
 var panel_header: Panel = Panel.new()
 var panel_body: Panel = Panel.new()
 
-const table_util = preload("res://addons/osirisas_ui_extension/table_node/table_utility.gd")
-
+var sort_thread: Thread = null
 
 func _enter_tree():
 	pass # Replace with function body.
@@ -116,6 +123,8 @@ func _init():
 	pass
 	
 func _ready():
+	connect("sorting_complete",Callable(self, "_on_sorting_complete"))
+	
 	init_Table()
 	init_v_separators()
 	init_h_separators()
@@ -142,7 +151,7 @@ func add_row(data: Array[Control] = [], clip_text:bool = true, height: float = s
 			node = Label.new()
 			node.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		
-		var margin_parent = _create_margin_container(node, i, rows.size() - 1)
+		var margin_parent = _create_margin_container(node, rows.size() - 1, i)
 		
 		if  node is LineEdit:
 			#print(child.get_minimum_size())
@@ -165,6 +174,8 @@ func add_row(data: Array[Control] = [], clip_text:bool = true, height: float = s
 	init_h_separators() # Updates the separators for the new row
 	update_layout()
 
+#TBD:: insert_row(title,pos)
+
 func add_header(title:String, cell_width := standard_cell_width):
 	
 	cell_widths.append(cell_width)
@@ -180,7 +191,7 @@ func add_header(title:String, cell_width := standard_cell_width):
 		standard_label = Label.new()
 		standard_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		
-		margin_parent = _create_margin_container(standard_label, columns - 1, i)
+		margin_parent = _create_margin_container(standard_label, i, columns - 1)
 		
 		rows[i].nodes.append(standard_label)
 		
@@ -195,6 +206,9 @@ func add_header(title:String, cell_width := standard_cell_width):
 	
 	init_v_separators() # Updates the separators for the new row
 	update_layout()
+
+#TBD:: insert_header(title,column_pos)
+#TBD:: remove_header(column_pos)
 
 func clear() -> void:
 	for row in rows:
@@ -248,13 +262,6 @@ func set_cell(node:Control,row:int, column:int, remain_clip_setting:bool = true)
 		else:
 			node.clip_text = old_child.clip_text
 	
-	#margin_parent.disconnect("gui_input")
-	
-	#if debug:
-		#if do_once:
-			#print(margin_parent.get_signal_connection_list("gui_input"))
-			#do_once = false
-			
 	var callable_old = Callable(self,"_on_cell_gui_input").bind(rows[row], old_child)
 	var callable_new = Callable(self,"_on_cell_gui_input").bind(rows[row], node)
 	
@@ -321,6 +328,11 @@ func get_visibility_row(row:int) -> bool:
 
 func get_visibility_column(column:int) -> bool:
 	return column_visiblity[column]
+
+#TBD:: set_editable_status_cell -> void:
+#TBD:: get_editable_status_cell -> bool:
+
+#TBD:: sort_column -> void: ? public sort??
 
 #---------------------------Private methods-------------------------------------
 func init_Table() -> void:
@@ -537,6 +549,10 @@ func create_headers() -> void:
 			margin_container.custom_minimum_size = Vector2(cell_widths_temp[i], header_cell_height)
 			margin_container.position = Vector2(get_x_offset(i), 0)
 			header.clip_text = true
+			
+			var callable = Callable(self, "_on_header_clicked").bind(i)
+			header.connect("pressed", callable)
+			
 			margin_container.add_child(header)
 			header_group.add_child(margin_container)
 
@@ -567,6 +583,16 @@ func _get_minimum_size() -> Vector2:
 	return min_size
 
 #------------------------------------SLOTS------------------------------------#
+func _on_header_clicked(column: int) -> void:
+	# Toggle sorting direction (ascending/descending)
+	var ascending = true
+	if has_meta("sort_column") and get_meta("sort_column") == column:
+		ascending = not get_meta("sort_ascending")
+	
+	set_meta("sort_column", column)
+	set_meta("sort_ascending", ascending)
+	
+	sort_rows_by_column(column, ascending)
 
 func _on_cell_gui_input(event: InputEvent,row_c: RowContent, node: Control) -> void:
 	var row = rows.find(row_c)
@@ -585,37 +611,46 @@ func _edit_cell(row:int, column:int) -> void:
 		
 		line_edit.clip_contents = cell.clip_text
 		line_edit.alignment = cell.horizontal_alignment
+		
+		var original_text = cell.text
 		line_edit.text = cell.text
 		line_edit.select_all()
 		
-		var callable = Callable(self,"_on_text_entered").bind(row,column,line_edit)
-		line_edit.connect("text_submitted",callable)
+		var callable_enter = Callable(self,"_on_edit_text_entered").bind(row, column, line_edit)
+		line_edit.connect("text_submitted", callable_enter)
 		
-		var callable_2 = Callable(self,"_on_text_focus_lost").bind(row,column,line_edit)
-		line_edit.connect("focus_exited",callable_2)
+		var callable_cancel = Callable(self,"_on_edit_input_event").bind(row, column, original_text, line_edit)
+		line_edit.connect("gui_input", callable_cancel)
+		
+		var callable_move_on = Callable(self,"_on_edit_text_focus_lost").bind(row, column, line_edit)
+		line_edit.connect("focus_exited", callable_move_on)
 		
 		set_cell(line_edit,row,column)
 		line_edit.grab_focus()
 
-func _on_text_entered(new_text:String, row:int, column:int, line_edit:LineEdit) -> void:
+func _on_edit_text_entered(new_text:String, row:int, column:int, line_edit:LineEdit) -> void:
 	line_edit.set_block_signals(true)
+	_commit_text(line_edit,line_edit.text, row, column)
+
+func _on_edit_text_focus_lost(row:int, column:int, line_edit:LineEdit) -> void:
+	line_edit.set_block_signals(true)
+	_commit_text(line_edit,line_edit.text, row, column)
+
+func _on_edit_input_event(event:InputEvent, row:int, column:int, original_text:String, line_edit:LineEdit) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		line_edit.set_block_signals(true)
+		_commit_text(line_edit, original_text, row, column)
+
+func _commit_text(line_edit:LineEdit, new_text:String, row:int, column:int) -> void:	
 	var label := Label.new()
 	label.text = new_text
 	label.clip_text = line_edit.clip_contents
 	label.horizontal_alignment = line_edit.alignment
-	set_cell(label,row,column)
-	emit_signal("cell_edited")
-
-func _on_text_focus_lost(row:int, column:int, line_edit:LineEdit) -> void:
-	var label := Label.new()
-	label.text = line_edit.text
-	label.clip_text = line_edit.clip_contents
-	label.horizontal_alignment = line_edit.alignment
 	
-	set_cell(label,row,column)
+	set_cell(label, row, column)
 	emit_signal("cell_edited")
 
-func _create_margin_container(node: Control, col_index: int, row_index: int) -> MarginContainer:
+func _create_margin_container(node: Control, row_index: int, col_index:int) -> MarginContainer:
 	var margin_parent = MarginContainer.new()
 	margin_parent.add_child(node)
 	margin_parent.custom_minimum_size = Vector2(cell_widths_temp[col_index], body_cell_heights_temp[row_index])
@@ -624,6 +659,73 @@ func _create_margin_container(node: Control, col_index: int, row_index: int) -> 
 	margin_parent.connect("gui_input", callable)
 	
 	return margin_parent
+
+# Function to sort rows based on a specific column
+#func sort_rows_by_column(column: int, ascending: bool) -> void:
+	#if not table_util.check_column_input(column, columns - 1):
+		#return
+	#
+	#var sorted_rows = rows.duplicate()
+	#
+	#sorted_rows.sort_custom(Sorter.new(column, ascending))
+	#
+	#rows.clear()
+	#rows = sorted_rows
+	#
+	#update_layout()
+	#emit_signal("column_sort_requested", column, ascending)
+
+class Sorter:
+	var column: int
+	var ascending: bool
+	
+	func _init(column: int, ascending: bool):
+		self.column = column
+		self.ascending = ascending
+	
+	func _sort(a, b):
+		var node_a = a.nodes[column]
+		var node_b = b.nodes[column]
+		
+		var text_a:String = node_a.text if node_a.text != null else ""
+		var text_b:String = node_b.text if node_b.text != null else ""
+		
+		if ascending:
+			return text_a.naturalcasecmp_to(text_b) < 0
+		else:
+			return text_a.naturalcasecmp_to(text_b) > 0
+
+
+func sort_rows_by_column(column: int, ascending: bool) -> void:
+	if not table_util.check_column_input(column, columns - 1):
+		return
+	
+	sort_thread = Thread.new()
+	var callable = Callable(self, "_sort_thread_function").bind([column, ascending])
+	sort_thread.start(callable)
+	
+func _sort_thread_function(args: Array) -> void:
+	var column = args[0]
+	var ascending = args[1]
+	
+	var sorted_rows = rows.duplicate()
+	
+	var sorter = Sorter.new(column, ascending)
+	sorted_rows.sort_custom(sorter._sort)
+	
+	#var callable = Callable(self, "sorting_complete").bind(sorted_rows)
+	call_deferred("emit_signal", "sorting_complete",sorted_rows)
+
+func _on_sorting_complete(sorted_rows: Array) -> void:
+	rows.clear()
+	rows = sorted_rows
+	
+	sort_thread.wait_to_finish()
+	sort_thread = null
+	
+	update_layout()
+	emit_signal("column_sort_requested", get_meta("sort_column"), get_meta("sort_ascending"))
+
 
 class RowContent:
 	var nodes :Array[Control] = []
