@@ -84,6 +84,9 @@ signal sorting_complete(sorted_rows)
 ##If not defined, it uses the theme applied to the Tablewidget or its parents
 @export var body_theme: Theme
 
+##if a row gets selected, it uses a other theme applied. (if not defined...)
+@export var selection_theme: Theme
+
 ##-------------------------------------------
 #@export var debug := true
 #
@@ -118,10 +121,9 @@ var panel_body: Panel = Panel.new()
 var sort_thread: Thread = null
 
 #selections
-var selected_rows: Array[bool] = []
-var last_selected_row: int = -1
-var current_row: int = -1
-
+var selected_rows: Array[RowContent] = []
+var current_row	:RowContent = null
+var last_selected_row := -1
 
 func _enter_tree():
 	pass # Replace with function body.
@@ -150,7 +152,6 @@ func add_row(data: Array[Control] = [], clip_text:bool = true, height: float = s
 	rows.append(new_row)
 	
 	new_row.row_visible = true
-	selected_rows.append(false) # Add a new entry for the new row
 	
 	for i in columns:
 		if i < data.size():
@@ -352,14 +353,15 @@ func sort_rows_by_column(column: int, ascending: bool) -> void:
 #TBD:: select rows
 
 func deselect_all_rows() -> void:
-	for i in range(selected_rows.size()):
-		selected_rows[i] = false
-		_update_row_selection_visuals(i)
-		
+	selected_rows.clear()
+	for row in rows:
+		_update_row_selection_visuals(row)
+
 func select_all_rows() -> void:
-	for i in range(selected_rows.size()):
-		selected_rows[i] = true
-		_update_row_selection_visuals(i)
+	for i in range(rows.size()):
+		if selected_rows.find(rows[i]) == -1:
+			selected_rows.append(rows[i])
+			_update_row_selection_visuals(rows[i])
 
 #TBD:: get selection
 
@@ -644,16 +646,19 @@ func _on_cell_gui_input(event: InputEvent,row_c: RowContent, node: Control) -> v
 
 func _select_single_row(row: int) -> void:
 	deselect_all_rows()
-	selected_rows[row] = true
-	last_selected_row = row
-	current_row = row
-	_update_row_selection_visuals(row)
+	selected_rows.append(rows[row])
+	current_row = rows[row]
+	_update_row_selection_visuals(rows[row])
 
 func _toggle_row_selection(row: int) -> void:
-	selected_rows[row] = not selected_rows[row]
-	last_selected_row = row
-	current_row = row
-	_update_row_selection_visuals(row)
+	var array_pos = selected_rows.find(rows[row])
+	if array_pos == -1:
+		selected_rows.append(rows[row])
+	else:
+		selected_rows.remove_at(array_pos)
+	
+	current_row = rows[row]
+	_update_row_selection_visuals(rows[row])
 
 func _select_multiple_rows(row: int) -> void:
 	if last_selected_row == -1:
@@ -664,23 +669,26 @@ func _select_multiple_rows(row: int) -> void:
 	var end = max(last_selected_row, row)
 	
 	for i in range(start, end + 1):
-		selected_rows[i] = true
-		_update_row_selection_visuals(i)
+		if selected_rows.find(rows[i]) == -1:
+			selected_rows.append(rows[i])
+			_update_row_selection_visuals(rows[i])
 	
-	current_row = row
+	current_row = rows[row]
 
-func _update_row_selection_visuals(row: int) -> void:
-	var color: Color = Color(1, 1, 1) # Default color (white)
-	if selected_rows[row]:
-		color = Color(0.5, 0.5, 1) # Selected color (light blue)
-
-	for node in rows[row].nodes:
-		if node is Label:
-			node.modulate = color
-		elif node is LineEdit:
-			node.modulate = color
-		elif node is Button:
-			node.modulate = color
+func _update_row_selection_visuals(row: RowContent) -> void:
+	if selected_rows.find(row) >= 0:
+		for node in row.nodes:
+			if selection_theme:
+				node.get_parent().theme = selection_theme
+				node.theme = selection_theme
+	else:
+		for node in row.nodes:
+			if body_theme:
+				node.get_parent().theme = body_theme
+				node.theme = body_theme
+			else:
+				node.theme.clear()
+				node.get_parent().theme = body_theme
 
 func _edit_cell(row:int, column:int) -> void:
 	var cell = get_cell(row,column)
@@ -729,6 +737,9 @@ func _commit_text(line_edit:LineEdit, new_text:String, row:int, column:int) -> v
 	emit_signal("cell_edited")
 
 func _create_margin_container(node: Control, row_index: int, col_index:int) -> MarginContainer:
+	
+	
+	
 	var margin_parent = MarginContainer.new()
 	margin_parent.add_child(node)
 	margin_parent.custom_minimum_size = Vector2(cell_widths_temp[col_index], body_cell_heights_temp[row_index])
@@ -736,6 +747,9 @@ func _create_margin_container(node: Control, row_index: int, col_index:int) -> M
 	var callable = Callable(self, "_on_cell_gui_input").bind(rows[row_index], node)
 	margin_parent.connect("gui_input", callable)
 	
+	if body_theme:
+		margin_parent.theme = body_theme
+		
 	return margin_parent
 
 func _sort_thread_function(args: Array) -> void:
