@@ -52,8 +52,7 @@ signal sorting_complete(sorted_rows)
 		cell_widths = value
 		
 		cell_widths_temp.clear()
-		for width in cell_widths:
-			cell_widths_temp.append(width)
+		cell_widths_temp = cell_widths.duplicate()
 		
 		_update_layout()
 
@@ -498,7 +497,7 @@ func _layout_rows() -> void:
 						margin_parent.custom_minimum_size = Vector2(cell_widths_temp[i],body_cell_heights_temp[j])
 						margin_parent.minimum_size_changed.emit()
 						margin_parent.set_size(Vector2(cell_widths_temp[i],body_cell_heights_temp[j]))
-				
+			
 			yOffset += body_cell_heights_temp[j]
 
 func _update_panels() -> void:
