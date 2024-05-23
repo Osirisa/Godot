@@ -175,7 +175,6 @@ func add_row(data: Array[Control] = [], clip_text:bool = true, height: float = s
 			margin_parent.theme = body_theme
 		
 		body_group.add_child(margin_parent)
-		
 		new_row.nodes.append(node)
 		new_row.editable.append(true)
 	
@@ -193,7 +192,6 @@ func add_header(title:String, cell_width := standard_cell_width):
 	columns = headers.size()
 	var margin_parent: MarginContainer
 	var standard_label: Label
-	
 	
 	for i in range(rows.size()):
 		standard_label = Label.new()
@@ -296,11 +294,19 @@ func remove_row(row:int) -> void:
 	if not table_util.check_row_input(row, rows.size() - 1):
 		return
 	
+	selected_rows.erase(rows[row])
+	
+	if last_selected_row == row:
+		last_selected_row = -1
+	
+	if current_row == rows[row]:
+		current_row = null
+	
 	for node: Control in rows[row].nodes:
 		node.queue_free()
 	
-	
 	rows.remove_at(row)
+	
 	_init_h_separators()
 	_update_layout()
 
@@ -362,8 +368,15 @@ func select_all_rows() -> void:
 			selected_rows.append(rows[i])
 			_update_row_selection_visuals(rows[i])
 
-#TBD:: get selection
+func get_current_row() -> int:
+	return rows.find(current_row)
 
+func get_selection_positions() -> Array[int]:
+	var positions :Array[int]= []
+	for row in selected_rows:
+		positions.append(rows.find(row))
+	positions.sort()
+	return positions
 
 func getSizeVecOfHeader() -> Vector2:
 	var sizeVec: Vector2 = Vector2(0,0)
@@ -619,6 +632,7 @@ func _on_header_clicked(column: int) -> void:
 	
 	sort_rows_by_column(column, ascending)
 
+
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		deselect_all_rows()
@@ -647,12 +661,14 @@ func _select_single_row(row: int) -> void:
 	deselect_all_rows()
 	selected_rows.append(rows[row])
 	current_row = rows[row]
+	last_selected_row = row
 	_update_row_selection_visuals(rows[row])
 
 func _toggle_row_selection(row: int) -> void:
 	var array_pos = selected_rows.find(rows[row])
 	if array_pos == -1:
 		selected_rows.append(rows[row])
+		last_selected_row = row
 	else:
 		selected_rows.remove_at(array_pos)
 	
@@ -771,6 +787,7 @@ func _on_sorting_complete(sorted_rows: Array) -> void:
 	sort_thread = null
 	
 	_update_layout()
+	last_selected_row = get_current_row()
 	emit_signal("column_sort_finished", get_meta("sort_column"), get_meta("sort_ascending"))
 
 class Sorter:

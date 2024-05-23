@@ -2,6 +2,8 @@ extends Control
 
 @onready
 var table: TableNode = %"Table Node"
+@onready
+var input: LineEdit = %debug_LE
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -22,23 +24,7 @@ func _ready():
 		cb.text = "combobox?"
 		
 		table.add_row([label,button,line_edit,label2,cb])
-	
-	#table.set_cell(Button.new(),0,0)
-	
-	#table.visibility_column(3,false)
-	#table.visibility_row(1,false)
-	
-	#var test = table.get_cell(0,0)
-	
-	table.add_header("add header Test",150)
-	table.add_header("add header Test",102)
-	
-	
-	#table.remove_row(1)
-	
-	#table.visibility_row(1, false)
-	
-	#print(test)
+
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta):
@@ -50,6 +36,38 @@ func _on_table_widget_cell_clicked(row, column):
 	
 
 
-func _on_button_pressed():
-	#table.visibility_column(1,true)
-	table.add_header("add header Test",50)
+func _on_button_pressed():	
+	print(table.get_selection_positions())
+
+
+func _on_debug_add_row_pressed():
+	table.add_row()
+
+func _on_debug_add_column_pressed():
+	table.add_header("test")
+
+
+func _on_debug_hide_row_pressed():
+	if input:
+		var row = input.text.to_int()
+		if table.get_visibility_row(row):
+			table.visibility_row(row,false)
+		else:
+			table.visibility_row(row,true)
+
+
+func _on_debug_hide_column_pressed():
+	if input:
+		var column = input.text.to_int()
+		if table.get_visibility_column(column):
+			table.visibility_column(column,false)
+		else:
+			table.visibility_column(column,true)
+
+func _on_debug_remove_row_pressed():
+	if input:
+		table.remove_row(input.text.to_int())
+
+
+func _on_debug_get_curr_row_pressed():
+	print(table.get_current_row())
