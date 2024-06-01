@@ -8,12 +8,15 @@ var input: LineEdit = %debug_LE
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	
-	for i in 30:
+	var arr := []
+	
+	for i in 3000:
+		
 		var label = Label.new()
 		var button = Button.new()
 		var label2 = Label.new()
 		var line_edit = LineEdit.new()
-		var cb = MenuButton.new()
+		#var cb = MenuButton.new()
 		
 		line_edit.clip_contents = true
 		
@@ -21,9 +24,12 @@ func _ready():
 		label2.text = "going strong"
 		
 		button.text = "press me " + str(randi())
-		cb.text = "combobox?"
+		#cb.text = "combobox?"
 		
-		table.add_row([label,button,line_edit,label2,cb])
+		#arr.append([label,button,line_edit,label2,cb])
+		arr.append([label,button,line_edit,label2])
+	
+	table.add_rows_batch(arr)
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -71,3 +77,17 @@ func _on_debug_remove_row_pressed():
 
 func _on_debug_get_curr_row_pressed():
 	print(table.get_current_row())
+
+
+func _on_debug_set_row_heigth_pressed():
+	if input:
+		table.set_row_height(input.text.to_int(),40)
+	
+	#print(table.get_column_count())
+	#print(table.get_row_count())
+	#print(table.has_selection())
+
+
+func _on_debug_set_col_width_pressed():
+	if input:
+		table.set_column_width(input.text.to_int(),40)

@@ -22,8 +22,9 @@ signal sorting_complete(sorted_rows)
 @export var headers: Array = []: 
 	set(value): 
 		columns = value.size()
-		if(value.size() > headers.size()):
-			value[headers.size()] = "header"+ str(headers.size())
+		if Engine.is_editor_hint():
+			if(value.size() > headers.size()):
+				value[headers.size()] = "header"+ str(headers.size())
 		
 		headers = value
 		
@@ -37,6 +38,7 @@ signal sorting_complete(sorted_rows)
 		cell_widths = cell_widths
 		
 		_init_v_separators()
+		_create_headers()
 		_update_layout()
 		notify_property_list_changed()
 
@@ -105,21 +107,21 @@ var body_cell_heights_temp := []
 
 var cell_widths_temp := []
 
-var separator_group : Control = Control.new()
+var separator_group := Control.new()
 var vertical_separators := []
 var horizontal_separators := []
 
-#groups for header and body
-var header_group: Control = Control.new()
-var body_group: Control = Control.new()
+# Groups for header and body
+var header_group := Control.new()
+var body_group := Control.new()
 
-#panels
-var panel_header: Panel = Panel.new()
-var panel_body: Panel = Panel.new()
+# Panels for Color etc.
+var panel_header := Panel.new()
+var panel_body := Panel.new()
 
 var sort_thread: Thread = null
 
-#selections
+# Selections
 var selected_rows: Array[RowContent] = []
 var current_row	:RowContent = null
 var last_selected_row := -1
@@ -183,6 +185,54 @@ func add_row(data: Array[Control] = [], clip_text:bool = true, height: float = s
 
 #TBD:: insert_row(title,pos)
 
+#TBD:: do that better :D
+##Takes in following template: [ [node:Control],...] as data use this for populating the table with data
+func add_rows_batch(data:Array, clip_text:bool = true, height: float = standard_body_cell_height) -> void:
+	for d in data:
+		
+		var new_row := RowContent.new()
+		var node: Control
+		
+		body_cell_heights.append(height)
+		body_cell_heights_temp.append(height)
+		rows.append(new_row)
+		
+		new_row.row_visible = true
+		
+		for i in columns:
+			if i < d.size():
+				if d[i] is Control:
+					node = d[i]
+				else :
+					push_error(d[i] + " is not a Control - node or child of the Control - node")
+					node = Label.new()
+					node.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			else:
+				node = Label.new()
+				node.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			
+			var margin_parent = _create_margin_container(node, rows.size() - 1, i)
+			
+			if  node is LineEdit:
+				#print(child.get_minimum_size())
+				pass
+			elif node is Label or Button:
+				if clip_text:
+					node.clip_text = true
+			
+			node.mouse_filter = Control.MOUSE_FILTER_PASS
+			
+			if body_theme:
+				node.theme = body_theme
+				margin_parent.theme = body_theme
+			
+			body_group.add_child(margin_parent)
+			new_row.nodes.append(node)
+			new_row.editable.append(true)
+	
+	_init_h_separators() # Updates the separators for the new row
+	_update_layout()
+
 func add_header(title:String, cell_width := standard_cell_width):
 	
 	cell_widths.append(cell_width)
@@ -211,6 +261,7 @@ func add_header(title:String, cell_width := standard_cell_width):
 		body_group.add_child(margin_parent)
 	
 	_init_v_separators() # Updates the separators for the new row
+	_create_headers()
 	_update_layout()
 
 #TBD:: insert_header(title,column_pos)
@@ -283,6 +334,20 @@ func set_cell(node:Control,row:int, column:int, remain_clip_setting:bool = true)
 	margin_parent.add_child(node)
 	_update_layout()
 
+func set_row_height(row:int, height:float) -> void:
+	if not table_util.check_row_input(row, rows.size() - 1):
+		return
+	
+	body_cell_heights_temp[row] = height
+	_update_layout()
+
+func set_column_width(column:int, width:float) -> void:
+	if not table_util.check_column_input(column, columns - 1):
+		return 
+	
+	cell_widths_temp[column] = width
+	_update_layout()
+
 func set_row(data:Array[Control],row:int) -> void:
 	if not table_util.check_row_input(row, rows.size() - 1):
 		return
@@ -325,22 +390,25 @@ func visibility_column(column:int, visible:bool) -> void:
 		return
 	
 	var children = header_group.get_children()
-	for child: MarginContainer in children:
-		if(child.name.begins_with("Header_")):
-			var index = int(child.name.substr(child.name.length() -1,1))
+	for index in range(children.size()):
 			if(column == index):
-				if child.visible != visible:
+				if children[index].visible != visible:
 					for row in rows:
 						row.nodes[column].visible = visible
-					child.visible = visible
+					children[index].visible = visible
 		
 	column_visiblity[column] = visible
 	_update_layout()
 
 func get_visibility_row(row:int) -> bool:
+	if not table_util.check_row_input(row, rows.size() - 1):
+		return false
+	
 	return rows[row].row_visible
 
 func get_visibility_column(column:int) -> bool:
+	if not table_util.check_column_input(column, columns - 1):
+		return false
 	return column_visiblity[column]
 
 #TBD:: set_editable_status_cell -> void:
@@ -357,19 +425,31 @@ func sort_rows_by_column(column: int, ascending: bool) -> void:
 #TBD:: select row
 #TBD:: select rows
 
-func deselect_all_rows() -> void:
-	selected_rows.clear()
-	for row in rows:
-		_update_row_selection_visuals(row)
-
 func select_all_rows() -> void:
 	for i in range(rows.size()):
 		if selected_rows.find(rows[i]) == -1:
 			selected_rows.append(rows[i])
 			_update_row_selection_visuals(rows[i])
 
+func deselect_all_rows() -> void:
+	selected_rows.clear()
+	for row in rows:
+		_update_row_selection_visuals(row)
+
+func has_selection() -> bool:
+	if selected_rows.size() > 0:
+		return true
+	else:
+		return false
+
 func get_current_row() -> int:
 	return rows.find(current_row)
+
+func get_row_count() -> int:
+	return rows.size()
+
+func get_column_count() -> int:
+	return columns
 
 func get_selection_positions() -> Array[int]:
 	var positions :Array[int]= []
@@ -381,8 +461,11 @@ func get_selection_positions() -> Array[int]:
 func getSizeVecOfHeader() -> Vector2:
 	var sizeVec: Vector2 = Vector2(0,0)
 	for i in range(cell_widths_temp.size()):
-		if header_group.get_child(i).visible:
-			sizeVec.x += cell_widths_temp[i]
+		var children = header_group.get_children()
+		if children.size() > i:
+			var child = children[i]
+			if child.visible:
+				sizeVec.x += cell_widths_temp[i]
 	
 	sizeVec.y = header_cell_height
 	return sizeVec
@@ -390,8 +473,11 @@ func getSizeVecOfHeader() -> Vector2:
 func getSizeVecOfBody() -> Vector2:
 	var sizeVec: Vector2 = Vector2(0,0)
 	for i in range(cell_widths_temp.size()):
-		if header_group.get_child(i).visible:
-			sizeVec.x += cell_widths_temp[i]
+		var children = header_group.get_children()
+		if children.size() > i:
+			var child = children[i]
+			if child.visible:
+				sizeVec.x += cell_widths_temp[i]
 	for i in range(rows.size()):
 		if rows[i].row_visible:
 			sizeVec.y += body_cell_heights_temp[i]
@@ -415,7 +501,7 @@ func init_Table() -> void:
 	header_group.name = "HeaderGroup"
 	if header_theme:
 		header_group.theme = header_theme
-	add_child(header_group)	
+	add_child(header_group)
 	
 	body_group.name = "BodyGroup"
 	if body_theme:
@@ -423,7 +509,8 @@ func init_Table() -> void:
 	add_child(body_group)
 	
 	separator_group.name = "SeparatorGroup"
-	add_child(separator_group)	
+	add_child(separator_group)
+
 
 
 func _init_v_separators() -> void:
@@ -480,35 +567,30 @@ func _on_separator_input(event, index, type) -> void:
 		_update_layout() 
 
 func _update_layout() -> void:
-	_create_headers()  # Function to create header labels
 	_update_headers()
-	_layout_rows()     # Lays out the rows
+	
+	call_deferred("_layout_rows")     # Lays out the rows
 	
 	# Lay out the seperators
 	_update_v_separators()
 	_update_h_separators()
 	
-	_update_panels()
+	call_deferred("_update_panels")
 	
 	# For all Containers as parents to update
 	custom_minimum_size = Vector2(getSizeVecOfHeader().x, getSizeVecOfHeader().y + getSizeVecOfBody().y)
 	minimum_size_changed.emit()
-	
-	# Redraws the whole widget for all changes to take immediate effect
-	queue_redraw()
 
 func _layout_rows() -> void:
 	var yOffset = header_cell_height
 	for j in range(rows.size()):
 		if rows[j].row_visible:
 			for i in range(rows[j].nodes.size()):
-				
 				var margin_parent:MarginContainer = rows[j].nodes[i].get_parent()
 				if margin_parent:
 					if margin_parent.visible:
 						margin_parent.position = Vector2(get_x_offset(i), yOffset)
 						margin_parent.custom_minimum_size = Vector2(cell_widths_temp[i],body_cell_heights_temp[j])
-						margin_parent.minimum_size_changed.emit()
 						margin_parent.set_size(Vector2(cell_widths_temp[i],body_cell_heights_temp[j]))
 			
 			yOffset += body_cell_heights_temp[j]
@@ -541,10 +623,10 @@ func _update_v_separators() -> void:
 		else:
 			vertical_separators[i].visible = false
 
-func _update_h_separators() -> void:	
+func _update_h_separators() -> void:
 	var pos = 0.0
 	
-	#needs a litle offset for it to look good here: -2px
+	#needs a litle offset for it to look good | here: -2px
 	var y_offset = getSizeVecOfHeader().y - 2
 	
 	for i in range (horizontal_separators.size()):
@@ -560,29 +642,24 @@ func get_total_height() -> float:
 	var total_body_height = getSizeVecOfBody().y
 	return total_body_height + header_cell_height
 
-# Optionally, you might want to trigger layout updates manually or under specific conditions
-func _notification(what):
-	if what == NOTIFICATION_VISIBILITY_CHANGED:
-		_update_layout()  # Update layout when the widget's visibility changes
-
 func _create_headers() -> void:
 	if !header_group:
 		return
+	
 	var children = header_group.get_children()
-	var createdIndexes := []
+
+	# Clear children out of the header group
 	for child in children:
-		if(child.name.begins_with("Header_")):
-			createdIndexes.append(int(child.name.substr(child.name.length() -1,1)))
+		header_group.remove_child(child)
+		child.queue_free()
+	
 	for i in range(headers.size()):
-		if createdIndexes.has(i):
-			continue
 		if headers[i]:
 			var margin_container = MarginContainer.new()
 			var header = Button.new()
 			
 			column_visiblity.append(true)
 			
-			margin_container.name = "Header_" + str(i)
 			header.text = headers[i]
 			margin_container.custom_minimum_size = Vector2(cell_widths_temp[i], header_cell_height)
 			margin_container.position = Vector2(get_x_offset(i), 0)
@@ -598,18 +675,11 @@ func _update_headers() -> void:
 	if !header_group:
 		return
 	var children = header_group.get_children()
-	for child in children:
-		if(child.name.begins_with("Header_")):
-			var index = int(child.name.substr(child.name.length() -1, 1))
-			if(headers.size() > index):
-				child.get_child(0).text = headers[index]
-				child.custom_minimum_size = Vector2(cell_widths_temp[index], header_cell_height)
-				child.minimum_size_changed
-				child.set_size(Vector2(cell_widths_temp[index], header_cell_height))
-				child.position = Vector2(get_x_offset(index), 0)
-				
-			else :
-				child.queue_free()
+	for index in range(children.size()):
+		
+		children[index].custom_minimum_size = Vector2(cell_widths_temp[index], header_cell_height)
+		children[index].set_size(Vector2(cell_widths_temp[index], header_cell_height))
+		children[index].position = Vector2(get_x_offset(index), 0)
 
 func _get_minimum_size() -> Vector2:
 	# Calculate the minimum width based on the number of columns and cell size
@@ -752,9 +822,6 @@ func _commit_text(line_edit:LineEdit, new_text:String, row:int, column:int) -> v
 	emit_signal("cell_edited")
 
 func _create_margin_container(node: Control, row_index: int, col_index:int) -> MarginContainer:
-	
-	
-	
 	var margin_parent = MarginContainer.new()
 	margin_parent.add_child(node)
 	margin_parent.custom_minimum_size = Vector2(cell_widths_temp[col_index], body_cell_heights_temp[row_index])

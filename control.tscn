@@ -75,20 +75,20 @@ theme_override_constants/margin_top = 5
 theme_override_constants/margin_right = 5
 theme_override_constants/margin_bottom = 5
 
-[node name="ScrollContainer2" type="ScrollContainer" parent="HBoxContainer/MarginContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="HBoxContainer/MarginContainer"]
 layout_mode = 2
 
-[node name="Table Node" type="Control" parent="HBoxContainer/MarginContainer/ScrollContainer2"]
+[node name="Table Node" type="Control" parent="HBoxContainer/MarginContainer/ScrollContainer"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(610, 25)
+custom_minimum_size = Vector2(2080, 25)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme = SubResource("Theme_yqqdk")
 script = ExtResource("2_sux1g")
-headers = ["header0", "header1", "header2", "header3", "header4", "header5"]
+headers = ["header0", "header1", "header2", "header3", "header4", "header5", "header6", "header7", "header8", "header9", "header10", "header11", "header12", "header13", "header14", "header15"]
 header_cell_height = 25.0
-cell_widths = [80.0, 150.0, 100.0, 80.0, 120.0, 80.0]
+cell_widths = [80.0, 150.0, 100.0, 80.0, 120.0, 80.0, 200.0, 70.0, 150.0, 150.0, 150.0, 150.0, 150.0, 150.0, 150.0, 150.0]
 standard_body_cell_height = 30.0
 resizing = true
 min_size = Vector2(50, 30)
@@ -128,11 +128,19 @@ text = "remove_row"
 layout_mode = 2
 text = "get current row"
 
+[node name="debug_set_row_heigth" type="Button" parent="HBoxContainer/VBoxContainer"]
+layout_mode = 2
+text = "set row height"
+
+[node name="debug_set_col_width" type="Button" parent="HBoxContainer/VBoxContainer"]
+layout_mode = 2
+text = "set column width"
+
 [node name="debug_LE" type="LineEdit" parent="HBoxContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 
-[connection signal="cell_clicked" from="HBoxContainer/MarginContainer/ScrollContainer2/Table Node" to="." method="_on_table_widget_cell_clicked"]
+[connection signal="cell_clicked" from="HBoxContainer/MarginContainer/ScrollContainer/Table Node" to="." method="_on_table_widget_cell_clicked"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/debug_get_selection" to="." method="_on_button_pressed"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/debug_add_row" to="." method="_on_debug_add_row_pressed"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/debug_add_column" to="." method="_on_debug_add_column_pressed"]
@@ -140,3 +148,5 @@ layout_mode = 2
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/debug_hide_column" to="." method="_on_debug_hide_column_pressed"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/debug_remove_row" to="." method="_on_debug_remove_row_pressed"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/debug_get_curr_row" to="." method="_on_debug_get_curr_row_pressed"]
+[connection signal="pressed" from="HBoxContainer/VBoxContainer/debug_set_row_heigth" to="." method="_on_debug_set_row_heigth_pressed"]
+[connection signal="pressed" from="HBoxContainer/VBoxContainer/debug_set_col_width" to="." method="_on_debug_set_col_width_pressed"]
