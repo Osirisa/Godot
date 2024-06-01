@@ -24,7 +24,9 @@ signal sorting_complete(sorted_rows)
 		columns = value.size()
 		if Engine.is_editor_hint():
 			if(value.size() > headers.size()):
-				value[headers.size()] = "header"+ str(headers.size())
+				var header_text = value[headers.size()]
+				if not header_text:
+					value[headers.size()] = "header"+ str(headers.size())
 		
 		headers = value
 		
@@ -605,8 +607,10 @@ func get_x_offset(col_index:int) -> float:
 	var offset = 0.0
 	
 	for i in range (col_index):
-		if header_group.get_child(i).visible:
-			offset += cell_widths_temp[i]
+		var child = header_group.get_child(i)
+		if child:
+			if child.visible:
+				offset += cell_widths_temp[i]
 	
 	return offset
 
@@ -615,13 +619,16 @@ func _update_v_separators() -> void:
 	var pos = -2.5
 	
 	for i in range(vertical_separators.size()):
-		if header_group.get_child(i).visible:
-			pos += cell_widths_temp[i]
-			vertical_separators[i].position = Vector2(pos, 0)
-			vertical_separators[i].set_size(Vector2(1, get_total_height()))
-			vertical_separators[i].visible = true
-		else:
-			vertical_separators[i].visible = false
+		var child = header_group.get_child(i)
+		if cell_widths_temp.size() > i:
+			if child:
+				if child.visible:
+					pos += cell_widths_temp[i]
+					vertical_separators[i].position = Vector2(pos, 0)
+					vertical_separators[i].set_size(Vector2(1, get_total_height()))
+					vertical_separators[i].visible = true
+				else:
+					vertical_separators[i].visible = false
 
 func _update_h_separators() -> void:
 	var pos = 0.0
@@ -647,7 +654,6 @@ func _create_headers() -> void:
 		return
 	
 	var children = header_group.get_children()
-
 	# Clear children out of the header group
 	for child in children:
 		header_group.remove_child(child)
@@ -676,10 +682,10 @@ func _update_headers() -> void:
 		return
 	var children = header_group.get_children()
 	for index in range(children.size()):
-		
-		children[index].custom_minimum_size = Vector2(cell_widths_temp[index], header_cell_height)
-		children[index].set_size(Vector2(cell_widths_temp[index], header_cell_height))
-		children[index].position = Vector2(get_x_offset(index), 0)
+		if headers.size()>index:
+			children[index].custom_minimum_size = Vector2(cell_widths_temp[index], header_cell_height)
+			children[index].set_size(Vector2(cell_widths_temp[index], header_cell_height))
+			children[index].position = Vector2(get_x_offset(index), 0)
 
 func _get_minimum_size() -> Vector2:
 	# Calculate the minimum width based on the number of columns and cell size
