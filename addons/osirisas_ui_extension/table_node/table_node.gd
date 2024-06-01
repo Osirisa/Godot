@@ -778,8 +778,10 @@ func _update_row_selection_visuals(row: RowContent) -> void:
 				node.get_parent().theme = body_theme
 				node.theme = body_theme
 			else:
-				node.theme.clear()
-				node.get_parent().theme = body_theme
+				if node.theme:
+					node.theme.clear()
+				if node.get_parent().theme:
+					node.get_parent().theme.clear()
 
 func _edit_cell(row:int, column:int) -> void:
 	var cell = get_cell(row,column)
