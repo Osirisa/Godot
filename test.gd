@@ -10,7 +10,7 @@ func _ready():
 	
 	var arr := []
 	
-	for i in 20:
+	for i in 500:
 		
 		var label = Label.new()
 		var button = Button.new()
@@ -21,6 +21,9 @@ func _ready():
 		line_edit.clip_contents = true
 		
 		label.text = "test: " + str(i)
+		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		
 		label2.text = "going strong"
 		
 		button.text = "press me " + str(randi())
@@ -91,3 +94,9 @@ func _on_debug_set_row_heigth_pressed():
 func _on_debug_set_col_width_pressed():
 	if input:
 		table.set_column_width(input.text.to_int(),40)
+
+
+func _on_debug_hide_selection_pressed():
+	for i in table.get_selection_positions():
+		print(i)
+		table.set_visibility_row(i,false)

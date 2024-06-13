@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://bwwfei0xtaahp"]
+[gd_scene load_steps=14 format=3 uid="uid://bwwfei0xtaahp"]
 
 [ext_resource type="Script" path="res://test.gd" id="1_ipyfc"]
 [ext_resource type="Script" path="res://addons/osirisas_ui_extension/table_node/table_node.gd" id="2_sux1g"]
@@ -17,6 +17,8 @@ Button/font_sizes/font_size = 12
 Button/styles/normal = SubResource("StyleBoxFlat_r21kg")
 Panel/styles/panel = SubResource("StyleBoxFlat_0pnpd")
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mq64c"]
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_k6pim"]
 bg_color = Color(0.96352, 0.953996, 0.948951, 1)
 
@@ -25,6 +27,7 @@ Button/colors/font_color = Color(0, 0, 0, 1)
 Button/colors/font_focus_color = Color(0, 0, 0, 1)
 Button/colors/font_hover_color = Color(0.0313726, 0.701961, 0.94902, 1)
 Button/colors/font_hover_pressed_color = Color(0.0313726, 0.701961, 0.94902, 1)
+Button/styles/normal = SubResource("StyleBoxFlat_mq64c")
 Label/colors/font_color = Color(0, 0, 0, 1)
 MarginContainer/constants/margin_left = 3
 MarginContainer/constants/margin_right = 3
@@ -48,6 +51,13 @@ MarginContainer/constants/margin_bottom = 0
 MarginContainer/constants/margin_left = 0
 MarginContainer/constants/margin_right = 0
 MarginContainer/constants/margin_top = 0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bdrjv"]
+content_margin_left = 50.0
+expand_margin_bottom = 2.0
+
+[sub_resource type="Theme" id="Theme_4bcto"]
+Label/styles/normal = SubResource("StyleBoxFlat_bdrjv")
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -80,6 +90,7 @@ layout_mode = 2
 
 [node name="Table Node" type="Control" parent="HBoxContainer/MarginContainer/ScrollContainer"]
 unique_name_in_owner = true
+clip_children = 2
 custom_minimum_size = Vector2(2080, 25)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -140,6 +151,16 @@ text = "set column width"
 unique_name_in_owner = true
 layout_mode = 2
 
+[node name="debug_hide_selection" type="Button" parent="HBoxContainer/VBoxContainer"]
+layout_mode = 2
+text = "hide_selection"
+
+[node name="Label" type="Label" parent="HBoxContainer/VBoxContainer"]
+layout_mode = 2
+theme = SubResource("Theme_4bcto")
+text = "Testeeeeeeeeeee
+"
+
 [connection signal="cell_clicked" from="HBoxContainer/MarginContainer/ScrollContainer/Table Node" to="." method="_on_table_widget_cell_clicked"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/debug_get_selection" to="." method="_on_button_pressed"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/debug_add_row" to="." method="_on_debug_add_row_pressed"]
@@ -150,3 +171,5 @@ layout_mode = 2
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/debug_get_curr_row" to="." method="_on_debug_get_curr_row_pressed"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/debug_set_row_heigth" to="." method="_on_debug_set_row_heigth_pressed"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/debug_set_col_width" to="." method="_on_debug_set_col_width_pressed"]
+[connection signal="pressed" from="HBoxContainer/VBoxContainer/debug_hide_selection" to="." method="_on_debug_hide_selection_pressed"]
+[connection signal="pressed" from="HBoxContainer/VBoxContainer/debug_hide_selection" to="." method="_on_debug_set_col_width_pressed"]
