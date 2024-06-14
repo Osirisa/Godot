@@ -18,6 +18,8 @@ signal column_sort_finished(column: int, ascending: bool)	#TBD: swap out for enu
 ##Signal for stopping the thread and applying the sorted_rows to the normal rows - Array
 signal sorting_complete(sorted_rows)
 
+
+
 ##The header Titles
 @export var headers: Array = []: 
 	set(value): 
