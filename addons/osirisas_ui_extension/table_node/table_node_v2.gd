@@ -52,9 +52,17 @@ enum Sorting {
 @export var min_size := Vector2i(50,20)
 
 @export_category("Special")
-## if the Table is
+@export_group("Culling")
+## Culling makes it that only so many rows are being inserted to maximize performacne (For Large Tables)
 @export var culling := true
+## Count for the maximum simultaneously "Active / inserted" Rows at any Moment 
+@export var max_row_count_active_culling := 100
+
+@export_group("Pagination")
+## Pagination for very large tables
 @export var pagination := false
+## Count of rows per Page
+@export var max_row_count_per_page := 250
 
 @export_category("Themes")
 ##If not defined, it uses the theme applied to the Table or its parents
