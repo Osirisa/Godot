@@ -35,13 +35,49 @@ enum Sorting {
 
 @export_category("Header")
 ## The header titles
-@export var header_titles: Array[String] = []
+@export var header_titles: Array[String] = []:
+	set(value): 
+		if Engine.is_editor_hint():
+			if(value.size() > header_titles.size()):
+				var header_text = value[header_titles.size()]
+				if not header_text:
+					value[header_titles.size()] = "header"+ str(header_titles.size())
+		
+		header_titles = value
+		
+		if(header_titles.size()> column_widths.size()):
+			for i in range(header_titles.size() - column_widths.size()):
+				column_widths.append(standard_cell_dimension.x)
+			
+		elif header_titles.size() < column_widths.size():
+			column_widths = column_widths.slice(0, header_titles.size())
+		
+		column_widths = column_widths
+		
+		#TBD::
+		#_init_v_separators()
+		#_create_headers()
+		#_update_layout()
+		#notify_property_list_changed()
+
 ## The cell height of the header
-@export var header_cell_height := 30
+@export var header_cell_height := 30:
+	set(value):
+		header_cell_height = value
+		#TBD::
+		#_update_layout()
 
 @export_category("Body")
 ## The starting widths for each column
-@export var column_widths: Array[int] = []
+@export var column_widths: Array[int] = []:
+	set(value): 
+		column_widths = value
+		
+		_column_widths_temp.clear()
+		_column_widths_temp = column_widths.duplicate()
+		#TBD::
+		#_update_layout()
+
 ## The standard cell dimension a row / a column gets created with
 @export var standard_cell_dimension := Vector2i(150,25)
 
@@ -88,7 +124,7 @@ var _body_cell_heights := []
 # Array for the changed cell heights (due to resizing)
 var _body_cell_heights_temp := []
 # Array for the changed cell widths (due to resizing)
-var _cell_widths_temp := []
+var _column_widths_temp := []
 
 
 # Array with all the Rows (and its contents) in it
@@ -111,6 +147,8 @@ var _body_group := Control.new()
 var _panel_header := Panel.new()
 var _panel_body := Panel.new()
 
+var _scroll_container := ScrollContainer.new()
+
 # Selections
 var _selected_rows: Array[RowContent] = []
 var _current_row: RowContent = null
@@ -128,7 +166,40 @@ func _init():
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	pass # Replace with function body.
+	
+	#_scroll_container.size_flags_horizontal = Control.SIZE_EXPAND
+	#_scroll_container.size_flags_vertical = Control.SIZE_EXPAND
+	_scroll_container.set_anchors_preset(Control.PRESET_FULL_RECT)
+	
+	_scroll_container.get_v_scroll_bar().connect("value_changed", Callable(self,"_update_visible_rows"))
+	
+	print(_scroll_container.get_v_scroll_bar().get_begin())
+	print(_scroll_container.get_v_scroll_bar().get_end())
+	_scroll_container.add_child(_body_group)
+	
+	_scroll_container.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_ALWAYS
+	_scroll_container.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_ALWAYS
+	
+	#_scroll_container.add_child() #separators?
+	add_child(_scroll_container)
+	
+	#----------------
+	var label := Label.new()
+	label.custom_minimum_size = Vector2(300,300)
+	label.position = Vector2(20,500)
+	label.text = "tests"
+	
+	var label2 := Label.new()
+	label2.custom_minimum_size = Vector2(300,300)
+	label2.position = Vector2(500,20)
+	label2.text = "tests"
+	
+	_body_group.custom_minimum_size = Vector2(550,550)
+	
+	_body_group.add_child(label)
+	_body_group.add_child(label2)
+	
+	_update_visible_rows()
 
 #-----------------------------------------Virtual methods------------------------------------------#
 
@@ -148,7 +219,17 @@ func add_header(title: String, cell_width := standard_cell_dimension.x) -> void:
 
 ## Adds a row to the table directly below the previous row can also called with no data, then it fills the row with empty labels
 func add_row(data: Array[Control] = [], clip_text: bool = true, height: float = standard_cell_dimension.y) -> void:
-	pass
+	
+	_body_cell_heights.append(height)
+	_body_cell_heights_temp.append(height)
+	
+	var row = RowContent.new()
+	row.nodes = data
+	row.row_visible = true
+	
+	_rows.append(row)
+	row_count += 1
+	
 
 #TBD:: insert_row(title,pos)
 
@@ -170,6 +251,10 @@ func remove_row(row: int) -> void:
 
 ## Clears the whole Table
 func clear() -> void:
+	pass
+
+func update_table() -> void:
+	#_layout_rows()
 	pass
 
 #endregion
@@ -284,7 +369,37 @@ func get_size_vec_of_body() -> Vector2i:
 #endregion
 
 #-----------------------------------------Private methods------------------------------------------#
+func _create_headers() -> void:
+	pass
 
+func _update_visible_rows(value = 0) -> void:
+	var delta_y = _scroll_container.get_v_scroll_bar().value
+	print(delta_y)
+
+func _create_margin_container(node: Control, row_index: int, col_index:int) -> MarginContainer:
+	var margin_parent = MarginContainer.new()
+	margin_parent.add_child(node)
+	margin_parent.custom_minimum_size = Vector2(_column_widths_temp[col_index], _body_cell_heights_temp[row_index])
+	
+	var callable = Callable(self, "_on_cell_gui_input").bind(_rows[row_index], node)
+	margin_parent.connect("gui_input", callable)
+	
+	if body_theme:
+		margin_parent.theme = body_theme
+		
+	return margin_parent
+
+func get_x_offset_arr() -> Array:
+	var offsets = []
+	
+	for i in range (column_count):
+		offsets.insert(i,0)
+		
+		for x in range (i):
+			if _column_visiblity[x]:
+				offsets[i] += _column_widths_temp[x]
+	
+	return offsets
 #<--------------------------|Slots|------------------------------>#
 
 #-----------------------------------------Subclasses-----------------------------------------------#

@@ -61,7 +61,7 @@ signal sorting_complete(sorted_rows)
 		cell_widths_temp.clear()
 		cell_widths_temp = cell_widths.duplicate()
 		
-		#_update_layout()
+	#	_update_layout()
 
 ##The standart width of the individual columns to "spawn" with
 @export var standard_cell_width: float = 150:
