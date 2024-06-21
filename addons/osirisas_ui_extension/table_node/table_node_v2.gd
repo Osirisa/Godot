@@ -225,7 +225,15 @@ func _ready():
 #region Header Edit -------------
 
 func add_column(title: String, cell_width := standard_cell_dimension.x) -> void:
-	pass
+	
+	column_widths.append(cell_width)
+	_column_widths_temp.append(cell_width)
+
+	for i in row_count:
+		_rows[i].nodes.append(Label.new())
+	
+	header_titles.append(title)
+
 
 #TBD:: insert_column(title,column_pos)
 #TBD:: remove_column(column_pos)
@@ -390,24 +398,29 @@ func _create_headers() -> void:
 	pass
 
 func _update_visible_rows(value = 0) -> void:
-	var position = _scroll_container.get_v_scroll_bar().ratio
+	var scroll_position = _scroll_container.get_v_scroll_bar().ratio
 	
 	var start
 	var end
 	
 	if culling:
-		start = clampi((row_count * position) - (max_row_count_active_culling / 2),0, row_count)
-		end = clampi((row_count * position) + (max_row_count_active_culling / 2),0, row_count)
+		start = clampi((row_count * scroll_position) - (max_row_count_active_culling / 2),0, row_count)
+		end = clampi((row_count * scroll_position) + (max_row_count_active_culling / 2),0, row_count)
 	else:
 		start = 0
 		end = row_count
 	
 	for i in range(start, end):
 		for x in range(_rows[i].nodes.size()):
-			return
+			var node = _rows[i].nodes[x]
+			
+			node.position = Vector2i(_x_offsets[x],_y_offsets[i])
+			var margin_parent = _create_margin_container(node, i, x)
+			_body_cell_group.add_child(margin_parent)
 
 func _create_margin_container(node: Control, row_index: int, col_index:int) -> MarginContainer:
 	var margin_parent = MarginContainer.new()
+
 	margin_parent.add_child(node)
 	margin_parent.custom_minimum_size = Vector2(_column_widths_temp[col_index], _body_cell_heights_temp[row_index])
 	
@@ -446,6 +459,7 @@ func refresh_y_offsets_arr() -> void:
 				offsets[i] += _body_cell_heights_temp[x]
 	
 	_y_offsets = offsets.duplicate()
+
 #<--------------------------|Slots|------------------------------>#
 
 #-----------------------------------------Subclasses-----------------------------------------------#
