@@ -127,6 +127,9 @@ var _body_cell_heights_temp := []
 var _column_widths_temp := []
 
 
+var _x_offsets := []
+var _y_offsets := []
+
 # Array with all the Rows (and its contents) in it
 var _rows: Array[RowContent] = []
 
@@ -136,11 +139,17 @@ var _column_visiblity: Array[bool] = []
 
 # Seperators
 var _separator_group := Control.new()
+
+var _header_separators := []
 var _vertical_separators := []
+
 var _horizontal_separators := []
 
 # Groups for header and body for cleaner overview
-var _header_group := Control.new()
+var _header_cell_group := Control.new()
+var _body_cell_group := Control.new()
+
+#The main group for all body related things (separators, cells and panel)
 var _body_group := Control.new()
 
 # Panels for Background-Color etc.
@@ -157,6 +166,14 @@ var _last_selected_row := -1
 # Threads
 var _sort_thread: Thread = null
 
+#Special:
+#Culling
+var _visible_culling_rows: Array[RowContent] = []
+
+#Pagination
+var max_pages := 1
+var current_page: int = 0
+ 
 #-----------------------------------------Onready Var----------------------------------------------#
 
 #-----------------------------------------Init and Ready-------------------------------------------#
@@ -175,7 +192,7 @@ func _ready():
 	
 	print(_scroll_container.get_v_scroll_bar().get_begin())
 	print(_scroll_container.get_v_scroll_bar().get_end())
-	_scroll_container.add_child(_body_group)
+	_scroll_container.add_child(_body_cell_group)
 	
 	_scroll_container.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_ALWAYS
 	_scroll_container.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_ALWAYS
@@ -194,10 +211,10 @@ func _ready():
 	label2.position = Vector2(500,20)
 	label2.text = "tests"
 	
-	_body_group.custom_minimum_size = Vector2(550,550)
+	_body_cell_group.custom_minimum_size = Vector2(500,550)
 	
-	_body_group.add_child(label)
-	_body_group.add_child(label2)
+	_body_cell_group.add_child(label)
+	_body_cell_group.add_child(label2)
 	
 	_update_visible_rows()
 
@@ -207,11 +224,11 @@ func _ready():
 
 #region Header Edit -------------
 
-func add_header(title: String, cell_width := standard_cell_dimension.x) -> void:
+func add_column(title: String, cell_width := standard_cell_dimension.x) -> void:
 	pass
 
-#TBD:: insert_header(title,column_pos)
-#TBD:: remove_header(column_pos)
+#TBD:: insert_column(title,column_pos)
+#TBD:: remove_column(column_pos)
 
 #endregion
 
@@ -373,8 +390,21 @@ func _create_headers() -> void:
 	pass
 
 func _update_visible_rows(value = 0) -> void:
-	var delta_y = _scroll_container.get_v_scroll_bar().value
-	print(delta_y)
+	var position = _scroll_container.get_v_scroll_bar().ratio
+	
+	var start
+	var end
+	
+	if culling:
+		start = clampi((row_count * position) - (max_row_count_active_culling / 2),0, row_count)
+		end = clampi((row_count * position) + (max_row_count_active_culling / 2),0, row_count)
+	else:
+		start = 0
+		end = row_count
+	
+	for i in range(start, end):
+		for x in range(_rows[i].nodes.size()):
+			return
 
 func _create_margin_container(node: Control, row_index: int, col_index:int) -> MarginContainer:
 	var margin_parent = MarginContainer.new()
@@ -389,17 +419,33 @@ func _create_margin_container(node: Control, row_index: int, col_index:int) -> M
 		
 	return margin_parent
 
-func get_x_offset_arr() -> Array:
-	var offsets = []
+func refresh_x_offsets_arr() -> void:
+	_x_offsets.clear()
+	
+	var offsets := []
 	
 	for i in range (column_count):
-		offsets.insert(i,0)
+		offsets.append(0)
 		
 		for x in range (i):
 			if _column_visiblity[x]:
 				offsets[i] += _column_widths_temp[x]
 	
-	return offsets
+	_x_offsets = offsets.duplicate()
+
+func refresh_y_offsets_arr() -> void:
+	_y_offsets.clear()
+	
+	var offsets := []
+	
+	for i in range (row_count):
+		offsets.append(0)
+		
+		for x in range (i):
+			if _rows[i].row_visible:
+				offsets[i] += _body_cell_heights_temp[x]
+	
+	_y_offsets = offsets.duplicate()
 #<--------------------------|Slots|------------------------------>#
 
 #-----------------------------------------Subclasses-----------------------------------------------#
