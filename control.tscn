@@ -165,12 +165,13 @@ theme = SubResource("Theme_4bcto")
 text = "Testeeeeeeeeeee
 "
 
-[node name="Table Node v2" type="Control" parent="VBoxContainer"]
+[node name="Table2" type="Control" parent="VBoxContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 script = ExtResource("3_eoo3w")
-header_titles = Array[String](["header0", "header1", "header2", "header3", "header4", "header5", "header6", "header7"])
-column_widths = Array[int]([150, 150, 150, 150, 150, 150, 150, 150])
+header_titles = Array[String](["header0", "header1", "header2", "header3", "header4", "header5", "header6", "header7", "header8"])
+column_widths = Array[int]([150, 150, 150, 150, 150, 150, 150, 150, 150])
 
 [connection signal="cell_clicked" from="VBoxContainer/HBoxContainer/MarginContainer/ScrollContainer/Table Node" to="." method="_on_table_widget_cell_clicked"]
 [connection signal="pressed" from="VBoxContainer/HBoxContainer/VBoxContainer/debug_get_selection" to="." method="_on_button_pressed"]

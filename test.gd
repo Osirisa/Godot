@@ -3,6 +3,9 @@ extends Control
 @onready
 var table: TableNode = %"Table Node"
 @onready
+var table2: TableNode_v2 = %"Table2"
+
+@onready
 var input: LineEdit = %debug_LE
 
 # Called when the node enters the scene tree for the first time.
@@ -34,6 +37,8 @@ func _ready():
 		
 		#arr.append([label,button,line_edit,label2,cb])
 		arr.append([label,button,line_edit,label2])
+		table2.add_row([label,button,line_edit,label2])
+	
 	
 	table.add_rows_batch(arr)
 

@@ -39,26 +39,37 @@ enum Sorting {
 	set(value): 
 		if Engine.is_editor_hint():
 			if(value.size() > header_titles.size()):
-				var header_text = value[header_titles.size()]
-				if not header_text:
-					value[header_titles.size()] = "header"+ str(header_titles.size())
+				for i in range(header_titles.size(), value.size()):
+					var header_text = value[i]
+
+					if not header_text:
+						value[i] = "header"+ str(i)
+					
 		
 		header_titles = value
 		
-		if(header_titles.size()> column_widths.size()):
-			for i in range(header_titles.size() - column_widths.size()):
-				column_widths.append(standard_cell_dimension.x)
-			
-		elif header_titles.size() < column_widths.size():
+		for i in range(column_widths.size(), header_titles.size()):
+			column_widths.append(standard_cell_dimension.x)
+		
+		if header_titles.size() < column_widths.size():
 			column_widths = column_widths.slice(0, header_titles.size())
+
+		for i in range(_column_visiblity.size(), header_titles.size()):
+			_column_visiblity.append(true)
+			
+		if header_titles.size() < _column_visiblity.size():
+			_column_visiblity = _column_visiblity.slice(0, header_titles.size())
+		
 		
 		column_widths = column_widths
-		
+		column_count = header_titles.size()
+
 		#TBD::
 		#_init_v_separators()
-		#_create_headers()
+		refresh_x_offsets_arr()
+		_create_headers()
 		#_update_layout()
-		#notify_property_list_changed()
+		notify_property_list_changed()
 
 ## The cell height of the header
 @export var header_cell_height := 30:
@@ -183,39 +194,38 @@ func _init():
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	
-	#_scroll_container.size_flags_horizontal = Control.SIZE_EXPAND
-	#_scroll_container.size_flags_vertical = Control.SIZE_EXPAND
+
 	_scroll_container.set_anchors_preset(Control.PRESET_FULL_RECT)
 	
 	_scroll_container.get_v_scroll_bar().connect("value_changed", Callable(self,"_update_visible_rows"))
 	
 	print(_scroll_container.get_v_scroll_bar().get_begin())
 	print(_scroll_container.get_v_scroll_bar().get_end())
+
 	_scroll_container.add_child(_body_cell_group)
 	
 	_scroll_container.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_ALWAYS
 	_scroll_container.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_ALWAYS
 	
+	_scroll_container.position = Vector2i(0, header_cell_height)
+
 	#_scroll_container.add_child() #separators?
+
+	_body_cell_group.custom_minimum_size = Vector2i(3000,2000)
+
+
+	var label = Label.new()
+	label.text = "test"
+	label.position = Vector2i(2000,0)
+
+	_scroll_container.add_child(label)
+
+	refresh_x_offsets_arr()
+	refresh_y_offsets_arr()
+
 	add_child(_scroll_container)
-	
-	#----------------
-	var label := Label.new()
-	label.custom_minimum_size = Vector2(300,300)
-	label.position = Vector2(20,500)
-	label.text = "tests"
-	
-	var label2 := Label.new()
-	label2.custom_minimum_size = Vector2(300,300)
-	label2.position = Vector2(500,20)
-	label2.text = "tests"
-	
-	_body_cell_group.custom_minimum_size = Vector2(500,550)
-	
-	_body_cell_group.add_child(label)
-	_body_cell_group.add_child(label2)
-	
+	add_child(_header_cell_group)
+
 	_update_visible_rows()
 
 #-----------------------------------------Virtual methods------------------------------------------#
@@ -224,16 +234,22 @@ func _ready():
 
 #region Header Edit -------------
 
-func add_column(title: String, cell_width := standard_cell_dimension.x) -> void:
+func add_column(title: String, cell_width := standard_cell_dimension.x, column_visiblity := true) -> void:
 	
 	column_widths.append(cell_width)
 	_column_widths_temp.append(cell_width)
 
+	_column_visiblity.append(column_visiblity)
+
+	column_count += 1
+
+	header_titles.append(title)
+
 	for i in row_count:
 		_rows[i].nodes.append(Label.new())
 	
-	header_titles.append(title)
-
+	refresh_x_offsets_arr()
+	_update_visible_rows()
 
 #TBD:: insert_column(title,column_pos)
 #TBD:: remove_column(column_pos)
@@ -245,6 +261,9 @@ func add_column(title: String, cell_width := standard_cell_dimension.x) -> void:
 ## Adds a row to the table directly below the previous row can also called with no data, then it fills the row with empty labels
 func add_row(data: Array[Control] = [], clip_text: bool = true, height: float = standard_cell_dimension.y) -> void:
 	
+	if data.size() > column_count:
+		push_warning("data array input bigger then column count, excess nodes wont be shown!")
+
 	_body_cell_heights.append(height)
 	_body_cell_heights_temp.append(height)
 	
@@ -254,11 +273,15 @@ func add_row(data: Array[Control] = [], clip_text: bool = true, height: float = 
 	
 	_rows.append(row)
 	row_count += 1
+
+	refresh_y_offsets_arr()
+	_update_visible_rows()
 	
 
 #TBD:: insert_row(title,pos)
 
 ## Takes in following template: [ [node:Control],...] as data use this for populating the table with data
+## Use this for heavy table filling, as it wont update the visible rows until its finished loading the data
 func add_rows_batch(data :Array, clip_text: bool = true, height: float = standard_cell_dimension.y) -> void:
 	pass
 
@@ -395,7 +418,28 @@ func get_size_vec_of_body() -> Vector2i:
 
 #-----------------------------------------Private methods------------------------------------------#
 func _create_headers() -> void:
-	pass
+
+	if !_header_cell_group:
+		return
+
+	for child in _header_cell_group.get_children():
+		_header_cell_group.remove_child(child)
+		child.queue_free()
+
+	for i in range(header_titles.size()):
+		var header_btn = Button.new()
+		var header_margin_container = MarginContainer.new()
+
+		header_btn.text = header_titles[i]
+
+		header_margin_container.add_child(header_btn)
+		header_margin_container.position = Vector2i(_x_offsets[i], 0)
+		header_margin_container.size = Vector2i(column_widths[i], header_cell_height)
+
+		_header_cell_group.add_child(header_margin_container)
+
+func _scroll_header_horizontally(value):
+	_header_cell_group.position.x -= value
 
 func _update_visible_rows(value = 0) -> void:
 	var scroll_position = _scroll_container.get_v_scroll_bar().ratio
@@ -409,7 +453,14 @@ func _update_visible_rows(value = 0) -> void:
 	else:
 		start = 0
 		end = row_count
-	
+
+	#TBD: only remove those, who are out ouf the "viewing field"
+	# Clears all the children from the body cell group
+	for child in _body_cell_group.get_children():
+		_body_cell_group.remove_child(child)
+		child.remove_child(child.get_child(0))
+		child.queue_free()
+
 	for i in range(start, end):
 		for x in range(_rows[i].nodes.size()):
 			var node = _rows[i].nodes[x]
@@ -460,6 +511,27 @@ func refresh_y_offsets_arr() -> void:
 	
 	_y_offsets = offsets.duplicate()
 
+
+func _on_cell_gui_input(event: InputEvent,row_c: RowContent, node: Control) -> void:
+	var row = _rows.find(row_c)
+	var column = row_c.nodes.find(node)
+	
+	if event is InputEventMouseButton and event.double_click:
+		#_edit_cell(row,column)
+		print("doubleclick")
+	if event is InputEventMouseButton and event.pressed and event.button_mask & MOUSE_BUTTON_LEFT:
+		emit_signal("cell_clicked",row,column)
+		
+	if event is InputEventMouseButton and event.pressed and event.button_mask & MOUSE_BUTTON_LEFT:
+		if Input.is_key_pressed(KEY_SHIFT):
+			#_select_multiple_rows(row)
+			pass
+		elif Input.is_key_pressed(KEY_CTRL):
+			#_toggle_row_selection(row)
+			pass
+		else:
+			#_select_single_row(row)
+			pass
 #<--------------------------|Slots|------------------------------>#
 
 #-----------------------------------------Subclasses-----------------------------------------------#
