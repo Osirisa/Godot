@@ -13,12 +13,12 @@ func _ready():
 	
 	var arr := []
 	
-	for i in 10:
+	for i in 2000:
 		
-		var label = Label.new()
-		var button = Button.new()
-		var label2 = Label.new()
-		var line_edit = LineEdit.new()
+		var label := Label.new()
+		var button := Button.new()
+		var label2 := Label.new()
+		var line_edit := LineEdit.new()
 		#var cb = MenuButton.new()
 		
 		line_edit.clip_contents = true
@@ -37,10 +37,9 @@ func _ready():
 		
 		#arr.append([label,button,line_edit,label2,cb])
 		arr.append([label,button,line_edit,label2])
-		table2.add_row([label,button,line_edit,label2])
-	
-	
-	table.add_rows_batch(arr)
+		
+	table2.add_rows_batch(arr)
+	#table.add_rows_batch(arr)
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -53,7 +52,7 @@ func _on_table_widget_cell_clicked(row, column):
 	
 
 
-func _on_button_pressed():	
+func _on_button_pressed():
 	print(table.get_selection_positions())
 
 
@@ -87,7 +86,9 @@ func _on_debug_remove_row_pressed():
 
 
 func _on_debug_get_curr_row_pressed():
-	print(table.get_current_row())
+	#print(table.get_current_row())
+	table2.update_table()
+	table2._update_body_size()
 
 
 func _on_debug_set_row_heigth_pressed():

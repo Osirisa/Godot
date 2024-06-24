@@ -60,7 +60,6 @@ enum Sorting {
 		if header_titles.size() < _column_visiblity.size():
 			_column_visiblity = _column_visiblity.slice(0, header_titles.size())
 		
-		
 		column_widths = column_widths
 		column_count = header_titles.size()
 
@@ -103,7 +102,12 @@ enum Sorting {
 ## Culling makes it that only so many rows are being inserted to maximize performacne (For Large Tables)
 @export var culling := true
 ## Count for the maximum simultaneously "Active / inserted" Rows at any Moment 
-@export var max_row_count_active_culling := 100
+@export var max_row_count_active_culling := 60:
+	set(value):
+		max_row_count_active_culling = value
+		
+		if (_x_offsets.size() > 0) and (_y_offsets.size() > 0):
+			_update_visible_rows()
 
 @export_group("Pagination")
 ## Pagination for very large tables
@@ -194,39 +198,46 @@ func _init():
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-
+	
+	var v_cont := VBoxContainer.new()
+	v_cont.set_anchors_preset(Control.PRESET_FULL_RECT)
+	v_cont.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	v_cont.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	
+	 # Ensure the ScrollContainer fills the parent container
 	_scroll_container.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_scroll_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_scroll_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	
+	_scroll_container.clip_contents = true
+	_scroll_container.custom_minimum_size = Vector2(0,0)
 	
 	_scroll_container.get_v_scroll_bar().connect("value_changed", Callable(self,"_update_visible_rows"))
+	_scroll_container.get_h_scroll_bar().connect("value_changed", Callable(self,"_scroll_header_horizontally"))
 	
-	print(_scroll_container.get_v_scroll_bar().get_begin())
-	print(_scroll_container.get_v_scroll_bar().get_end())
-
-	_scroll_container.add_child(_body_cell_group)
+	#_scroll_container.position = Vector2i(0, header_cell_height + 2)
 	
-	_scroll_container.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_ALWAYS
-	_scroll_container.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_ALWAYS
+	#print(_scroll_container.get_v_scroll_bar().get_begin())
+	#print(_scroll_container.get_v_scroll_bar().get_end())
 	
-	_scroll_container.position = Vector2i(0, header_cell_height)
-
+	_body_group.add_child(_body_cell_group)
+	_body_group.set_anchors_preset(Control.PRESET_FULL_RECT)
+	
+	_scroll_container.add_child(_body_group)
+	
+	_header_cell_group.custom_minimum_size = Vector2i(_x_offsets.back(), header_cell_height)
+	
 	#_scroll_container.add_child() #separators?
-
-	_body_cell_group.custom_minimum_size = Vector2i(3000,2000)
-
-
-	var label = Label.new()
-	label.text = "test"
-	label.position = Vector2i(2000,0)
-
-	_scroll_container.add_child(label)
-
+	
 	refresh_x_offsets_arr()
 	refresh_y_offsets_arr()
-
-	add_child(_scroll_container)
-	add_child(_header_cell_group)
-
-	_update_visible_rows()
+	
+	v_cont.add_child(_header_cell_group)
+	v_cont.add_child(_scroll_container)
+	
+	add_child(v_cont)
+	_create_headers()
+	clip_contents = true
 
 #-----------------------------------------Virtual methods------------------------------------------#
 
@@ -238,18 +249,18 @@ func add_column(title: String, cell_width := standard_cell_dimension.x, column_v
 	
 	column_widths.append(cell_width)
 	_column_widths_temp.append(cell_width)
-
+	
 	_column_visiblity.append(column_visiblity)
-
+	
 	column_count += 1
-
+	
 	header_titles.append(title)
 
 	for i in row_count:
 		_rows[i].nodes.append(Label.new())
 	
 	refresh_x_offsets_arr()
-	_update_visible_rows()
+	call_deferred("_update_visible_rows")
 
 #TBD:: insert_column(title,column_pos)
 #TBD:: remove_column(column_pos)
@@ -263,27 +274,49 @@ func add_row(data: Array[Control] = [], clip_text: bool = true, height: float = 
 	
 	if data.size() > column_count:
 		push_warning("data array input bigger then column count, excess nodes wont be shown!")
-
+	
+	var new_row := RowContent.new()
+	
 	_body_cell_heights.append(height)
 	_body_cell_heights_temp.append(height)
 	
-	var row = RowContent.new()
-	row.nodes = data
-	row.row_visible = true
 	
-	_rows.append(row)
+	new_row.nodes = data
+	new_row.row_visible = true
+	
+	_rows.append(new_row)
 	row_count += 1
-
-	refresh_y_offsets_arr()
-	_update_visible_rows()
 	
+	refresh_y_offsets_arr()
+	_update_body_size()
+	call_deferred("_update_visible_rows")
+
 
 #TBD:: insert_row(title,pos)
 
-## Takes in following template: [ [node:Control],...] as data use this for populating the table with data
+## Takes in following template: [ [node:Control, node2:Control],[nod...,...]...] as data use this
+## for populating the table with data
 ## Use this for heavy table filling, as it wont update the visible rows until its finished loading the data
 func add_rows_batch(data :Array, clip_text: bool = true, height: float = standard_cell_dimension.y) -> void:
-	pass
+	
+	for d in data:
+		var new_row := RowContent.new()
+		
+		_body_cell_heights.append(height)
+		_body_cell_heights_temp.append(height)
+		
+		new_row.row_visible = true
+		
+		for node in d:
+			new_row.nodes.append(node)
+			new_row.editable.append(true)
+		
+		_rows.append(new_row)
+		row_count += 1
+	
+	refresh_y_offsets_arr()
+	_update_body_size()
+	call_deferred("_update_visible_rows")
 
 ## Overrides the row from the Table 
 func set_row(data: Array[Control], row: int) -> void:
@@ -302,7 +335,7 @@ func clear() -> void:
 	pass
 
 func update_table() -> void:
-	#_layout_rows()
+	_update_visible_rows()
 	pass
 
 #endregion
@@ -418,28 +451,31 @@ func get_size_vec_of_body() -> Vector2i:
 
 #-----------------------------------------Private methods------------------------------------------#
 func _create_headers() -> void:
-
+	
 	if !_header_cell_group:
 		return
-
+	
 	for child in _header_cell_group.get_children():
 		_header_cell_group.remove_child(child)
 		child.queue_free()
-
+	
 	for i in range(header_titles.size()):
 		var header_btn = Button.new()
 		var header_margin_container = MarginContainer.new()
-
+		
 		header_btn.text = header_titles[i]
-
+		
 		header_margin_container.add_child(header_btn)
 		header_margin_container.position = Vector2i(_x_offsets[i], 0)
 		header_margin_container.size = Vector2i(column_widths[i], header_cell_height)
-
+		header_margin_container.custom_minimum_size = Vector2i(column_widths[i], header_cell_height)
+		
+		
 		_header_cell_group.add_child(header_margin_container)
 
 func _scroll_header_horizontally(value):
-	_header_cell_group.position.x -= value
+	print(value)
+	_header_cell_group.position.x = -value
 
 func _update_visible_rows(value = 0) -> void:
 	var scroll_position = _scroll_container.get_v_scroll_bar().ratio
@@ -448,8 +484,8 @@ func _update_visible_rows(value = 0) -> void:
 	var end
 	
 	if culling:
-		start = clampi((row_count * scroll_position) - (max_row_count_active_culling / 2),0, row_count)
-		end = clampi((row_count * scroll_position) + (max_row_count_active_culling / 2),0, row_count)
+		start = clampi((row_count * scroll_position), 0, row_count)
+		end = clampi((row_count * scroll_position) + max_row_count_active_culling, 0, row_count)
 	else:
 		start = 0
 		end = row_count
@@ -457,23 +493,32 @@ func _update_visible_rows(value = 0) -> void:
 	#TBD: only remove those, who are out ouf the "viewing field"
 	# Clears all the children from the body cell group
 	for child in _body_cell_group.get_children():
-		_body_cell_group.remove_child(child)
 		child.remove_child(child.get_child(0))
+		_body_cell_group.remove_child(child)
 		child.queue_free()
-
+	
 	for i in range(start, end):
 		for x in range(_rows[i].nodes.size()):
 			var node = _rows[i].nodes[x]
 			
-			node.position = Vector2i(_x_offsets[x],_y_offsets[i])
-			var margin_parent = _create_margin_container(node, i, x)
-			_body_cell_group.add_child(margin_parent)
+			if !(node.get_parent() is MarginContainer):
+				var margin_parent = _create_margin_container(node, i, x)
+				_body_cell_group.add_child(margin_parent)
+
+func _table_size() -> Vector2i:
+	return Vector2i(_x_offsets.back(), _y_offsets.back() + _body_cell_heights_temp.back() + 8)
+
+func _update_body_size() -> void:
+	_body_group.custom_minimum_size = _table_size()
+	minimum_size_changed.emit()
 
 func _create_margin_container(node: Control, row_index: int, col_index:int) -> MarginContainer:
 	var margin_parent = MarginContainer.new()
-
+	
 	margin_parent.add_child(node)
 	margin_parent.custom_minimum_size = Vector2(_column_widths_temp[col_index], _body_cell_heights_temp[row_index])
+	margin_parent.size =  Vector2(_column_widths_temp[col_index], _body_cell_heights_temp[row_index])
+	margin_parent.position = Vector2(_x_offsets[col_index], _y_offsets[row_index])
 	
 	var callable = Callable(self, "_on_cell_gui_input").bind(_rows[row_index], node)
 	margin_parent.connect("gui_input", callable)
@@ -510,7 +555,6 @@ func refresh_y_offsets_arr() -> void:
 				offsets[i] += _body_cell_heights_temp[x]
 	
 	_y_offsets = offsets.duplicate()
-
 
 func _on_cell_gui_input(event: InputEvent,row_c: RowContent, node: Control) -> void:
 	var row = _rows.find(row_c)

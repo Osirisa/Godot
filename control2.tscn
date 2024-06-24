@@ -1,0 +1,22 @@
+[gd_scene load_steps=2 format=3 uid="uid://dp2vlkkw7v62e"]
+
+[ext_resource type="Script" path="res://addons/osirisas_ui_extension/table_node/table_node_v2.gd" id="1_hy4fv"]
+
+[node name="Control" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Table Node v2" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_hy4fv")
+header_titles = Array[String](["header0", "header1", "header2", "header3"])
+column_widths = Array[int]([70, 150, 300, 150])

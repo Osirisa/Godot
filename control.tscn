@@ -69,7 +69,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_ipyfc")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -77,10 +77,18 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer"]
+[node name="Button" type="Button" parent="HBoxContainer"]
+layout_mode = 2
+text = "awdfawdawdwad"
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="HBoxContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/HBoxContainer"]
+[node name="MarginContainer" type="MarginContainer" parent="HBoxContainer/VBoxContainer/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_stretch_ratio = 5.0
@@ -89,11 +97,12 @@ theme_override_constants/margin_top = 5
 theme_override_constants/margin_right = 5
 theme_override_constants/margin_bottom = 5
 
-[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/HBoxContainer/MarginContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="HBoxContainer/VBoxContainer/HBoxContainer/MarginContainer"]
 layout_mode = 2
 
-[node name="Table Node" type="Control" parent="VBoxContainer/HBoxContainer/MarginContainer/ScrollContainer"]
+[node name="Table Node" type="Control" parent="HBoxContainer/VBoxContainer/HBoxContainer/MarginContainer/ScrollContainer"]
 unique_name_in_owner = true
+visible = false
 clip_children = 2
 custom_minimum_size = Vector2(1780, 25)
 layout_mode = 2
@@ -111,77 +120,83 @@ header_theme = SubResource("Theme_sv4ih")
 body_theme = SubResource("Theme_yqn8f")
 selection_theme = SubResource("Theme_0602n")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/HBoxContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer/VBoxContainer/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="debug_get_selection" type="Button" parent="VBoxContainer/HBoxContainer/VBoxContainer"]
+[node name="debug_get_selection" type="Button" parent="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
 layout_mode = 2
 text = "print curr selection"
 
-[node name="debug_add_row" type="Button" parent="VBoxContainer/HBoxContainer/VBoxContainer"]
+[node name="debug_add_row" type="Button" parent="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
 layout_mode = 2
 text = "add row"
 
-[node name="debug_add_column" type="Button" parent="VBoxContainer/HBoxContainer/VBoxContainer"]
+[node name="debug_add_column" type="Button" parent="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
 layout_mode = 2
 text = "add_column"
 
-[node name="debug_hide_row" type="Button" parent="VBoxContainer/HBoxContainer/VBoxContainer"]
+[node name="debug_hide_row" type="Button" parent="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
 layout_mode = 2
 text = "hide_row"
 
-[node name="debug_hide_column" type="Button" parent="VBoxContainer/HBoxContainer/VBoxContainer"]
+[node name="debug_hide_column" type="Button" parent="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
 layout_mode = 2
 text = "hide_column"
 
-[node name="debug_remove_row" type="Button" parent="VBoxContainer/HBoxContainer/VBoxContainer"]
+[node name="debug_remove_row" type="Button" parent="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
 layout_mode = 2
 text = "remove_row"
 
-[node name="debug_get_curr_row" type="Button" parent="VBoxContainer/HBoxContainer/VBoxContainer"]
+[node name="debug_get_curr_row" type="Button" parent="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
 layout_mode = 2
 text = "get current row"
 
-[node name="debug_set_row_heigth" type="Button" parent="VBoxContainer/HBoxContainer/VBoxContainer"]
+[node name="debug_set_row_heigth" type="Button" parent="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
 layout_mode = 2
 text = "set row height"
 
-[node name="debug_set_col_width" type="Button" parent="VBoxContainer/HBoxContainer/VBoxContainer"]
+[node name="debug_set_col_width" type="Button" parent="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
 layout_mode = 2
 text = "set column width"
 
-[node name="debug_LE" type="LineEdit" parent="VBoxContainer/HBoxContainer/VBoxContainer"]
+[node name="debug_LE" type="LineEdit" parent="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="debug_hide_selection" type="Button" parent="VBoxContainer/HBoxContainer/VBoxContainer"]
+[node name="debug_hide_selection" type="Button" parent="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
 layout_mode = 2
 text = "hide_selection"
 
-[node name="Label" type="Label" parent="VBoxContainer/HBoxContainer/VBoxContainer"]
+[node name="Label" type="Label" parent="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
 layout_mode = 2
 theme = SubResource("Theme_4bcto")
 text = "Testeeeeeeeeeee
 "
 
-[node name="Table2" type="Control" parent="VBoxContainer"]
+[node name="Table2" type="Control" parent="HBoxContainer/VBoxContainer"]
 unique_name_in_owner = true
+clip_contents = true
+custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
 size_flags_vertical = 3
 script = ExtResource("3_eoo3w")
-header_titles = Array[String](["header0", "header1", "header2", "header3", "header4", "header5", "header6", "header7", "header8"])
-column_widths = Array[int]([150, 150, 150, 150, 150, 150, 150, 150, 150])
+header_titles = Array[String](["header0", "header1", "header2", "header3", "header4", "header5", "header6"])
+column_widths = Array[int]([150, 300, 300, 70, 150, 150, 150])
 
-[connection signal="cell_clicked" from="VBoxContainer/HBoxContainer/MarginContainer/ScrollContainer/Table Node" to="." method="_on_table_widget_cell_clicked"]
-[connection signal="pressed" from="VBoxContainer/HBoxContainer/VBoxContainer/debug_get_selection" to="." method="_on_button_pressed"]
-[connection signal="pressed" from="VBoxContainer/HBoxContainer/VBoxContainer/debug_add_row" to="." method="_on_debug_add_row_pressed"]
-[connection signal="pressed" from="VBoxContainer/HBoxContainer/VBoxContainer/debug_add_column" to="." method="_on_debug_add_column_pressed"]
-[connection signal="pressed" from="VBoxContainer/HBoxContainer/VBoxContainer/debug_hide_row" to="." method="_on_debug_hide_row_pressed"]
-[connection signal="pressed" from="VBoxContainer/HBoxContainer/VBoxContainer/debug_hide_column" to="." method="_on_debug_hide_column_pressed"]
-[connection signal="pressed" from="VBoxContainer/HBoxContainer/VBoxContainer/debug_remove_row" to="." method="_on_debug_remove_row_pressed"]
-[connection signal="pressed" from="VBoxContainer/HBoxContainer/VBoxContainer/debug_get_curr_row" to="." method="_on_debug_get_curr_row_pressed"]
-[connection signal="pressed" from="VBoxContainer/HBoxContainer/VBoxContainer/debug_set_row_heigth" to="." method="_on_debug_set_row_heigth_pressed"]
-[connection signal="pressed" from="VBoxContainer/HBoxContainer/VBoxContainer/debug_set_col_width" to="." method="_on_debug_set_col_width_pressed"]
-[connection signal="pressed" from="VBoxContainer/HBoxContainer/VBoxContainer/debug_hide_selection" to="." method="_on_debug_set_col_width_pressed"]
-[connection signal="pressed" from="VBoxContainer/HBoxContainer/VBoxContainer/debug_hide_selection" to="." method="_on_debug_hide_selection_pressed"]
+[node name="Button2" type="Button" parent="HBoxContainer"]
+layout_mode = 2
+text = "teateaeeta"
+
+[connection signal="cell_clicked" from="HBoxContainer/VBoxContainer/HBoxContainer/MarginContainer/ScrollContainer/Table Node" to="." method="_on_table_widget_cell_clicked"]
+[connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_get_selection" to="." method="_on_button_pressed"]
+[connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_add_row" to="." method="_on_debug_add_row_pressed"]
+[connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_add_column" to="." method="_on_debug_add_column_pressed"]
+[connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_hide_row" to="." method="_on_debug_hide_row_pressed"]
+[connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_hide_column" to="." method="_on_debug_hide_column_pressed"]
+[connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_remove_row" to="." method="_on_debug_remove_row_pressed"]
+[connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_get_curr_row" to="." method="_on_debug_get_curr_row_pressed"]
+[connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_set_row_heigth" to="." method="_on_debug_set_row_heigth_pressed"]
+[connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_set_col_width" to="." method="_on_debug_set_col_width_pressed"]
+[connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_hide_selection" to="." method="_on_debug_set_col_width_pressed"]
+[connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_hide_selection" to="." method="_on_debug_hide_selection_pressed"]
