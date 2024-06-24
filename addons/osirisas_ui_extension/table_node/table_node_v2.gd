@@ -100,7 +100,7 @@ enum Sorting {
 @export_category("Special")
 @export_group("Culling")
 ## Culling makes it that only so many rows are being inserted to maximize performacne (For Large Tables)
-@export var culling := true
+@export var row_culling := true
 ## Count for the maximum simultaneously "Active / inserted" Rows at any Moment 
 @export var max_row_count_active_culling := 60:
 	set(value):
@@ -126,8 +126,19 @@ enum Sorting {
 
 #-----------------------------------------Public Var-----------------------------------------------#
 
+## The current column count (incl. hidden colummns)
 var column_count: int = 0
+## The current row count (incl. hidden rows)
 var row_count: int = 0
+
+## How many pages there are in total
+var max_pages := 1
+
+## The current visible page
+var current_page: int = 0:
+	set(value):
+		current_page = clampi(value,1,max_pages)
+		_update_visible_rows()
 
 #-----------------------------------------Private Var----------------------------------------------#
 
@@ -180,14 +191,6 @@ var _last_selected_row := -1
 
 # Threads
 var _sort_thread: Thread = null
-
-#Special:
-#Culling
-var _visible_culling_rows: Array[RowContent] = []
-
-#Pagination
-var max_pages := 1
-var current_page: int = 0
  
 #-----------------------------------------Onready Var----------------------------------------------#
 
@@ -215,19 +218,12 @@ func _ready():
 	_scroll_container.get_v_scroll_bar().connect("value_changed", Callable(self,"_update_visible_rows"))
 	_scroll_container.get_h_scroll_bar().connect("value_changed", Callable(self,"_scroll_header_horizontally"))
 	
-	#_scroll_container.position = Vector2i(0, header_cell_height + 2)
-	
-	#print(_scroll_container.get_v_scroll_bar().get_begin())
-	#print(_scroll_container.get_v_scroll_bar().get_end())
-	
 	_body_group.add_child(_body_cell_group)
 	_body_group.set_anchors_preset(Control.PRESET_FULL_RECT)
 	
 	_scroll_container.add_child(_body_group)
 	
 	_header_cell_group.custom_minimum_size = Vector2i(_x_offsets.back(), header_cell_height)
-	
-	#_scroll_container.add_child() #separators?
 	
 	refresh_x_offsets_arr()
 	refresh_y_offsets_arr()
@@ -340,18 +336,6 @@ func update_table() -> void:
 
 #endregion
 
-#region Counts ------------------
-
-func get_row_count() -> int:
-	return 0
-	pass
-
-func get_column_count() -> int:
-	return 0
-	pass
-
-#endregion
-
 #region Cell edit ---------------
 
 func get_row(row: int) -> Array:
@@ -441,7 +425,7 @@ func get_selection_positions() -> Array[int]:
 func get_size_vec_of_header() -> Vector2i:
 	return Vector2i(0,0)
 	pass
-	
+
 ## Get the total size of the body
 func get_size_vec_of_body() -> Vector2i:
 	return Vector2i(0,0)
@@ -477,33 +461,39 @@ func _scroll_header_horizontally(value):
 	print(value)
 	_header_cell_group.position.x = -value
 
+## Main function for inserting and visualizing the nodes
 func _update_visible_rows(value = 0) -> void:
 	var scroll_position = _scroll_container.get_v_scroll_bar().ratio
 	
 	var start
 	var end
 	
-	if culling:
+	if row_culling:
 		start = clampi((row_count * scroll_position), 0, row_count)
 		end = clampi((row_count * scroll_position) + max_row_count_active_culling, 0, row_count)
 	else:
 		start = 0
 		end = row_count
-
-	#TBD: only remove those, who are out ouf the "viewing field"
-	# Clears all the children from the body cell group
+	
+	if pagination:
+		start += max_row_count_per_page * current_page
+		end += max_row_count_per_page * current_page
+	
 	for child in _body_cell_group.get_children():
 		child.remove_child(child.get_child(0))
 		_body_cell_group.remove_child(child)
 		child.queue_free()
 	
 	for i in range(start, end):
-		for x in range(_rows[i].nodes.size()):
-			var node = _rows[i].nodes[x]
-			
-			if !(node.get_parent() is MarginContainer):
-				var margin_parent = _create_margin_container(node, i, x)
-				_body_cell_group.add_child(margin_parent)
+		if _rows[i].row_visible:
+			for x in range(_rows[i].nodes.size()):
+				var node = _rows[i].nodes[x]
+				
+				if !(node.get_parent() is MarginContainer):
+					var margin_parent = _create_margin_container(node, i, x)
+					_body_cell_group.add_child(margin_parent)
+		else:
+			end = clampi(end + 1, 0, row_count)
 
 func _table_size() -> Vector2i:
 	return Vector2i(_x_offsets.back(), _y_offsets.back() + _body_cell_heights_temp.back() + 8)

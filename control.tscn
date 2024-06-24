@@ -126,11 +126,11 @@ size_flags_horizontal = 3
 
 [node name="debug_get_selection" type="Button" parent="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
 layout_mode = 2
-text = "print curr selection"
+text = "next page"
 
 [node name="debug_add_row" type="Button" parent="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
 layout_mode = 2
-text = "add row"
+text = "previous page"
 
 [node name="debug_add_column" type="Button" parent="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
 layout_mode = 2
@@ -183,6 +183,7 @@ size_flags_vertical = 3
 script = ExtResource("3_eoo3w")
 header_titles = Array[String](["header0", "header1", "header2", "header3", "header4", "header5", "header6"])
 column_widths = Array[int]([150, 300, 300, 70, 150, 150, 150])
+row_culling = null
 
 [node name="Button2" type="Button" parent="HBoxContainer"]
 layout_mode = 2
@@ -198,5 +199,5 @@ text = "teateaeeta"
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_get_curr_row" to="." method="_on_debug_get_curr_row_pressed"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_set_row_heigth" to="." method="_on_debug_set_row_heigth_pressed"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_set_col_width" to="." method="_on_debug_set_col_width_pressed"]
-[connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_hide_selection" to="." method="_on_debug_set_col_width_pressed"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_hide_selection" to="." method="_on_debug_hide_selection_pressed"]
+[connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_hide_selection" to="." method="_on_debug_set_col_width_pressed"]

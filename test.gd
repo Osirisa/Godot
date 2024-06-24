@@ -53,11 +53,11 @@ func _on_table_widget_cell_clicked(row, column):
 
 
 func _on_button_pressed():
-	print(table.get_selection_positions())
+	table2.current_page += 1 
 
 
 func _on_debug_add_row_pressed():
-	table.add_row()
+	table2.current_page -= 1 
 
 func _on_debug_add_column_pressed():
 	table.add_header("test")
@@ -109,3 +109,4 @@ func _on_debug_hide_selection_pressed():
 	for i in table.get_selection_positions():
 		print(i)
 		table.set_visibility_row(i,false)
+
