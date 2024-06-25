@@ -12,5 +12,3 @@ static func check_row_input(row:int, max_size:int) -> bool:
 		push_error("ERROR, parameter row: " + str(row) + " exceeds Array size index: "+ str(max_size))
 		return false
 	return true
-	
-	

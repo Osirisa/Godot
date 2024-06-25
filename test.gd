@@ -13,7 +13,7 @@ func _ready():
 	
 	var arr := []
 	
-	for i in 2000:
+	for i in 1256:
 		
 		var label := Label.new()
 		var button := Button.new()
@@ -84,21 +84,14 @@ func _on_debug_remove_row_pressed():
 	if input:
 		table.remove_row(input.text.to_int())
 
-
 func _on_debug_get_curr_row_pressed():
 	#print(table.get_current_row())
 	table2.update_table()
 	table2._update_body_size()
 
-
 func _on_debug_set_row_heigth_pressed():
 	if input:
 		table.set_row_height(input.text.to_int(),40)
-	
-	#print(table.get_column_count())
-	#print(table.get_row_count())
-	#print(table.has_selection())
-
 
 func _on_debug_set_col_width_pressed():
 	if input:

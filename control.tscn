@@ -102,7 +102,6 @@ layout_mode = 2
 
 [node name="Table Node" type="Control" parent="HBoxContainer/VBoxContainer/HBoxContainer/MarginContainer/ScrollContainer"]
 unique_name_in_owner = true
-visible = false
 clip_children = 2
 custom_minimum_size = Vector2(1780, 25)
 layout_mode = 2
@@ -183,7 +182,8 @@ size_flags_vertical = 3
 script = ExtResource("3_eoo3w")
 header_titles = Array[String](["header0", "header1", "header2", "header3", "header4", "header5", "header6"])
 column_widths = Array[int]([150, 300, 300, 70, 150, 150, 150])
-row_culling = null
+max_row_count_active_culling = 20
+pagination = true
 
 [node name="Button2" type="Button" parent="HBoxContainer"]
 layout_mode = 2
