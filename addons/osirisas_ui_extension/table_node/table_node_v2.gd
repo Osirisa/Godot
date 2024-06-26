@@ -65,6 +65,7 @@ enum Sorting {
 		#TBD::
 		#_init_v_separators()
 		refresh_x_offsets_arr()
+		_create_v_separators()
 		_create_headers.call_deferred()
 		#_update_layout()
 		notify_property_list_changed()
@@ -115,7 +116,11 @@ enum Sorting {
 		pagination = value
 		
 		refresh_y_offsets_arr()
+		
 		_clr_body.call_deferred()
+		_create_h_separators.call_deferred()
+		_update_h_separators.call_deferred()
+		_update_v_separators.call_deferred()
 		_update_body_size.call_deferred()
 		_update_visible_rows.call_deferred()
 		
@@ -130,6 +135,9 @@ enum Sorting {
 		
 		refresh_y_offsets_arr()
 		_clr_body.call_deferred()
+		_create_h_separators.call_deferred()
+		_update_h_separators.call_deferred()
+		_update_v_separators.call_deferred()
 		_update_body_size.call_deferred()
 		_update_visible_rows.call_deferred()
 		
@@ -169,7 +177,11 @@ var current_page: int = 0:
 			_shortened = true
 		
 		refresh_y_offsets_arr()
+		
 		_clr_body.call_deferred()
+		_create_h_separators.call_deferred()
+		_update_h_separators.call_deferred()
+		_update_v_separators.call_deferred()
 		_update_visible_rows.call_deferred()
 
 #-----------------------------------------Private Var----------------------------------------------#
@@ -177,10 +189,6 @@ var current_page: int = 0:
 # Utility Class
 var _table_util := preload("res://addons/osirisas_ui_extension/table_node/table_utility.gd")
 
-# Array for the standard cell heights 
-var _body_cell_heights := []
-# Array for the changed cell heights (due to resizing)
-var _body_cell_heights_temp := []
 # Array for the changed cell widths (due to resizing)
 var _column_widths_temp := []
 
@@ -267,7 +275,13 @@ func _ready():
 	v_cont.add_child(_scroll_container)
 	
 	add_child(v_cont)
-	_create_headers()
+	
+	
+	_create_headers.call_deferred()
+	_create_h_separators.call_deferred()
+	_create_v_separators.call_deferred()
+	_update_h_separators.call_deferred()
+	_update_v_separators.call_deferred()
 	
 	clip_contents = true
 
@@ -292,6 +306,9 @@ func add_column(title: String, cell_width := standard_cell_dimension.x, column_v
 		_rows[i].nodes.append(Label.new())
 	
 	refresh_x_offsets_arr()
+	
+	_create_v_separators.call_deferred()
+	_update_v_separators.call_deferred()
 	_update_visible_rows.call_deferred()
 
 #TBD:: insert_column(title,column_pos)
@@ -309,14 +326,13 @@ func add_row(data: Array[Control] = [], clip_text: bool = true, height: float = 
 	
 	var new_row := RowContent.new()
 	
-	_body_cell_heights.append(height)
-	_body_cell_heights_temp.append(height)
-	
-	
 	new_row.nodes = data
 	new_row.row_visible = true
+	new_row.row_height = height
+	new_row.row_height_temp = height
 	
 	_rows.append(new_row)
+	
 	row_count += 1
 	
 	#pagniation
@@ -324,6 +340,9 @@ func add_row(data: Array[Control] = [], clip_text: bool = true, height: float = 
 	
 	refresh_y_offsets_arr()
 	_update_body_size()
+	
+	_create_h_separators.call_deferred()
+	_update_h_separators.call_deferred()
 	_update_visible_rows.call_deferred()
 
 
@@ -337,15 +356,14 @@ func add_rows_batch(data :Array, clip_text: bool = true, height: float = standar
 	for d in data:
 		var new_row := RowContent.new()
 		
-		_body_cell_heights.append(height)
-		_body_cell_heights_temp.append(height)
-		
 		new_row.row_visible = true
 		
 		for node in d:
 			new_row.nodes.append(node)
 			new_row.editable.append(true)
-		
+			new_row.row_height = height
+			new_row.row_height_temp = height
+			
 		_rows.append(new_row)
 		row_count += 1
 	
@@ -353,6 +371,9 @@ func add_rows_batch(data :Array, clip_text: bool = true, height: float = standar
 	
 	refresh_y_offsets_arr()
 	_update_body_size()
+	
+	_create_h_separators.call_deferred()
+	_update_h_separators.call_deferred()
 	_update_visible_rows.call_deferred()
 
 ## Overrides the row from the Table 
@@ -374,6 +395,9 @@ func clear() -> void:
 func update_table() -> void:
 	refresh_y_offsets_arr()
 	refresh_x_offsets_arr()
+	
+	_update_h_separators.call_deferred()
+	_update_v_separators.call_deferred()
 	_update_visible_rows.call_deferred()
 
 #endregion
@@ -498,45 +522,48 @@ func _create_headers() -> void:
 		
 		_header_cell_group.add_child(header_margin_container)
 
+func _update_headers() -> void:
+	pass
+
 func _scroll_header_horizontally(value):
 	print(value)
 	_header_cell_group.position.x = -value
 
 ## Main function for inserting and visualizing the nodes
 func _update_visible_rows(value = 0) -> void:
-	var scroll_position = _scroll_container.get_v_scroll_bar().ratio
+	var start_index: int = 0
+	var end_index: int = row_count
 	
-	var start: int
-	var end: int
-	
-	if row_culling:
-		start = clampi((row_count * scroll_position), 0, row_count)
-		end = clampi((row_count * scroll_position) + max_row_count_active_culling, 0, row_count)
-	else:
-		start = 0
-		end = row_count
+	if value == 0:
+		value = _scroll_container.get_v_scroll_bar().value
+		
+	for i in range(_y_offsets.size()):
+		if _y_offsets[i] >= value:
+			start_index = i - 1 if i > 0 else 0
+			break 
 	
 	if pagination:
-		if row_culling:
-			start = (max_row_count_per_page * scroll_position)
-			start = clampi( start + (max_row_count_per_page * current_page), 0, row_count)
-			
-			end = (max_row_count_per_page * scroll_position) + max_row_count_active_culling
-			end = clampi(end + max_row_count_per_page * current_page, 0, max_row_count_per_page * (current_page + 1))
-			end = clampi(end, 0, row_count)
-		else :
-			start = clampi(current_page * max_row_count_per_page, 0, row_count)
-			end = clampi(max_row_count_per_page * (current_page + 1), 0, row_count)
+		var page_start: int = current_page * max_row_count_per_page
+		var page_end: int = page_start + max_row_count_per_page
 		
-		#print(current_page)
-		#print(max_row_count_per_page)
-		#print(start)
-		#print(end)
+		if row_culling:
+			start_index = max(start_index, page_start)
+			end_index = min(start_index + max_row_count_active_culling, page_end)
+			
+		else :
+			start_index = page_start
+			end_index = page_end
+		
+	elif row_culling:
+		end_index = min(start_index + max_row_count_active_culling, row_count)
+	
+	start_index = clampi(start_index, 0, row_count)
+	end_index = clampi(end_index, 0, row_count)
 	
 	if row_culling:
 		_clr_body()
 	
-	for i in range(start, end):
+	for i in range(start_index, end_index):
 		if _rows[i].row_visible:
 			for x in range(_rows[i].nodes.size()):
 				var node = _rows[i].nodes[x]
@@ -545,7 +572,7 @@ func _update_visible_rows(value = 0) -> void:
 					var margin_parent = _create_margin_container(node, i, x)
 					_body_cell_group.add_child(margin_parent)
 		else:
-			end = clampi(end + 1, 0, row_count)
+			end_index = clampi(end_index + 1, 0, row_count)
 
 func _clr_body() -> void:
 	for child in _body_cell_group.get_children():
@@ -556,16 +583,16 @@ func _clr_body() -> void:
 func _table_size() -> Vector2i:
 	
 	var table_size := Vector2i(0,0)
-	table_size.x = _x_offsets.back()
+	table_size.x = _x_offsets.back() + _column_widths_temp.back()
 	
 	if not _y_offsets.size() > 0:
 		return table_size 
 	
 	if pagination:
 		var last_pos = clampi((max_row_count_per_page * (current_page + 1)) - 1, 0, row_count - 1)
-		table_size.y = _y_offsets[last_pos] + _body_cell_heights_temp[last_pos] + 8
+		table_size.y = _y_offsets[last_pos] + _rows[last_pos].row_height_temp + 8
 	else:
-		table_size.y = _y_offsets.back() + _body_cell_heights_temp.back() + 8
+		table_size.y = _y_offsets.back() + _rows.back().row_height_temp + 8
 	
 	return table_size
 
@@ -577,8 +604,8 @@ func _create_margin_container(node: Control, row_index: int, col_index:int) -> M
 	var margin_parent = MarginContainer.new()
 	
 	margin_parent.add_child(node)
-	margin_parent.custom_minimum_size = Vector2(_column_widths_temp[col_index], _body_cell_heights_temp[row_index])
-	margin_parent.size =  Vector2(_column_widths_temp[col_index], _body_cell_heights_temp[row_index])
+	margin_parent.custom_minimum_size = Vector2(_column_widths_temp[col_index], _rows[row_index].row_height_temp)
+	margin_parent.size =  Vector2(_column_widths_temp[col_index], _rows[row_index].row_height_temp)
 	margin_parent.position = Vector2(_x_offsets[col_index], _y_offsets[row_index])
 	
 	var callable = Callable(self, "_on_cell_gui_input").bind(_rows[row_index], node)
@@ -594,39 +621,110 @@ func _create_h_separators() -> void:
 		sep.queue_free()
 	_horizontal_separators.clear()
 	
-	for i in range(_rows.size()):  # No separator after the last row
+	var start_index: int = 0
+	var end_index: int = row_count
+	
+	if pagination:
+		end_index = max_row_count_per_page
+		
+		if max_row_count_per_page * (current_page + 1) > row_count:
+			end_index = row_count - (max_row_count_per_page * current_page)
+	
+	clampi(start_index, 0, row_count)
+	clampi(end_index, 0, row_count)
+	
+	for i in range(start_index, end_index):  # No separator after the last row
 		var sep = HSeparator.new()
 		sep.name = "HSep%d" % i
 		sep.mouse_default_cursor_shape = Control.CURSOR_VSIZE
+		
 		#print("addchild")
 		if is_instance_valid(_separator_group):
 			_separator_group.add_child(sep)
 			_horizontal_separators.append(sep)
+		
 		var callable = Callable(self, "_on_separator_input").bind(i,HSeparator)
 		sep.connect("gui_input", callable)
 
 func _create_v_separators() -> void:
-	pass
-
-func _update_headers() -> void:
-	pass
+	for v_sep in _vertical_separators:
+		v_sep.queue_free()
+	_vertical_separators.clear()
+		
+	for i in range(column_count):  # No separator after the last column
+		var sep = VSeparator.new()
+		sep.name = "VSep%d" % i
+		sep.mouse_default_cursor_shape = Control.CURSOR_HSIZE
+		
+		if is_instance_valid(_separator_group):
+			_separator_group.add_child(sep)
+			_vertical_separators.append(sep)
+		
+		var callable = Callable(self, "_on_separator_input").bind(i,VSeparator)
+		sep.connect("gui_input", callable)
 
 func _update_h_separators() -> void:
-	pass
+	var pos: int = 0
+	var index: int = 0
+	
+	if not _rows.size() > 0:
+		return
+	
+	for i in range (_horizontal_separators.size()):
+		index = i
+		
+		if pagination:
+			index += (max_row_count_per_page * current_page)
+			index = clampi(index, 0, row_count - 1)
+		
+		if _rows[index].row_visible:
+			pos += _rows[index].row_height_temp
+			
+			_horizontal_separators[i].position = Vector2(0, pos)
+			_horizontal_separators[i].visible = true
+			_horizontal_separators[i].set_size(Vector2(_x_offsets.back() + _column_widths_temp.back(), 1))
+		else:
+			_horizontal_separators[i].visible = false
+	
+	_update_body_size()
 
 func _update_v_separators() -> void:
-	pass
+	#needs a litle offset for it to look good here: -2.5px
+	var pos = -2.5
+	
+	for i in range(_vertical_separators.size()):
+		if _column_widths_temp.size() > i:
+			if _column_visiblity[i]:
+				pos += _column_widths_temp[i]
+				
+				_vertical_separators[i].position = Vector2(pos, 0)
+				_vertical_separators[i].visible = true
+				
+				if pagination:
+					var index = (max_row_count_per_page * (current_page + 1)) - 1
+					
+					if index > row_count:
+						index = row_count - (max_row_count_per_page * current_page)
+					
+					
+					_vertical_separators[i].set_size(Vector2(1, _y_offsets[index] + _rows[index].row_height_temp))
+				else:
+					_vertical_separators[i].set_size(Vector2(1, _y_offsets.back() + _rows.back().row_height_temp))
+			else:
+				_vertical_separators[i].visible = false
+	
+	_update_body_size()
 
 func _on_separator_input(event, index, type) -> void:
 	if event is InputEventMouseMotion and event.button_mask & MOUSE_BUTTON_LEFT and resizing:
 		# Adjust the column width based on mouse movement
 		if type == VSeparator:
-			_column_widths_temp[index] = max(min_size.x, _column_widths_temp[index] + event.relative.x)
+			_column_widths_temp[index] = max(min_size.x, _column_widths_temp[index] + int(event.relative.x))
 			
 		if type == HSeparator:
-			_body_cell_heights_temp[index] = max(min_size.y,_body_cell_heights_temp[index] + event.relative.y)
+			_rows[index + (max_row_count_per_page * current_page)].row_height_temp = max(min_size.y, _rows[index + (max_row_count_per_page * current_page)].row_height_temp + event.relative.y)
 		
-		#_update_layout() 
+		update_table()
 
 func refresh_x_offsets_arr() -> void:
 	_x_offsets.clear()
@@ -667,7 +765,7 @@ func refresh_y_offsets_arr() -> void:
 		
 		for x in range (start, i):
 			if _rows[i].row_visible:
-				offsets[i] += _body_cell_heights_temp[x]
+				offsets[i] += _rows[x].row_height_temp
 	
 	_y_offsets = offsets.duplicate()
 
