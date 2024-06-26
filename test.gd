@@ -60,16 +60,11 @@ func _on_debug_add_row_pressed():
 	table2.current_page -= 1 
 
 func _on_debug_add_column_pressed():
-	table.add_header("test")
+	table2.clear()
 
 
 func _on_debug_hide_row_pressed():
-	if input:
-		var row = input.text.to_int()
-		if table.get_visibility_row(row):
-			table.visibility_row(row,false)
-		else:
-			table.visibility_row(row,true)
+	table2.remove_row(input.text.to_int())
 
 
 func _on_debug_hide_column_pressed():

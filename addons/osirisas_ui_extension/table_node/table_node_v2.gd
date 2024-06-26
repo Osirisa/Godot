@@ -134,6 +134,7 @@ enum Sorting {
 		max_pages = int(row_count / max_row_count_per_page)
 		
 		refresh_y_offsets_arr()
+
 		_clr_body.call_deferred()
 		_create_h_separators.call_deferred()
 		_update_h_separators.call_deferred()
@@ -159,7 +160,7 @@ var column_count: int = 0
 ## The current row count (incl. hidden rows)
 var row_count: int = 0
 
-## How many pages there are in total (do not set it!)
+## How many pages there are in total (DO NOT SET!)
 var max_pages := 1
 ## The current visible page (starts with 0)
 var current_page: int = 0:
@@ -336,7 +337,7 @@ func add_row(data: Array[Control] = [], clip_text: bool = true, height: float = 
 	row_count += 1
 	
 	#pagniation
-	max_pages = int(row_count / max_row_count_per_page)
+	max_pages = int(row_count / (max_row_count_per_page + 1))
 	
 	refresh_y_offsets_arr()
 	_update_body_size()
@@ -367,7 +368,7 @@ func add_rows_batch(data :Array, clip_text: bool = true, height: float = standar
 		_rows.append(new_row)
 		row_count += 1
 	
-	max_pages = int(row_count / max_row_count_per_page)
+	max_pages = int(row_count / (max_row_count_per_page + 1))
 	
 	refresh_y_offsets_arr()
 	_update_body_size()
@@ -377,12 +378,67 @@ func add_rows_batch(data :Array, clip_text: bool = true, height: float = standar
 	_update_visible_rows.call_deferred()
 
 ## Overrides the row from the Table 
-func set_row(data: Array[Control], row: int) -> void:
-	pass
+func set_row(data: Array[Control], row: int, clip_text: bool = true, height: float = standard_cell_dimension.y) -> void:
+
+	if data.size() > column_count:
+		push_warning("data array input bigger then column count, excess nodes wont be shown!")
+	
+	var edited_row := _rows[row]
+	
+	edited_row.nodes = data
+	edited_row.row_visible = true
+	edited_row.row_height = height
+	edited_row.row_height_temp = height
+	
+	refresh_y_offsets_arr()
+	_update_body_size()
+	
+	_create_h_separators.call_deferred()
+	_update_h_separators.call_deferred()
+	_update_visible_rows.call_deferred()
 
 ## Removes the row from the Table
 func remove_row(row: int) -> void:
-	pass
+
+	_rows.remove_at(row)
+
+	row_count = row_count - 1 if row_count > 0 else 0
+	max_pages = int(row_count / (max_row_count_per_page + 1))
+
+	if (current_page > max_pages) and pagination:
+		current_page = current_page
+	else:
+		refresh_y_offsets_arr()
+
+		_create_h_separators.call_deferred()
+		_update_h_separators.call_deferred()
+		_update_v_separators.call_deferred()
+		_update_visible_rows.call_deferred()	
+
+	_update_body_size()
+
+## Removes the rows from the Table e.g.: remove_row_batch([2,5,1,3,8])
+func remove_row_batch(rows_to_remove: Array[int]) -> void:
+
+	rows_to_remove.sort()
+
+	for index in range(rows_to_remove.size(), 0, -1):
+		_rows.remove_at(rows_to_remove[index])
+		row_count = row_count - 1 if row_count > 0 else 0
+	
+	max_pages = int(row_count / (max_row_count_per_page + 1))
+
+	if (current_page > max_pages) and pagination:
+		current_page = current_page
+	else:
+		refresh_y_offsets_arr()
+
+		_create_h_separators.call_deferred()
+		_update_h_separators.call_deferred()
+		_update_v_separators.call_deferred()
+		_update_visible_rows.call_deferred()	
+
+	_update_body_size()
 
 #endregion
 
@@ -390,7 +446,20 @@ func remove_row(row: int) -> void:
 
 ## Clears the whole Table
 func clear() -> void:
-	pass
+	_rows.clear()
+
+	row_count = 0
+	max_pages = 0
+	current_page = 0
+
+	refresh_y_offsets_arr()
+	_update_body_size()
+	
+	_create_h_separators.call_deferred()
+	_create_v_separators.call_deferred()
+	_update_h_separators.call_deferred()
+	_update_v_separators.call_deferred()
+	_update_visible_rows.call_deferred()
 
 func update_table() -> void:
 	refresh_y_offsets_arr()
@@ -567,12 +636,20 @@ func _update_visible_rows(value = 0) -> void:
 		if _rows[i].row_visible:
 			for x in range(_rows[i].nodes.size()):
 				var node = _rows[i].nodes[x]
-				
+
 				if !(node.get_parent() is MarginContainer):
+					_set_properties(node)
 					var margin_parent = _create_margin_container(node, i, x)
 					_body_cell_group.add_child(margin_parent)
 		else:
 			end_index = clampi(end_index + 1, 0, row_count)
+
+func _set_properties(node: Control) -> void:
+	if node is LineEdit:
+		node.clip_contents = true
+	elif node is Button or Label:
+		node.clip_text = true
+		node.clip_contents = true
 
 func _clr_body() -> void:
 	for child in _body_cell_group.get_children():
@@ -700,16 +777,20 @@ func _update_v_separators() -> void:
 				_vertical_separators[i].position = Vector2(pos, 0)
 				_vertical_separators[i].visible = true
 				
-				if pagination:
-					var index = (max_row_count_per_page * (current_page + 1)) - 1
-					
-					if index > row_count:
-						index = row_count - (max_row_count_per_page * current_page)
-					
-					
-					_vertical_separators[i].set_size(Vector2(1, _y_offsets[index] + _rows[index].row_height_temp))
+				if row_count > 0:
+					if pagination:
+						var index = (max_row_count_per_page * (current_page + 1)) - 1
+						
+						if index > row_count:
+							index = row_count - (max_row_count_per_page * current_page)
+						
+						
+						_vertical_separators[i].set_size(Vector2(1, _y_offsets[index] + _rows[index].row_height_temp))
+					else:
+						_vertical_separators[i].set_size(Vector2(1, _y_offsets.back() + _rows.back().row_height_temp))
 				else:
-					_vertical_separators[i].set_size(Vector2(1, _y_offsets.back() + _rows.back().row_height_temp))
+					_vertical_separators[i].visible = false
+
 			else:
 				_vertical_separators[i].visible = false
 	
