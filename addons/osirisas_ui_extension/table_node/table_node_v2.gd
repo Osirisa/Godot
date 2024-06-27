@@ -205,6 +205,7 @@ var _column_visiblity: Array[bool] = []
 
 # Seperators
 var _separator_group := Control.new()
+var _header_separator_group := Control.new()
 
 var _header_separators := []
 var _vertical_separators := []
@@ -216,6 +217,7 @@ var _header_cell_group := Control.new()
 var _body_cell_group := Control.new()
 
 #The main group for all body related things (separators, cells and panel)
+var _header_group := Control.new()
 var _body_group := Control.new()
 
 # Panels for Background-Color etc.
@@ -267,12 +269,15 @@ func _ready():
 	
 	_scroll_container.add_child(_body_group)
 	
-	_header_cell_group.custom_minimum_size = Vector2i(_x_offsets.back(), header_cell_height)
-	
+	_header_group.custom_minimum_size = Vector2i(_x_offsets.back(),header_cell_height)
+	_header_group.add_child(_header_cell_group)
+	_header_group.add_child(_header_separator_group)
+
+
 	refresh_x_offsets_arr()
 	refresh_y_offsets_arr()
 	
-	v_cont.add_child(_header_cell_group)
+	v_cont.add_child(_header_group)
 	v_cont.add_child(_scroll_container)
 	
 	add_child(v_cont)
@@ -308,6 +313,7 @@ func add_column(title: String, cell_width := standard_cell_dimension.x, column_v
 	
 	refresh_x_offsets_arr()
 	
+	_create_headers.call_deferred()
 	_create_v_separators.call_deferred()
 	_update_v_separators.call_deferred()
 	_update_visible_rows.call_deferred()
@@ -418,10 +424,10 @@ func remove_row(row: int) -> void:
 	_update_body_size()
 
 ## Removes the rows from the Table e.g.: remove_row_batch([2,5,1,3,8])
-func remove_row_batch(rows_to_remove: Array[int]) -> void:
+func remove_rows_batch(rows_to_remove: Array[int]) -> void:
 
 	rows_to_remove.sort()
-
+	
 	for index in range(rows_to_remove.size(), 0, -1):
 		_rows.remove_at(rows_to_remove[index])
 		row_count = row_count - 1 if row_count > 0 else 0
@@ -579,11 +585,13 @@ func _create_headers() -> void:
 		child.queue_free()
 	
 	for i in range(header_titles.size()):
-		var header_btn = Button.new()
-		var header_margin_container = MarginContainer.new()
+		var header_btn := Button.new()
+		var header_margin_container := MarginContainer.new()
 		
 		header_btn.text = header_titles[i]
-		
+		header_btn.clip_text = true
+		header_btn.clip_contents = true
+
 		header_margin_container.add_child(header_btn)
 		header_margin_container.position = Vector2i(_x_offsets[i], 0)
 		header_margin_container.size = Vector2i(column_widths[i], header_cell_height)
@@ -592,11 +600,16 @@ func _create_headers() -> void:
 		_header_cell_group.add_child(header_margin_container)
 
 func _update_headers() -> void:
-	pass
+	var children = _header_cell_group.get_children()
+
+	for idx in children.size():
+		children[idx].position = Vector2i(_x_offsets[idx], 0)
+		children[idx].size = Vector2i(_column_widths_temp[idx], header_cell_height)
+		children[idx].custom_minimum_size = Vector2i(_column_widths_temp[idx], header_cell_height)
 
 func _scroll_header_horizontally(value):
 	print(value)
-	_header_cell_group.position.x = -value
+	_header_group.position.x = -value
 
 ## Main function for inserting and visualizing the nodes
 func _update_visible_rows(value = 0) -> void:
@@ -727,17 +740,33 @@ func _create_v_separators() -> void:
 	for v_sep in _vertical_separators:
 		v_sep.queue_free()
 	_vertical_separators.clear()
+
+	for h_sep in _header_separators:
+		h_sep.queue_free()
+	_header_separators.clear()
+
 		
 	for i in range(column_count):  # No separator after the last column
 		var sep = VSeparator.new()
+		var sep_header = VSeparator.new()
+
 		sep.name = "VSep%d" % i
 		sep.mouse_default_cursor_shape = Control.CURSOR_HSIZE
-		
+
+		sep_header.name = "VSep%d" % i
+		sep_header.mouse_default_cursor_shape = Control.CURSOR_HSIZE
+		sep_header.set_size(Vector2i(1, header_cell_height))
+
+		if is_instance_valid(_header_separator_group):
+			_header_separator_group.add_child(sep_header)
+			_header_separators.append(sep_header)
+			
 		if is_instance_valid(_separator_group):
 			_separator_group.add_child(sep)
 			_vertical_separators.append(sep)
 		
 		var callable = Callable(self, "_on_separator_input").bind(i,VSeparator)
+		sep_header.connect("gui_input", callable)
 		sep.connect("gui_input", callable)
 
 func _update_h_separators() -> void:
@@ -763,6 +792,7 @@ func _update_h_separators() -> void:
 		else:
 			_horizontal_separators[i].visible = false
 	
+	_update_headers.call_deferred()
 	_update_body_size()
 
 func _update_v_separators() -> void:
@@ -776,7 +806,10 @@ func _update_v_separators() -> void:
 				
 				_vertical_separators[i].position = Vector2(pos, 0)
 				_vertical_separators[i].visible = true
-				
+			
+				_header_separators[i].position = Vector2(pos, 0)
+				_header_separators[i].visible = true
+
 				if row_count > 0:
 					if pagination:
 						var index = (max_row_count_per_page * (current_page + 1)) - 1
@@ -793,7 +826,9 @@ func _update_v_separators() -> void:
 
 			else:
 				_vertical_separators[i].visible = false
+				_header_separators[i].visible = false
 	
+	_update_headers.call_deferred()
 	_update_body_size()
 
 func _on_separator_input(event, index, type) -> void:
