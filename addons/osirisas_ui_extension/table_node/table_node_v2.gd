@@ -523,7 +523,7 @@ func clear() -> void:
 
 	row_count = 0
 	column_count = 0
-	
+
 	max_pages = 0
 	current_page = 0
 
@@ -901,13 +901,17 @@ func _update_v_separators() -> void:
 
 				if row_count > 0:
 					if pagination:
-						var index = (max_row_count_per_page * (current_page + 1)) - 1
-						
+						var index: int = (max_row_count_per_page * (current_page + 1)) - 1
+						var rows_index := index
+
 						if index > row_count:
-							index = row_count - (max_row_count_per_page * current_page)
+							index = row_count - (max_row_count_per_page * current_page) - 1
+							rows_index = row_count - 1
 						
-						
-						_vertical_separators[i].set_size(Vector2(1, _y_offsets[index] + _rows[index].row_height_temp))
+						#print(row_count)
+						#print(index)
+
+						_vertical_separators[i].set_size(Vector2(1, _y_offsets[index] + _rows[rows_index].row_height_temp))
 					else:
 						_vertical_separators[i].set_size(Vector2(1, _y_offsets.back() + _rows.back().row_height_temp))
 				else:
@@ -941,8 +945,8 @@ func refresh_y_offsets_arr() -> void:
 	var start: int
 	var end: int
 	
-	for i in row_count:
-		offsets.append(0)
+	offsets.resize(row_count)
+	offsets.fill(0)
 	
 	if pagination:
 		start = clampi(max_row_count_per_page * current_page, 0, row_count)
@@ -962,15 +966,14 @@ func refresh_y_offsets_arr() -> void:
 
 func _sort_thread_function(args: Array) -> void:
 	var column = args[0]
-	var ascending :E_Sorting= args[1]
+	var ascending: E_Sorting = args[1]
 	
 	var sorted_rows = _rows.duplicate()
 	
 	var sorter = Sorter.new(column, ascending)
 	sorted_rows.sort_custom(sorter._sort)
-	
-	#var callable = Callable(self, "sorting_complete").bind(sorted_rows)
-	call_deferred("emit_signal", "_c_sort_finished",sorted_rows)
+
+	call_deferred("emit_signal", "_c_sort_finished", sorted_rows)
 
 
 #<--------------------------|Slots|------------------------------>#
@@ -1029,13 +1032,15 @@ func _on_header_clicked(column_btn: Control) -> void:
 	sort_rows_by_column(column, ascending)
 
 func _on_sorting_complete(sorted_rows: Array) -> void:
-	_rows.clear()
-	_rows = sorted_rows
 	
+	_rows.clear()
+	_rows = sorted_rows.duplicate()
+
 	_sort_thread.wait_to_finish()
 	_sort_thread = null
-	
-	_update_visible_rows()
+
+	update_table()
+
 	#last_selected_row = get_current_row()
 	emit_signal("column_sort_finished", get_meta("sort_column"), get_meta("sort_ascending"))
 #-----------------------------------------Subclasses-----------------------------------------------#
