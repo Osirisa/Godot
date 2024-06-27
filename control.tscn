@@ -201,5 +201,5 @@ text = "teateaeeta"
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_get_curr_row" to="." method="_on_debug_get_curr_row_pressed"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_set_row_heigth" to="." method="_on_debug_set_row_heigth_pressed"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_set_col_width" to="." method="_on_debug_set_col_width_pressed"]
-[connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_hide_selection" to="." method="_on_debug_hide_selection_pressed"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_hide_selection" to="." method="_on_debug_set_col_width_pressed"]
+[connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_hide_selection" to="." method="_on_debug_hide_selection_pressed"]

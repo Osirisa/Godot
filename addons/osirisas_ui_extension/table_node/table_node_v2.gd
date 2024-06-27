@@ -19,13 +19,14 @@ signal cell_edit(row:int,column:int)
 signal cell_edit_finished(row:int,column:int)
 
 ## Signal when a column sorting was requested
-signal column_sort_requested(column: int, sort: Sorting)
+signal column_sort_requested(column: int, sort: E_Sorting)
 
 ## Signal when a column sorting was finished
-signal column_sort_finished(column: int, sort: Sorting)
+signal column_sort_finished(column: int, sort: E_Sorting)
 
+signal _c_sort_finished(sorted_rows: Array)
 #-----------------------------------------Enums----------------------------------------------------#
-enum Sorting {
+enum E_Sorting {
 	ASCENDING,
 	DESCENDING,
 }
@@ -247,6 +248,8 @@ func _init():
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	
+	connect("_c_sort_finished",Callable(self, "_on_sorting_complete"))
+
 	var v_cont := VBoxContainer.new()
 	v_cont.set_anchors_preset(Control.PRESET_FULL_RECT)
 	v_cont.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -298,7 +301,6 @@ func _ready():
 #region Header Edit -------------
 
 func add_column(title: String, cell_width := standard_cell_dimension.x, column_visiblity := true) -> void:
-	
 	column_widths.append(cell_width)
 	_column_widths_temp.append(cell_width)
 	
@@ -309,7 +311,14 @@ func add_column(title: String, cell_width := standard_cell_dimension.x, column_v
 	header_titles.append(title)
 
 	for i in row_count:
-		_rows[i].nodes.append(Label.new())
+		var row = _rows[i]
+		var standard_label = Label.new()
+
+		standard_label.name = "std_label_%d" % row.nodes.size()
+		standard_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+
+		row.nodes.append(standard_label)
+		row.editable.append(true)
 	
 	refresh_x_offsets_arr()
 	
@@ -318,8 +327,61 @@ func add_column(title: String, cell_width := standard_cell_dimension.x, column_v
 	_update_v_separators.call_deferred()
 	_update_visible_rows.call_deferred()
 
-#TBD:: insert_column(title,column_pos)
-#TBD:: remove_column(column_pos)
+func insert_column(title, column_pos, cell_width := standard_cell_dimension.x, column_visiblity := true):
+	if not _table_util.check_column_input(column_pos, column_count-1):
+		return
+
+	column_widths.insert(column_pos, cell_width)
+	_column_widths_temp.insert(column_pos, cell_width)
+	
+	_column_visiblity.insert(column_pos, column_visiblity)
+	
+	column_count += 1
+	
+	header_titles.insert(column_pos, title)
+
+	for i in row_count:
+		var row = _rows[i]
+		var standard_label = Label.new()
+
+		standard_label.name = "std_label_%d" % row.nodes.size()
+		standard_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+
+		row.nodes.insert(column_pos, standard_label)
+		row.editable.insert(column_pos, true)
+	
+	refresh_x_offsets_arr()
+	
+	_create_headers.call_deferred()
+	_create_v_separators.call_deferred()
+	_update_v_separators.call_deferred()
+	_update_visible_rows.call_deferred()
+
+func remove_column(column_pos):
+	if not _table_util.check_column_input(column_pos, column_count-1):
+		return
+
+	column_widths.remove_at(column_pos)
+	_column_widths_temp.remove_at(column_pos)
+	
+	_column_visiblity.remove_at(column_pos)
+	
+	column_count = column_count - 1 if column_count > 0 else 0 
+	
+	header_titles.remove_at(column_pos)
+
+	for i in row_count:
+		var row = _rows[i]
+
+		row.nodes.remove_at(column_pos)
+		row.editable.remove_at(column_pos)
+	
+	refresh_x_offsets_arr()
+	
+	_create_headers.call_deferred()
+	_create_v_separators.call_deferred()
+	_update_v_separators.call_deferred()
+	_update_visible_rows.call_deferred()
 
 #endregion
 
@@ -327,7 +389,7 @@ func add_column(title: String, cell_width := standard_cell_dimension.x, column_v
 
 ## Adds a row to the table directly below the previous row can also called with no data, then it fills the row with empty labels
 func add_row(data: Array[Control] = [], clip_text: bool = true, height: float = standard_cell_dimension.y) -> void:
-	
+
 	if data.size() > column_count:
 		push_warning("data array input bigger then column count, excess nodes wont be shown!")
 	
@@ -359,7 +421,7 @@ func add_row(data: Array[Control] = [], clip_text: bool = true, height: float = 
 ## for populating the table with data
 ## Use this for heavy table filling, as it wont update the visible rows until its finished loading the data
 func add_rows_batch(data :Array, clip_text: bool = true, height: float = standard_cell_dimension.y) -> void:
-	
+
 	for d in data:
 		var new_row := RowContent.new()
 		
@@ -385,6 +447,8 @@ func add_rows_batch(data :Array, clip_text: bool = true, height: float = standar
 
 ## Overrides the row from the Table 
 func set_row(data: Array[Control], row: int, clip_text: bool = true, height: float = standard_cell_dimension.y) -> void:
+	if not _table_util.check_row_input(row, row_count - 1):
+		return
 
 	if data.size() > column_count:
 		push_warning("data array input bigger then column count, excess nodes wont be shown!")
@@ -405,6 +469,8 @@ func set_row(data: Array[Control], row: int, clip_text: bool = true, height: flo
 
 ## Removes the row from the Table
 func remove_row(row: int) -> void:
+	if not _table_util.check_row_input(row, row_count - 1):
+		return
 
 	_rows.remove_at(row)
 
@@ -453,14 +519,19 @@ func remove_rows_batch(rows_to_remove: Array[int]) -> void:
 ## Clears the whole Table
 func clear() -> void:
 	_rows.clear()
+	header_titles.clear()
 
 	row_count = 0
+	column_count = 0
+	
 	max_pages = 0
 	current_page = 0
 
 	refresh_y_offsets_arr()
+	refresh_x_offsets_arr()
 	_update_body_size()
 	
+	_create_headers.call_deferred()
 	_create_h_separators.call_deferred()
 	_create_v_separators.call_deferred()
 	_update_h_separators.call_deferred()
@@ -525,8 +596,13 @@ func get_visibility_column(column: int) -> bool:
 
 #region Sorting -----------------
 
-func sort_rows_by_column(column: int, sort: Sorting) -> void:
-	pass
+func sort_rows_by_column(column: int, sort: E_Sorting) -> void:
+	if not _table_util.check_column_input(column, column_count - 1):
+		return
+	
+	_sort_thread = Thread.new()
+	var callable = Callable(self, "_sort_thread_function").bind([column, sort])
+	_sort_thread.start(callable)
 
 #endregion
 
@@ -591,6 +667,9 @@ func _create_headers() -> void:
 		header_btn.text = header_titles[i]
 		header_btn.clip_text = true
 		header_btn.clip_contents = true
+		
+		var callable = Callable(self, "_on_header_clicked").bind(header_margin_container)
+		header_btn.connect("pressed", callable)
 
 		header_margin_container.add_child(header_btn)
 		header_margin_container.position = Vector2i(_x_offsets[i], 0)
@@ -647,8 +726,14 @@ func _update_visible_rows(value = 0) -> void:
 	
 	for i in range(start_index, end_index):
 		if _rows[i].row_visible:
-			for x in range(_rows[i].nodes.size()):
-				var node = _rows[i].nodes[x]
+			for x in range(column_count):
+				var nodes = _rows[i].nodes
+				var node
+
+				if nodes.size() > x:
+					node = nodes[x]
+				else:
+					node = Label.new()
 
 				if !(node.get_parent() is MarginContainer):
 					_set_properties(node)
@@ -673,17 +758,21 @@ func _clr_body() -> void:
 func _table_size() -> Vector2i:
 	
 	var table_size := Vector2i(0,0)
+
+	if not _x_offsets.size() > 0:
+		return table_size 
+
 	table_size.x = _x_offsets.back() + _column_widths_temp.back()
-	
+
 	if not _y_offsets.size() > 0:
 		return table_size 
-	
+
 	if pagination:
 		var last_pos = clampi((max_row_count_per_page * (current_page + 1)) - 1, 0, row_count - 1)
 		table_size.y = _y_offsets[last_pos] + _rows[last_pos].row_height_temp + 8
 	else:
 		table_size.y = _y_offsets.back() + _rows.back().row_height_temp + 8
-	
+
 	return table_size
 
 func _update_body_size() -> void:
@@ -741,8 +830,8 @@ func _create_v_separators() -> void:
 		v_sep.queue_free()
 	_vertical_separators.clear()
 
-	for h_sep in _header_separators:
-		h_sep.queue_free()
+	for head_sep in _header_separators:
+		head_sep.queue_free()
 	_header_separators.clear()
 
 		
@@ -831,22 +920,11 @@ func _update_v_separators() -> void:
 	_update_headers.call_deferred()
 	_update_body_size()
 
-func _on_separator_input(event, index, type) -> void:
-	if event is InputEventMouseMotion and event.button_mask & MOUSE_BUTTON_LEFT and resizing:
-		# Adjust the column width based on mouse movement
-		if type == VSeparator:
-			_column_widths_temp[index] = max(min_size.x, _column_widths_temp[index] + int(event.relative.x))
-			
-		if type == HSeparator:
-			_rows[index + (max_row_count_per_page * current_page)].row_height_temp = max(min_size.y, _rows[index + (max_row_count_per_page * current_page)].row_height_temp + event.relative.y)
-		
-		update_table()
-
 func refresh_x_offsets_arr() -> void:
 	_x_offsets.clear()
 	
 	var offsets := []
-	
+
 	for i in range (column_count):
 		offsets.append(0)
 		
@@ -873,10 +951,6 @@ func refresh_y_offsets_arr() -> void:
 		start = 0
 		end = row_count
 	
-	#print("------y_offsets---")
-	#print(start)
-	#print(end)
-	
 	for i in range(start, end):
 		
 		for x in range (start, i):
@@ -884,6 +958,22 @@ func refresh_y_offsets_arr() -> void:
 				offsets[i] += _rows[x].row_height_temp
 	
 	_y_offsets = offsets.duplicate()
+
+
+func _sort_thread_function(args: Array) -> void:
+	var column = args[0]
+	var ascending :E_Sorting= args[1]
+	
+	var sorted_rows = _rows.duplicate()
+	
+	var sorter = Sorter.new(column, ascending)
+	sorted_rows.sort_custom(sorter._sort)
+	
+	#var callable = Callable(self, "sorting_complete").bind(sorted_rows)
+	call_deferred("emit_signal", "_c_sort_finished",sorted_rows)
+
+
+#<--------------------------|Slots|------------------------------>#
 
 func _on_cell_gui_input(event: InputEvent,row_c: RowContent, node: Control) -> void:
 	var row = _rows.find(row_c)
@@ -905,15 +995,56 @@ func _on_cell_gui_input(event: InputEvent,row_c: RowContent, node: Control) -> v
 		else:
 			#_select_single_row(row)
 			pass
-#<--------------------------|Slots|------------------------------>#
 
+func _on_separator_input(event, index, type) -> void:
+	if event is InputEventMouseMotion and event.button_mask & MOUSE_BUTTON_LEFT and resizing:
+		# Adjust the column width based on mouse movement
+		if type == VSeparator:
+			_column_widths_temp[index] = max(min_size.x, _column_widths_temp[index] + int(event.relative.x))
+			
+		if type == HSeparator:
+			_rows[index + (max_row_count_per_page * current_page)].row_height_temp = max(min_size.y, _rows[index + (max_row_count_per_page * current_page)].row_height_temp + event.relative.y)
+		
+	if event is InputEventMouseButton and event.double_click:
+		if type == VSeparator:
+			_column_widths_temp[index] = column_widths[index]
+			
+		if type == HSeparator:
+			_rows[index].row_height_temp = _rows[index].row_height
+		
+
+	update_table()
+
+func _on_header_clicked(column_btn: Control) -> void:
+	# Toggle sorting direction (ascending/descending)
+	var column: int = _header_cell_group.get_children().find(column_btn)
+	var ascending = E_Sorting.ASCENDING
+
+	if has_meta("sort_column") and get_meta("sort_column") == column:
+		ascending = not get_meta("sort_ascending")
+	
+	set_meta("sort_column", column)
+	set_meta("sort_ascending", ascending)
+	
+	sort_rows_by_column(column, ascending)
+
+func _on_sorting_complete(sorted_rows: Array) -> void:
+	_rows.clear()
+	_rows = sorted_rows
+	
+	_sort_thread.wait_to_finish()
+	_sort_thread = null
+	
+	_update_visible_rows()
+	#last_selected_row = get_current_row()
+	emit_signal("column_sort_finished", get_meta("sort_column"), get_meta("sort_ascending"))
 #-----------------------------------------Subclasses-----------------------------------------------#
 
 class Sorter:
 	var column: int
-	var ascending: bool
+	var ascending: E_Sorting
 	
-	func _init(column: int, ascending: bool):
+	func _init(column: int, ascending: E_Sorting):
 		self.column = column
 		self.ascending = ascending
 	
@@ -924,10 +1055,13 @@ class Sorter:
 		var text_a: String = node_a.text if node_a.text != null else ""
 		var text_b: String = node_b.text if node_b.text != null else ""
 		
-		if ascending:
+		if ascending == E_Sorting.ASCENDING:
 			return text_a.naturalcasecmp_to(text_b) < 0
-		else:
+		elif ascending == E_Sorting.DESCENDING:
 			return text_a.naturalcasecmp_to(text_b) > 0
+		else:
+			push_error("sorting invalid: " + str(ascending))
+			return
 
 class RowContent:
 	var nodes: Array[Control] = []
