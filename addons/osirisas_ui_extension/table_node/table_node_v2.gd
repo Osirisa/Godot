@@ -24,6 +24,7 @@ signal column_sort_requested(column: int, sort: E_Sorting)
 ## Signal when a column sorting was finished
 signal column_sort_finished(column: int, sort: E_Sorting)
 
+## Private Signal (for the sorting thread, gives out the new sorted array)
 signal _c_sort_finished(sorted_rows: Array)
 #-----------------------------------------Enums----------------------------------------------------#
 enum E_Sorting {
@@ -65,7 +66,7 @@ enum E_Sorting {
 
 		#TBD::
 		#_init_v_separators()
-		refresh_x_offsets_arr()
+		_refresh_x_offsets_arr()
 		_create_v_separators()
 		_create_headers.call_deferred()
 		#_update_layout()
@@ -116,7 +117,7 @@ enum E_Sorting {
 	set(value):
 		pagination = value
 		
-		refresh_y_offsets_arr()
+		_refresh_y_offsets_arr()
 		
 		_clr_body.call_deferred()
 		_create_h_separators.call_deferred()
@@ -134,7 +135,7 @@ enum E_Sorting {
 		
 		max_pages = int(row_count / max_row_count_per_page)
 		
-		refresh_y_offsets_arr()
+		_refresh_y_offsets_arr()
 
 		_clr_body.call_deferred()
 		_create_h_separators.call_deferred()
@@ -178,7 +179,7 @@ var current_page: int = 0:
 			_update_body_size.call_deferred()
 			_shortened = true
 		
-		refresh_y_offsets_arr()
+		_refresh_y_offsets_arr()
 		
 		_clr_body.call_deferred()
 		_create_h_separators.call_deferred()
@@ -277,8 +278,8 @@ func _ready():
 	_header_group.add_child(_header_separator_group)
 
 
-	refresh_x_offsets_arr()
-	refresh_y_offsets_arr()
+	_refresh_x_offsets_arr()
+	_refresh_y_offsets_arr()
 	
 	v_cont.add_child(_header_group)
 	v_cont.add_child(_scroll_container)
@@ -294,6 +295,11 @@ func _ready():
 	
 	clip_contents = true
 
+func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		deselect_all_rows()
+	elif event.is_action_pressed("ui_text_select_all"):
+		select_all_rows()
 #-----------------------------------------Virtual methods------------------------------------------#
 
 #-----------------------------------------Public methods-------------------------------------------#
@@ -301,26 +307,16 @@ func _ready():
 #region Header Edit -------------
 
 func add_column(title: String, cell_width := standard_cell_dimension.x, column_visiblity := true) -> void:
+
 	column_widths.append(cell_width)
 	_column_widths_temp.append(cell_width)
-	
 	_column_visiblity.append(column_visiblity)
 	
 	column_count += 1
-	
+
 	header_titles.append(title)
-
-	for i in row_count:
-		var row = _rows[i]
-		var standard_label = Label.new()
-
-		standard_label.name = "std_label_%d" % row.nodes.size()
-		standard_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-
-		row.nodes.append(standard_label)
-		row.editable.append(true)
 	
-	refresh_x_offsets_arr()
+	_refresh_x_offsets_arr()
 	
 	_create_headers.call_deferred()
 	_create_v_separators.call_deferred()
@@ -350,7 +346,7 @@ func insert_column(title, column_pos, cell_width := standard_cell_dimension.x, c
 		row.nodes.insert(column_pos, standard_label)
 		row.editable.insert(column_pos, true)
 	
-	refresh_x_offsets_arr()
+	_refresh_x_offsets_arr()
 	
 	_create_headers.call_deferred()
 	_create_v_separators.call_deferred()
@@ -376,7 +372,7 @@ func remove_column(column_pos):
 		row.nodes.remove_at(column_pos)
 		row.editable.remove_at(column_pos)
 	
-	refresh_x_offsets_arr()
+	_refresh_x_offsets_arr()
 	
 	_create_headers.call_deferred()
 	_create_v_separators.call_deferred()
@@ -407,7 +403,7 @@ func add_row(data: Array[Control] = [], clip_text: bool = true, height: float = 
 	#pagniation
 	max_pages = int(row_count / (max_row_count_per_page + 1))
 	
-	refresh_y_offsets_arr()
+	_refresh_y_offsets_arr()
 	_update_body_size()
 	
 	_create_h_separators.call_deferred()
@@ -438,7 +434,7 @@ func add_rows_batch(data :Array, clip_text: bool = true, height: float = standar
 	
 	max_pages = int(row_count / (max_row_count_per_page + 1))
 	
-	refresh_y_offsets_arr()
+	_refresh_y_offsets_arr()
 	_update_body_size()
 	
 	_create_h_separators.call_deferred()
@@ -460,7 +456,7 @@ func set_row(data: Array[Control], row: int, clip_text: bool = true, height: flo
 	edited_row.row_height = height
 	edited_row.row_height_temp = height
 	
-	refresh_y_offsets_arr()
+	_refresh_y_offsets_arr()
 	_update_body_size()
 	
 	_create_h_separators.call_deferred()
@@ -480,7 +476,7 @@ func remove_row(row: int) -> void:
 	if (current_page > max_pages) and pagination:
 		current_page = current_page
 	else:
-		refresh_y_offsets_arr()
+		_refresh_y_offsets_arr()
 
 		_create_h_separators.call_deferred()
 		_update_h_separators.call_deferred()
@@ -503,7 +499,7 @@ func remove_rows_batch(rows_to_remove: Array[int]) -> void:
 	if (current_page > max_pages) and pagination:
 		current_page = current_page
 	else:
-		refresh_y_offsets_arr()
+		_refresh_y_offsets_arr()
 
 		_create_h_separators.call_deferred()
 		_update_h_separators.call_deferred()
@@ -527,8 +523,8 @@ func clear() -> void:
 	max_pages = 0
 	current_page = 0
 
-	refresh_y_offsets_arr()
-	refresh_x_offsets_arr()
+	_refresh_y_offsets_arr()
+	_refresh_x_offsets_arr()
 	_update_body_size()
 	
 	_create_headers.call_deferred()
@@ -539,8 +535,8 @@ func clear() -> void:
 	_update_visible_rows.call_deferred()
 
 func update_table() -> void:
-	refresh_y_offsets_arr()
-	refresh_x_offsets_arr()
+	_refresh_y_offsets_arr()
+	_refresh_x_offsets_arr()
 	
 	_update_h_separators.call_deferred()
 	_update_v_separators.call_deferred()
@@ -613,26 +609,37 @@ func sort_rows_by_column(column: int, sort: E_Sorting) -> void:
 
 ## Selects all rows
 func select_all_rows() -> void:
-	pass
+	for row in _rows:
 
-## Deselects all rows
+		if _selected_rows.find(row) == -1:
+			_selected_rows.append(row)
+			_update_row_selection_visuals(row)
+
 func deselect_all_rows() -> void:
-	pass
 
-## Returns if the Table has a selection
+	if _selected_rows.is_empty():
+		return
+
+	_selected_rows.clear()
+	for row in _rows:
+		_update_row_selection_visuals(row)
+
 func has_selection() -> bool:
-	return false
-	pass
+	if _selected_rows.size() > 0:
+		return true
+	else:
+		return false
 
-## Returns the positions of the last selected Row 
 func get_current_row() -> int:
-	return 0
-	pass
+	return _rows.find(_current_row)
 
 ## Returns the positions of the Rows that got selected
 func get_selection_positions() -> Array[int]:
-	return []
-	pass
+	var positions :Array[int]= []
+	for row in _selected_rows:
+		positions.append(_rows.find(row))
+	positions.sort()
+	return positions
 
 #endregion
 
@@ -734,11 +741,14 @@ func _update_visible_rows(value = 0) -> void:
 					node = nodes[x]
 				else:
 					node = Label.new()
+					node.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
 				if !(node.get_parent() is MarginContainer):
 					_set_properties(node)
 					var margin_parent = _create_margin_container(node, i, x)
 					_body_cell_group.add_child(margin_parent)
+				
+				
 		else:
 			end_index = clampi(end_index + 1, 0, row_count)
 
@@ -924,7 +934,7 @@ func _update_v_separators() -> void:
 	_update_headers.call_deferred()
 	_update_body_size()
 
-func refresh_x_offsets_arr() -> void:
+func _refresh_x_offsets_arr() -> void:
 	_x_offsets.clear()
 	
 	var offsets := []
@@ -938,7 +948,7 @@ func refresh_x_offsets_arr() -> void:
 	
 	_x_offsets = offsets.duplicate()
 
-func refresh_y_offsets_arr() -> void:
+func _refresh_y_offsets_arr() -> void:
 	_y_offsets.clear()
 	
 	var offsets := []
@@ -975,6 +985,46 @@ func _sort_thread_function(args: Array) -> void:
 
 	call_deferred("emit_signal", "_c_sort_finished", sorted_rows)
 
+func _select_single_row(row: int) -> void:
+	deselect_all_rows()
+
+	var curr_row = _rows[row]
+
+	_selected_rows.append(curr_row)
+	_current_row = curr_row
+	_last_selected_row = row
+	_update_row_selection_visuals(curr_row)
+
+func _toggle_row_selection(row: int) -> void:
+
+	var curr_row = _rows[row]
+	var array_pos = _selected_rows.find(curr_row)
+
+	if array_pos == -1:
+		_selected_rows.append(curr_row)
+		_last_selected_row = row
+	else:
+		_selected_rows.remove_at(array_pos)
+	
+	_current_row = curr_row
+	_update_row_selection_visuals(curr_row)
+
+func _select_multiple_rows(row: int) -> void:
+
+	if _last_selected_row == -1:
+		_select_single_row(row)
+		return
+	
+	var curr_row = _rows[row]
+	var start = min(_last_selected_row, row)
+	var end = max(_last_selected_row, row)
+	
+	for i in range(start, end + 1):
+		if _selected_rows.find(curr_row) == -1:
+			_selected_rows.append(curr_row)
+			_update_row_selection_visuals(curr_row)
+	
+	_current_row = curr_row
 
 #<--------------------------|Slots|------------------------------>#
 
@@ -984,20 +1034,18 @@ func _on_cell_gui_input(event: InputEvent,row_c: RowContent, node: Control) -> v
 	
 	if event is InputEventMouseButton and event.double_click:
 		#_edit_cell(row,column)
-		print("doubleclick")
+		#print("doubleclick")
+		pass
 	if event is InputEventMouseButton and event.pressed and event.button_mask & MOUSE_BUTTON_LEFT:
 		emit_signal("cell_clicked",row,column)
 		
 	if event is InputEventMouseButton and event.pressed and event.button_mask & MOUSE_BUTTON_LEFT:
 		if Input.is_key_pressed(KEY_SHIFT):
-			#_select_multiple_rows(row)
-			pass
+			_select_multiple_rows(row)
 		elif Input.is_key_pressed(KEY_CTRL):
-			#_toggle_row_selection(row)
-			pass
+			_toggle_row_selection(row)
 		else:
-			#_select_single_row(row)
-			pass
+			_select_single_row(row)
 
 func _on_separator_input(event, index, type) -> void:
 	if event is InputEventMouseMotion and event.button_mask & MOUSE_BUTTON_LEFT and resizing:
@@ -1015,7 +1063,6 @@ func _on_separator_input(event, index, type) -> void:
 		if type == HSeparator:
 			_rows[index].row_height_temp = _rows[index].row_height
 		
-
 	update_table()
 
 func _on_header_clicked(column_btn: Control) -> void:
@@ -1043,6 +1090,31 @@ func _on_sorting_complete(sorted_rows: Array) -> void:
 
 	#last_selected_row = get_current_row()
 	emit_signal("column_sort_finished", get_meta("sort_column"), get_meta("sort_ascending"))
+
+func _update_row_selection_visuals(row: RowContent) -> void:
+
+	if _selected_rows.find(row) >= 0:
+		for node in row.nodes:
+			if selection_theme:
+				node.get_parent().theme = selection_theme
+				node.theme = selection_theme
+	else:
+		for node in row.nodes:
+			var parent = node.get_parent()
+			
+			print(node)
+			print(parent)
+
+			if body_theme:
+				parent.theme = body_theme
+				node.theme = body_theme
+			else:
+				if node.theme:
+					node.theme.clear()
+
+				if parent.theme:
+					parent.theme.clear()
+
 #-----------------------------------------Subclasses-----------------------------------------------#
 
 class Sorter:
