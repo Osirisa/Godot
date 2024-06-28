@@ -102,13 +102,17 @@ enum E_Sorting {
 @export_category("Special")
 @export_group("Culling")
 ## Culling makes it that only so many rows are being inserted to maximize performacne (For Large Tables)
-@export var row_culling := true
+@export var row_culling := true:
+	set(value):
+		row_culling = value
+		_init_v_scroll()
+
 ## Count for the maximum simultaneously "Active / inserted" Rows at any Moment 
 @export var max_row_count_active_culling := 60:
 	set(value):
 		max_row_count_active_culling = value
 		
-		if (_x_offsets.size() > 0) and (_y_offsets.size() > 0):
+		if !_x_offsets.is_empty() and !_y_offsets.is_empty():
 			_update_visible_rows.call_deferred()
 
 @export_group("Pagination")
@@ -116,7 +120,7 @@ enum E_Sorting {
 @export var pagination := false :
 	set(value):
 		pagination = value
-		
+
 		_refresh_y_offsets_arr()
 		
 		_clr_body.call_deferred()
@@ -169,6 +173,8 @@ var current_page: int = 0:
 	set(value):
 		current_page = clampi(value, 0, max_pages)
 		
+		_culling_active_rows_old.clear()
+
 		if _shortened:
 			#print("update shortened")
 			_update_body_size.call_deferred()
@@ -239,6 +245,9 @@ var _sort_thread: Thread = null
 # Pagination extra
 var _shortened := false
 
+# Culling extra
+var _culling_active_rows_old: Array[int] = []
+
 #-----------------------------------------Onready Var----------------------------------------------#
 
 #-----------------------------------------Init and Ready-------------------------------------------#
@@ -264,7 +273,7 @@ func _ready():
 	_scroll_container.clip_contents = true
 	_scroll_container.custom_minimum_size = Vector2(0,0)
 	
-	_scroll_container.get_v_scroll_bar().connect("value_changed", Callable(self,"_update_visible_rows"))
+	_init_v_scroll()
 	_scroll_container.get_h_scroll_bar().connect("value_changed", Callable(self,"_scroll_header_horizontally"))
 	
 	_body_group.add_child(_body_cell_group)
@@ -297,7 +306,9 @@ func _ready():
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
-		deselect_all_rows()
+		#deselect_all_rows()
+		pass
+
 	elif event.is_action_pressed("ui_text_select_all"):
 		select_all_rows()
 #-----------------------------------------Virtual methods------------------------------------------#
@@ -316,6 +327,8 @@ func add_column(title: String, cell_width := standard_cell_dimension.x, column_v
 
 	header_titles.append(title)
 	
+	_fill_rows_arr()
+
 	_refresh_x_offsets_arr()
 	
 	_create_headers.call_deferred()
@@ -338,12 +351,10 @@ func insert_column(title, column_pos, cell_width := standard_cell_dimension.x, c
 
 	for i in row_count:
 		var row = _rows[i]
-		var standard_label = Label.new()
 
-		standard_label.name = "std_label_%d" % row.nodes.size()
-		standard_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		var std_label = _table_util.create_standard_label()
 
-		row.nodes.insert(column_pos, standard_label)
+		row.nodes.insert(column_pos, std_label)
 		row.editable.insert(column_pos, true)
 	
 	_refresh_x_offsets_arr()
@@ -403,6 +414,8 @@ func add_row(data: Array[Control] = [], clip_text: bool = true, height: float = 
 	#pagniation
 	max_pages = int(row_count / (max_row_count_per_page + 1))
 	
+	_fill_rows_arr()
+
 	_refresh_y_offsets_arr()
 	_update_body_size()
 	
@@ -434,6 +447,8 @@ func add_rows_batch(data :Array, clip_text: bool = true, height: float = standar
 	
 	max_pages = int(row_count / (max_row_count_per_page + 1))
 	
+	_fill_rows_arr()
+
 	_refresh_y_offsets_arr()
 	_update_body_size()
 	
@@ -611,8 +626,9 @@ func sort_rows_by_column(column: int, sort: E_Sorting) -> void:
 func select_all_rows() -> void:
 	for row in _rows:
 
-		if _selected_rows.find(row) == -1:
+		if row.selected == false:
 			_selected_rows.append(row)
+			row.selected = true
 			_update_row_selection_visuals(row)
 
 func deselect_all_rows() -> void:
@@ -620,22 +636,26 @@ func deselect_all_rows() -> void:
 	if _selected_rows.is_empty():
 		return
 
-	_selected_rows.clear()
-	for row in _rows:
+	for row in _selected_rows:
+		
+		row.selected = false
+		row.deselect = true
 		_update_row_selection_visuals(row)
+	
+	_selected_rows.clear()
 
 func has_selection() -> bool:
-	if _selected_rows.size() > 0:
-		return true
-	else:
+	if _selected_rows.is_empty():
 		return false
+	else:
+		return true
 
 func get_current_row() -> int:
 	return _rows.find(_current_row)
 
 ## Returns the positions of the Rows that got selected
 func get_selection_positions() -> Array[int]:
-	var positions :Array[int]= []
+	var positions: Array[int] = []
 	for row in _selected_rows:
 		positions.append(_rows.find(row))
 	positions.sort()
@@ -658,6 +678,17 @@ func get_size_vec_of_body() -> Vector2i:
 #endregion
 
 #-----------------------------------------Private methods------------------------------------------#
+func _init_v_scroll() -> void:
+
+	var callable_culling := Callable(self,"_update_visible_rows")
+	
+	if row_culling:
+		_scroll_container.get_v_scroll_bar().connect("value_changed", callable_culling)
+	else:
+		if _scroll_container.get_v_scroll_bar().is_connected("value_changed", callable_culling):
+			_scroll_container.get_v_scroll_bar().disconnect("value_changed", callable_culling)
+
+
 func _create_headers() -> void:
 	
 	if !_header_cell_group:
@@ -667,21 +698,21 @@ func _create_headers() -> void:
 		_header_cell_group.remove_child(child)
 		child.queue_free()
 	
-	for i in range(header_titles.size()):
+	for col_idx in range(header_titles.size()):
 		var header_btn := Button.new()
 		var header_margin_container := MarginContainer.new()
 		
-		header_btn.text = header_titles[i]
+		header_btn.text = header_titles[col_idx]
 		header_btn.clip_text = true
 		header_btn.clip_contents = true
 		
-		var callable = Callable(self, "_on_header_clicked").bind(header_margin_container)
+		var callable = Callable(self, "_on_header_clicked").bind(col_idx)
 		header_btn.connect("pressed", callable)
 
 		header_margin_container.add_child(header_btn)
-		header_margin_container.position = Vector2i(_x_offsets[i], 0)
-		header_margin_container.size = Vector2i(column_widths[i], header_cell_height)
-		header_margin_container.custom_minimum_size = Vector2i(column_widths[i], header_cell_height)
+		header_margin_container.position = Vector2i(_x_offsets[col_idx], 0)
+		header_margin_container.size = Vector2i(column_widths[col_idx], header_cell_height)
+		header_margin_container.custom_minimum_size = Vector2i(column_widths[col_idx], header_cell_height)
 		
 		_header_cell_group.add_child(header_margin_container)
 
@@ -697,8 +728,10 @@ func _scroll_header_horizontally(value):
 	print(value)
 	_header_group.position.x = -value
 
+
+
 ## Main function for inserting and visualizing the nodes
-func _update_visible_rows(value = 0) -> void:
+func _update_visible_rows(value: int = 0) -> void:
 	var start_index: int = 0
 	var end_index: int = row_count
 	
@@ -727,28 +760,61 @@ func _update_visible_rows(value = 0) -> void:
 	
 	start_index = clampi(start_index, 0, row_count)
 	end_index = clampi(end_index, 0, row_count)
-	
-	if row_culling:
+
+	if _culling_active_rows_old.is_empty():
 		_clr_body()
-	
-	for i in range(start_index, end_index):
-		if _rows[i].row_visible:
-			for x in range(column_count):
-				var nodes = _rows[i].nodes
+		
+		for row in _rows:
+			row.row_culling_rendered = false
+			
+	elif row_culling:
+		var clr_arr := []
+		for idx in _culling_active_rows_old:
+			if idx > end_index - 1 or idx < start_index:
+				clr_arr.append(idx)
+
+		for row_index in clr_arr:
+			var row = _rows[row_index]
+			row.row_culling_rendered = false
+
+			for node in row.nodes:
+				var parent = node.get_parent()
+				parent.remove_child(node)
+				_body_cell_group.remove_child(parent)
+				parent.queue_free()
+
+	_culling_active_rows_old.clear()
+
+	for row_idx in range(start_index, end_index):
+		var row = _rows[row_idx]
+		_culling_active_rows_old.append(row_idx)
+		row.row_culling_rendered = true
+
+		if row.row_visible:
+
+			for col_idx in range(column_count):
+				var nodes = row.nodes
 				var node
+				var change_pos := true
 
-				if nodes.size() > x:
-					node = nodes[x]
-				else:
-					node = Label.new()
-					node.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+				node = nodes[col_idx]
+				var parent = node.get_parent()
 
-				if !(node.get_parent() is MarginContainer):
+				if !(parent is MarginContainer):
 					_set_properties(node)
-					var margin_parent = _create_margin_container(node, i, x)
+					var margin_parent = _create_margin_container(node, row_idx, col_idx)
 					_body_cell_group.add_child(margin_parent)
+					change_pos = false
+
+				elif !(parent.size.x == _column_widths_temp[col_idx]) or !(parent.size.y == row.row_height_temp):
+					parent.custom_minimum_size = Vector2(_column_widths_temp[col_idx], row.row_height_temp)
+					parent.size =  Vector2(_column_widths_temp[col_idx], row.row_height_temp)
+					
+				if change_pos:
+					parent.position = Vector2(_x_offsets[col_idx], _y_offsets[row_idx])
 				
-				
+				_update_row_selection_visuals(row)
+
 		else:
 			end_index = clampi(end_index + 1, 0, row_count)
 
@@ -759,7 +825,21 @@ func _set_properties(node: Control) -> void:
 		node.clip_text = true
 		node.clip_contents = true
 
+func _fill_rows_arr() -> void:
+	var nodes
+	
+	for row in _rows:
+		nodes = row.nodes
+
+		for col_idx in range(column_count):
+			if !(nodes.size() > col_idx):
+				var std_label = _table_util.create_standard_label()
+
+				nodes.append(std_label)
+				row.editable.append(true)
+
 func _clr_body() -> void:
+
 	for child in _body_cell_group.get_children():
 			child.remove_child(child.get_child(0))
 			_body_cell_group.remove_child(child)
@@ -769,12 +849,12 @@ func _table_size() -> Vector2i:
 	
 	var table_size := Vector2i(0,0)
 
-	if not _x_offsets.size() > 0:
+	if _x_offsets.is_empty():
 		return table_size 
 
 	table_size.x = _x_offsets.back() + _column_widths_temp.back()
 
-	if not _y_offsets.size() > 0:
+	if _y_offsets.is_empty():
 		return table_size 
 
 	if pagination:
@@ -872,7 +952,7 @@ func _update_h_separators() -> void:
 	var pos: int = 0
 	var index: int = 0
 	
-	if not _rows.size() > 0:
+	if _rows.is_empty():
 		return
 	
 	for i in range (_horizontal_separators.size()):
@@ -964,12 +1044,12 @@ func _refresh_y_offsets_arr() -> void:
 	else:
 		start = 0
 		end = row_count
-	
+
 	for i in range(start, end):
-		
+		offsets[i] += 2
 		for x in range (start, i):
 			if _rows[i].row_visible:
-				offsets[i] += _rows[x].row_height_temp
+				offsets[i] += _rows[x].row_height_temp 
 	
 	_y_offsets = offsets.duplicate()
 
@@ -990,21 +1070,27 @@ func _select_single_row(row: int) -> void:
 
 	var curr_row = _rows[row]
 
+	curr_row.selected = true
+
 	_selected_rows.append(curr_row)
 	_current_row = curr_row
 	_last_selected_row = row
+
 	_update_row_selection_visuals(curr_row)
 
 func _toggle_row_selection(row: int) -> void:
 
 	var curr_row = _rows[row]
-	var array_pos = _selected_rows.find(curr_row)
 
-	if array_pos == -1:
+	if not curr_row.selected:
 		_selected_rows.append(curr_row)
+		curr_row.selected = true
 		_last_selected_row = row
+
 	else:
-		_selected_rows.remove_at(array_pos)
+		_selected_rows.erase(curr_row)
+		curr_row.selected = false
+		curr_row.deselect = true
 	
 	_current_row = curr_row
 	_update_row_selection_visuals(curr_row)
@@ -1015,16 +1101,58 @@ func _select_multiple_rows(row: int) -> void:
 		_select_single_row(row)
 		return
 	
-	var curr_row = _rows[row]
+	
 	var start = min(_last_selected_row, row)
 	var end = max(_last_selected_row, row)
 	
-	for i in range(start, end + 1):
-		if _selected_rows.find(curr_row) == -1:
+	for idx in range(start, end + 1):
+		var curr_row = _rows[idx]
+
+		if curr_row.selected == false:
 			_selected_rows.append(curr_row)
+			curr_row.selected = true
 			_update_row_selection_visuals(curr_row)
 	
-	_current_row = curr_row
+	_current_row = _rows[row]
+
+
+func _update_row_selection_visuals(row: RowContent) -> void:
+	
+	if not row.row_culling_rendered:
+		#print(_selected_rows)
+		#print(_current_row)
+		#print(_last_selected_row)
+		#print(row.selected)
+		#print("meh")
+		return
+
+	if row.selected:
+		#print("selected amd in selection")
+		print(selection_theme)
+		for node in row.nodes:
+			if selection_theme:
+				node.get_parent().theme = selection_theme
+				node.theme = selection_theme
+	
+	elif row.deselect:
+		#print("deselect" + str(_rows.find(row)))
+		for node in row.nodes:
+			var parent = node.get_parent()
+
+			if body_theme:
+				parent.theme = body_theme
+				node.theme = body_theme
+			else:
+				
+				
+				if node.theme:
+					node.theme.clear()
+
+				if parent.theme:
+					parent.theme.clear()
+		
+		row.deselect = false
+	queue_redraw()
 
 #<--------------------------|Slots|------------------------------>#
 
@@ -1034,7 +1162,6 @@ func _on_cell_gui_input(event: InputEvent,row_c: RowContent, node: Control) -> v
 	
 	if event is InputEventMouseButton and event.double_click:
 		#_edit_cell(row,column)
-		#print("doubleclick")
 		pass
 	if event is InputEventMouseButton and event.pressed and event.button_mask & MOUSE_BUTTON_LEFT:
 		emit_signal("cell_clicked",row,column)
@@ -1042,32 +1169,41 @@ func _on_cell_gui_input(event: InputEvent,row_c: RowContent, node: Control) -> v
 	if event is InputEventMouseButton and event.pressed and event.button_mask & MOUSE_BUTTON_LEFT:
 		if Input.is_key_pressed(KEY_SHIFT):
 			_select_multiple_rows(row)
+
 		elif Input.is_key_pressed(KEY_CTRL):
 			_toggle_row_selection(row)
 		else:
+			#print("select")
 			_select_single_row(row)
 
 func _on_separator_input(event, index, type) -> void:
+
+	var changed := false
+
 	if event is InputEventMouseMotion and event.button_mask & MOUSE_BUTTON_LEFT and resizing:
 		# Adjust the column width based on mouse movement
 		if type == VSeparator:
 			_column_widths_temp[index] = max(min_size.x, _column_widths_temp[index] + int(event.relative.x))
+			changed = true
 			
 		if type == HSeparator:
 			_rows[index + (max_row_count_per_page * current_page)].row_height_temp = max(min_size.y, _rows[index + (max_row_count_per_page * current_page)].row_height_temp + event.relative.y)
+			changed = true
 		
 	if event is InputEventMouseButton and event.double_click:
 		if type == VSeparator:
 			_column_widths_temp[index] = column_widths[index]
+			changed = true
 			
 		if type == HSeparator:
 			_rows[index].row_height_temp = _rows[index].row_height
-		
-	update_table()
+			changed = true
+	
+	if changed:
+		update_table()
 
-func _on_header_clicked(column_btn: Control) -> void:
+func _on_header_clicked(column: int) -> void:
 	# Toggle sorting direction (ascending/descending)
-	var column: int = _header_cell_group.get_children().find(column_btn)
 	var ascending = E_Sorting.ASCENDING
 
 	if has_meta("sort_column") and get_meta("sort_column") == column:
@@ -1086,34 +1222,11 @@ func _on_sorting_complete(sorted_rows: Array) -> void:
 	_sort_thread.wait_to_finish()
 	_sort_thread = null
 
+	_culling_active_rows_old.clear()
 	update_table()
 
 	#last_selected_row = get_current_row()
 	emit_signal("column_sort_finished", get_meta("sort_column"), get_meta("sort_ascending"))
-
-func _update_row_selection_visuals(row: RowContent) -> void:
-
-	if _selected_rows.find(row) >= 0:
-		for node in row.nodes:
-			if selection_theme:
-				node.get_parent().theme = selection_theme
-				node.theme = selection_theme
-	else:
-		for node in row.nodes:
-			var parent = node.get_parent()
-			
-			print(node)
-			print(parent)
-
-			if body_theme:
-				parent.theme = body_theme
-				node.theme = body_theme
-			else:
-				if node.theme:
-					node.theme.clear()
-
-				if parent.theme:
-					parent.theme.clear()
 
 #-----------------------------------------Subclasses-----------------------------------------------#
 
@@ -1142,8 +1255,12 @@ class Sorter:
 
 class RowContent:
 	var nodes: Array[Control] = []
-	var row_visible := true
 	var editable: Array[bool] = []
+
+	var row_culling_rendered := false
+	var row_visible := true
+	var selected := false
+	var deselect := false
 	
 	var row_height: int = 0
 	var row_height_temp: int = 0

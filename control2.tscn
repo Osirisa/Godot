@@ -11,6 +11,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Table Node v2" type="Control" parent="."]
+clip_contents = true
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
