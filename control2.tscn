@@ -1,4 +1,4 @@
-[gd_scene load_steps=2 format=3 uid="uid://dp2vlkkw7v62e"]
+[gd_scene load_steps=2 format=3 uid="uid://cftbv7mven0ck"]
 
 [ext_resource type="Script" path="res://addons/osirisas_ui_extension/table_node/table_node_v2.gd" id="1_hy4fv"]
 
