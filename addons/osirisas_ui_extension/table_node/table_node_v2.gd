@@ -630,7 +630,7 @@ func set_visibility_row(row: int, visible: bool) -> void:
 
 	_rows[row].row_visible = visible
 
-	_culling_active_rows_old.clear()
+	#_culling_active_rows_old.clear()
 	update_table()
 
 func get_visibility_row(row: int) -> bool:
@@ -789,7 +789,6 @@ func _scroll_header_horizontally(value):
 	_header_group.position.x = -value
 
 
-
 ## Main function for inserting and visualizing the nodes
 func _update_visible_rows(value: int = 0) -> void:
 	var start_index: int = 0
@@ -839,9 +838,10 @@ func _update_visible_rows(value: int = 0) -> void:
 			
 			for node in row.nodes:
 				var parent = node.get_parent()
-				parent.remove_child(node)
-				_body_cell_group.remove_child(parent)
-				parent.queue_free()
+				if parent:
+					parent.remove_child(node)
+					_body_cell_group.remove_child(parent)
+					parent.queue_free()
 	
 	_culling_active_rows_old.clear()
 
@@ -851,7 +851,7 @@ func _update_visible_rows(value: int = 0) -> void:
 		row.row_culling_rendered = true
 		
 		if row.row_visible:
-			
+
 			for col_idx in range(column_count):
 				var nodes = row.nodes
 				var node
@@ -875,9 +875,6 @@ func _update_visible_rows(value: int = 0) -> void:
 				
 				_update_row_selection_visuals(row)
 		
-		else:
-			end_index = clampi(end_index + 1, 0, row_count)
-
 func _set_properties(node: Control) -> void:
 	if node is LineEdit:
 		node.clip_contents = true
@@ -1102,10 +1099,11 @@ func _refresh_y_offsets_arr() -> void:
 		end = row_count
 	
 	for i in range(start, end):
-		offsets[i] += 2
-		for x in range (start, i):
-			if _rows[i].row_visible:
-				offsets[i] += _rows[x].row_height_temp 
+		if _rows[i].row_visible:
+			offsets[i] += 2
+			for x in range (start, i):
+				if _rows[x].row_visible:
+					offsets[i] += _rows[x].row_height_temp 
 	
 	_y_offsets = offsets.duplicate()
 
