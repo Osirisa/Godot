@@ -11,7 +11,7 @@ func _ready():
 	
 	var arr := []
 	
-	for i in 251:
+	for i in 252:
 		
 		var label := Label.new()
 		var button := Button.new()
@@ -109,3 +109,32 @@ func _on_debug_hide_row_pressed():
 			table2.set_visibility_row(row, false)
 		else:
 			table2.set_visibility_row(row, true)
+
+
+func _on_debug_insert_col_pressed():
+	if input:
+		table2.insert_column("test_column", input.text.to_int())
+
+
+func _on_debug_insert_row_pressed():
+	if input:
+		var label := Label.new()
+		var button := Button.new()
+		var label2 := Label.new()
+		var line_edit := LineEdit.new()
+		#var cb = MenuButton.new()
+		
+		line_edit.clip_contents = true
+		
+		label.text = "test_debug "
+		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		
+		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		
+		label2.text = "going strong"
+		
+		button.text = "press me " + str(randi())
+
+		table2.insert_row([label,button,label2,line_edit], input.text.to_int())

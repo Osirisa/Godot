@@ -47,7 +47,6 @@ header_titles = Array[String](["header0", "header1", "header2", "header3", "head
 column_widths = Array[int]([150, 300, 300, 70, 150, 150, 150])
 standard_cell_dimension = Vector2i(150, 30)
 min_size = Vector2i(50, 25)
-max_row_count_active_culling = 20
 pagination = true
 selection_theme = SubResource("Theme_eh8fq")
 
@@ -91,6 +90,14 @@ text = "remove row"
 layout_mode = 2
 text = "remove column"
 
+[node name="debug_insert_col" type="Button" parent="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+text = "insert column"
+
+[node name="debug_insert_row" type="Button" parent="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+text = "insert row"
+
 [node name="debug_LE" type="LineEdit" parent="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
@@ -104,3 +111,5 @@ layout_mode = 2
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_get_curr_row" to="." method="_on_debug_get_curr_row_pressed"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_remove_row" to="." method="_on_debug_remove_row_pressed"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_remove_col" to="." method="_on_debug_remove_col_pressed"]
+[connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_insert_col" to="." method="_on_debug_insert_col_pressed"]
+[connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_insert_row" to="." method="_on_debug_insert_row_pressed"]
