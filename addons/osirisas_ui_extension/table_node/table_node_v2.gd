@@ -137,8 +137,7 @@ enum E_Sorting {
 	set(value):
 		max_row_count_per_page = value
 		
-		_max_pages = int(_row_count / max_row_count_per_page)
-		
+		_refresh_max_pages()
 		_refresh_y_offsets_arr()
 		
 		_clr_body.call_deferred()
@@ -198,7 +197,6 @@ var _row_count: int = 0
 # Array for the changed cell widths (due to resizing)
 var _column_widths_temp := []
 
-
 var _x_offsets := []
 var _y_offsets := []
 
@@ -208,9 +206,12 @@ var _rows: Array[RowContent] = []
 # Array for the visibility of the columns
 var _column_visiblity: Array[bool] = []
 
+#TBD::
 var _invisible_rows: Array[int] = []
 var _invisible_columns: Array[int] = []
 
+var _last_visible_row: int = 0
+var _last_visible_column: int = 0
 var _offset_rows_visibility_pages: Array[int] = []
 
 # Seperators
@@ -231,6 +232,7 @@ var _header_group := Control.new()
 var _body_group := Control.new()
 
 # Panels for Background-Color etc.
+#TBD::
 var _panel_header := Panel.new()
 var _panel_body := Panel.new()
 
@@ -276,7 +278,9 @@ func _ready():
 	
 	_scroll_container.clip_contents = true
 	_scroll_container.custom_minimum_size = Vector2(0,0)
-	
+
+	_refresh_last_visible_column()
+
 	_init_v_scroll()
 	_scroll_container.get_h_scroll_bar().connect("value_changed", Callable(self,"_scroll_header_horizontally"))
 	
@@ -333,6 +337,7 @@ func add_column(title: String, cell_width := standard_cell_dimension.x, column_v
 	
 	_fill_rows_arr()
 	
+	_refresh_last_visible_column()
 	_refresh_x_offsets_arr()
 	
 	_create_headers.call_deferred()
@@ -362,6 +367,7 @@ func insert_column(title, column_pos, cell_width := standard_cell_dimension.x, c
 		row.nodes.insert(column_pos, std_label)
 		row.editable.insert(column_pos, true)
 	
+	_refresh_last_visible_column()
 	_refresh_x_offsets_arr()
 	
 	_create_headers.call_deferred()
@@ -395,6 +401,7 @@ func remove_column(column_pos):
 		row.nodes.remove_at(column_pos)
 		row.editable.remove_at(column_pos)
 	
+	_refresh_last_visible_column()
 	_refresh_x_offsets_arr()
 	
 	_create_headers.call_deferred()
@@ -427,11 +434,10 @@ func add_row(data: Array[Control] = [], height: float = standard_cell_dimension.
 	
 	_row_count += 1
 	
-	#pagniation
-	_max_pages = int(_row_count / (max_row_count_per_page + 1))
-	
+	_refresh_max_pages()
 	_fill_rows_arr()
 	
+	_refresh_last_visible_row()
 	_refresh_y_offsets_arr()
 	_update_body_size()
 	
@@ -456,11 +462,11 @@ func insert_row(data: Array[Control], row_pos: int, height: float = standard_cel
 	
 	_row_count += 1
 	
-	#pagniation
-	_max_pages = int(_row_count / (max_row_count_per_page + 1))
-	
+
+	_refresh_max_pages()
 	_fill_rows_arr()
-	
+
+	_refresh_last_visible_row()
 	_refresh_y_offsets_arr()
 	_update_body_size()
 	
@@ -489,10 +495,10 @@ func add_rows_batch(data :Array, height: float = standard_cell_dimension.y) -> v
 		_rows.append(new_row)
 		_row_count += 1
 	
-	_max_pages = int(_row_count / (max_row_count_per_page + 1))
-	
+	_refresh_max_pages()
 	_fill_rows_arr()
-	
+
+	_refresh_last_visible_row()
 	_refresh_y_offsets_arr()
 	_update_body_size()
 	
@@ -515,6 +521,7 @@ func set_row(data: Array[Control], row: int, clip_text: bool = true, height: flo
 	edited_row.row_height = height
 	edited_row.row_height_temp = height
 	
+	_refresh_last_visible_row()
 	_refresh_y_offsets_arr()
 	_update_body_size()
 	
@@ -538,12 +545,13 @@ func remove_row(row: int) -> void:
 	_rows.remove_at(row)
 	
 	_row_count = _row_count - 1 if _row_count > 0 else 0
-	_max_pages = int(_row_count / (max_row_count_per_page + 1))
+	_refresh_max_pages()
 	
 	if (current_page > _max_pages) and pagination:
 		current_page = current_page
 	else:
-		
+
+		_refresh_last_visible_row()
 		_refresh_y_offsets_arr()
 		
 		_create_h_separators.call_deferred()
@@ -562,13 +570,13 @@ func remove_rows_batch(rows_to_remove: Array[int]) -> void:
 		_rows.remove_at(rows_to_remove[index])
 		_row_count = _row_count - 1 if _row_count > 0 else 0
 	
-	_max_pages = int(_row_count / (max_row_count_per_page + 1))
+	_refresh_max_pages()
 	
 	if (current_page > _max_pages) and pagination:
 		current_page = current_page
 	else:
 
-
+		_refresh_last_visible_row()
 		_refresh_y_offsets_arr()
 
 		_culling_active_rows_old.clear()
@@ -679,18 +687,19 @@ func set_column_width(column: int, width: float) -> void:
 func set_visibility_row(row: int, visible: bool) -> void:
 	if not _table_util.check_row_input(row, _row_count- 1):
 		return
-
+	
 	var nodes = _rows[row].nodes
-
+	
 	for node_idx in range(nodes.size()):
 		if _column_visiblity[node_idx]:
 			nodes[node_idx].visible = visible
-
+	
 	_rows[row].row_visible = visible
 
-	#_recalc_row_offsets_visibility()
-
-	#_culling_active_rows_old.clear()
+	_refresh_max_pages()
+	_refresh_last_visible_row()
+	_recalc_row_offsets_visibility()
+	_create_h_separators.call_deferred()
 	update_table()
 
 func get_visibility_row(row: int) -> bool:
@@ -709,6 +718,7 @@ func set_visibility_column(column: int, visible: bool) -> void:
 		if row.row_visible:
 			row.nodes[column].visible = visible
 	
+	_refresh_last_visible_column()
 	update_table()
 	_update_headers.call_deferred()
 
@@ -899,18 +909,44 @@ func _scroll_header_horizontally(value):
 	print(value)
 	_header_group.position.x = -value
 
+func _refresh_max_pages() -> void:
+	var invis_count: int = 0
+	#TBD::
+	_max_pages = int((_row_count - 1 - invis_count) / max_row_count_per_page)
+	#print(_max_pages)
+
+func _refresh_last_visible_row() -> void:
+	if _rows.is_empty():
+		return
+
+	for idx in range(_row_count - 1, -1, -1):
+		if _rows[idx].row_visible:
+			_last_visible_row = idx
+			return
+
+func _refresh_last_visible_column() -> void:
+	if _column_visiblity.is_empty():
+		return
+
+	for idx in range (_column_count - 1, -1, -1):
+		if _column_visiblity[idx]:
+			_last_visible_column = idx
+			return
+
 func _recalc_row_offsets_visibility() -> void:
 	
 	_offset_rows_visibility_pages.clear()
-	_offset_rows_visibility_pages.resize(_max_pages)
+	_offset_rows_visibility_pages.resize(_max_pages+1)
 	_offset_rows_visibility_pages.fill(0)
 	
 	for i in range(_max_pages):
 		
 		var x = i - 1 if i > 0 else 0
 		var start_rows = (max_row_count_per_page * i + _offset_rows_visibility_pages[x])
-		
 		var end_rows = start_rows + max_row_count_per_page
+		
+		clampi(end_rows, 0, _row_count)
+		clampi(start_rows, 0, _row_count)
 		
 		var offsets = 0
 		var valid_rows = 0
@@ -928,7 +964,7 @@ func _recalc_row_offsets_visibility() -> void:
 			row_idx += 1
 		_offset_rows_visibility_pages[i] = offsets
 	
-	print(_offset_rows_visibility_pages)
+	#print(_offset_rows_visibility_pages)
 
 ## Main function for inserting and visualizing the nodes
 func _update_visible_rows(value: int = 0) -> void:
@@ -946,6 +982,12 @@ func _update_visible_rows(value: int = 0) -> void:
 	if pagination:
 		var page_start: int = current_page * max_row_count_per_page
 		var page_end: int = page_start + max_row_count_per_page
+		
+		if not _offset_rows_visibility_pages.is_empty():
+			if current_page > 0:
+				page_start += _offset_rows_visibility_pages[current_page - 1]
+			
+			page_end += _offset_rows_visibility_pages[current_page]
 		
 		if row_culling:
 			start_index = max(start_index, page_start)
@@ -985,9 +1027,9 @@ func _update_visible_rows(value: int = 0) -> void:
 					parent.queue_free()
 	
 	_culling_active_rows_old.clear()
-
-	var row_idx: int = start_index
+	
 	begin_bulk_theme_override()
+	var row_idx: int = start_index
 	while row_idx < end_index:
 		
 		var row = _rows[row_idx]
@@ -1022,8 +1064,8 @@ func _update_visible_rows(value: int = 0) -> void:
 			end_index = clampi(end_index + 1, 0, _row_count)
 		
 		row_idx += 1
-	
 	end_bulk_theme_override()
+
 func _set_properties(node: Control) -> void:
 	if node is LineEdit:
 		node.clip_contents = true
@@ -1058,18 +1100,22 @@ func _table_size() -> Vector2i:
 	if _x_offsets.is_empty():
 		return table_size 
 	
-	table_size.x = _x_offsets.back() + _column_widths_temp.back()
+	table_size.x = _x_offsets[_last_visible_column] + _column_widths_temp[_last_visible_column]
 	
 	if _y_offsets.is_empty():
 		return table_size 
 	
 	if pagination:
-		var last_pos = clampi((max_row_count_per_page * (current_page + 1)) - 1, 0, _row_count - 1)
+		var last_pos = max_row_count_per_page * (current_page + 1) - 1
+		if not _offset_rows_visibility_pages.is_empty():
+			last_pos += _offset_rows_visibility_pages[current_page]
+		last_pos = clampi(last_pos, 0, _row_count - 1)
+		
 		#BUG::
 		table_size.y = _y_offsets[last_pos] + _rows[last_pos].row_height_temp + 8
 	else:
 		#BUG::
-		table_size.y = _y_offsets.back() + _rows.back().row_height_temp + 8
+		table_size.y = _y_offsets[_last_visible_row] + _rows[_last_visible_row].row_height_temp + 8
 	
 	return table_size
 
@@ -1098,19 +1144,21 @@ func _create_h_separators() -> void:
 		sep.queue_free()
 	_horizontal_separators.clear()
 	
-	var start_index: int = 0
-	var end_index: int = _row_count
+	var start_idx: int = 0
+	var end_idx: int = _row_count
 	
 	if pagination:
-		end_index = max_row_count_per_page
-		
+		end_idx = max_row_count_per_page
+		if not _offset_rows_visibility_pages.is_empty():
+			end_idx = end_idx + _offset_rows_visibility_pages[current_page]
+
 		if max_row_count_per_page * (current_page + 1) > _row_count:
-			end_index = _row_count - (max_row_count_per_page * current_page)
+			end_idx = _row_count - (max_row_count_per_page * current_page)
 	
-	clampi(start_index, 0, _row_count)
-	clampi(end_index, 0, _row_count)
+	clampi(start_idx, 0, _row_count)
+	clampi(end_idx, 0, _row_count)
 	
-	for i in range(start_index, end_index):  # No separator after the last row
+	for i in range(start_idx, end_idx):  # No separator after the last row
 		var sep = HSeparator.new()
 		sep.name = "HSep%d" % i
 		sep.mouse_default_cursor_shape = Control.CURSOR_VSIZE
@@ -1175,8 +1223,8 @@ func _update_h_separators() -> void:
 			
 			_horizontal_separators[i].position = Vector2(0, pos)
 			_horizontal_separators[i].visible = true
-			#BUG::when hiding last column
-			_horizontal_separators[i].set_size(Vector2(_x_offsets.back() + _column_widths_temp.back(), 1))
+			
+			_horizontal_separators[i].set_size(Vector2(_x_offsets[_last_visible_column] + _column_widths_temp[_last_visible_column], 1))
 		else:
 			_horizontal_separators[i].visible = false
 	
@@ -1200,16 +1248,19 @@ func _update_v_separators() -> void:
 				
 				if _row_count > 0:
 					if pagination:
-						var index: int = clampi((max_row_count_per_page * (current_page + 1)) - 1, 0, _row_count - 1)
+						var index: int = max_row_count_per_page * (current_page + 1) - 1
 						var rows_index := index
+						if not _offset_rows_visibility_pages.is_empty():
+							rows_index += _offset_rows_visibility_pages[current_page]
+						rows_index = clampi(rows_index, 0, _row_count - 1)
 						
 						if index > _row_count:
 							rows_index = _row_count - 1
+						
 						#BUG:: when hiding last row
 						_vertical_separators[i].set_size(Vector2(1, _y_offsets[rows_index] + _rows[rows_index].row_height_temp))
 					else:
-						#BUG:: when hiding last row
-						_vertical_separators[i].set_size(Vector2(1, _y_offsets.back() + _rows.back().row_height_temp))
+						_vertical_separators[i].set_size(Vector2(1, _y_offsets[_last_visible_row] + _rows[_last_visible_row].row_height_temp))
 				else:
 					_vertical_separators[i].visible = false
 				
@@ -1235,7 +1286,7 @@ func _refresh_x_offsets_arr() -> void:
 		else:
 			if i > 0:
 				offsets[i] = offsets[i-1]
-	
+
 	_x_offsets = offsets.duplicate()
 
 func _refresh_y_offsets_arr() -> void:
@@ -1250,7 +1301,15 @@ func _refresh_y_offsets_arr() -> void:
 	
 	if pagination:
 		start = clampi(max_row_count_per_page * current_page, 0, _row_count)
-		end = clampi(max_row_count_per_page * (current_page + 1), 0, _row_count)
+		end = max_row_count_per_page * (current_page + 1)
+		
+		if not _offset_rows_visibility_pages.is_empty():
+			if current_page > 0:
+				start += _offset_rows_visibility_pages[current_page - 1]
+			
+			end += _offset_rows_visibility_pages[current_page]
+		
+		end = clampi(end, 0, _row_count)
 	else:
 		start = 0
 		end = _row_count
