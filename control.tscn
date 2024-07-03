@@ -47,8 +47,9 @@ header_titles = Array[String](["header0", "header1", "header2", "header3", "head
 column_widths = Array[int]([150, 300, 300, 70, 150, 150, 150])
 standard_cell_dimension = Vector2i(150, 30)
 min_size = Vector2i(50, 25)
-max_row_count_active_culling = 46
+max_row_count_active_culling = 9
 pagination = true
+max_row_count_per_page = 10
 selection_theme = SubResource("Theme_eh8fq")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer/VBoxContainer/HBoxContainer"]

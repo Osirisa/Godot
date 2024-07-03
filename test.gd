@@ -11,7 +11,7 @@ func _ready():
 	
 	var arr := []
 	
-	for i in 501:
+	for i in 1001:
 		
 		var label := Label.new()
 		var button := Button.new()

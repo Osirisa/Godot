@@ -1146,11 +1146,12 @@ func _table_size() -> Vector2i:
 	
 	if pagination:
 		var last_pos = max_row_count_per_page * (current_page + 1) - 1
+		
 		if not _offset_rows_visibility_pages.is_empty():
 			last_pos += _offset_rows_visibility_pages[current_page]
+			
 		last_pos = clampi(last_pos, 0, _row_count - 1)
 		
-		#BUG::
 		table_size.y = _y_offsets[last_pos] + _rows[last_pos].row_height_temp + 8
 	else:
 		table_size.y = _y_offsets[_last_visible_row] + _rows[_last_visible_row].row_height_temp + 8
@@ -1185,18 +1186,20 @@ func _create_h_separators() -> void:
 	var start_idx: int = 0
 	var end_idx: int = _row_count
 	
-	var invis_count = _invisible_rows.size()
-	var offset = invis_count - max_row_count_per_page * int(invis_count / max_row_count_per_page)
+	var offset: int = 0
 	
 	if pagination:
+		var invis_count = _invisible_rows.size()
+		offset = invis_count - max_row_count_per_page * int (invis_count / max_row_count_per_page)
 		end_idx = max_row_count_per_page
+		
 		if not _offset_rows_visibility_pages.is_empty():
 			end_idx = end_idx + _offset_rows_visibility_pages[current_page]
 		
 		if max_row_count_per_page * (current_page + 1) > _row_count:
 			end_idx = _row_count - (max_row_count_per_page * current_page)
 			end_idx -= offset
-
+	
 	start_idx = clampi(start_idx, 0, _row_count)
 	end_idx = clampi(end_idx, 0, _row_count)
 	
@@ -1210,8 +1213,21 @@ func _create_h_separators() -> void:
 			_separator_group.add_child(sep)
 			_horizontal_separators.append(sep)
 		
-		var row = idx + offset
-
+		var row := idx
+		#if has_meta("sorting_state"):
+			#if get_meta("sorting_state") == E_Sorting.DESCENDING:
+				##print("descending ")
+				##row -= offset
+				#pass
+			#else:
+				##print("ascending +")
+				#row += offset
+		#else:
+			#print("nothing +")
+		row += offset
+		#print(offset)
+		#var row = idx
+		
 		var callable = Callable(self, "_on_separator_input").bind(row ,HSeparator)
 		sep.connect("gui_input", callable)
 
@@ -1254,14 +1270,14 @@ func _update_h_separators() -> void:
 	
 	if _rows.is_empty():
 		return
-
-	var invis_count = _invisible_rows.size()
-	var offset = invis_count - max_row_count_per_page * int(invis_count / max_row_count_per_page)
-
+	
 	for i in range (_horizontal_separators.size()):
 		index = i
 		
 		if pagination:
+			var invis_count = _invisible_rows.size()
+			var offset = invis_count - max_row_count_per_page * int(invis_count / max_row_count_per_page)
+			
 			index += (max_row_count_per_page * current_page)
 			index += offset
 			index = clampi(index, 0, _row_count - 1)
@@ -1305,7 +1321,6 @@ func _update_v_separators() -> void:
 						if index > _row_count:
 							rows_index = _row_count - 1
 						
-						#BUG:: when hiding last row
 						_vertical_separators[i].set_size(Vector2(1, _y_offsets[rows_index] + _rows[rows_index].row_height_temp))
 					else:
 						_vertical_separators[i].set_size(Vector2(1, _y_offsets[_last_visible_row] + _rows[_last_visible_row].row_height_temp))
@@ -1378,12 +1393,12 @@ func _sort_thread_function(args: Array) -> void:
 	var column = args[0]
 	var ascending: E_Sorting = args[1]
 	
-	var sorted_rows = _rows.duplicate()
+	#var sorted_rows = _rows.duplicate()
 	
 	var sorter = Sorter.new(column, ascending)
-	sorted_rows.sort_custom(sorter._sort)
+	_rows.sort_custom(sorter._sort)
 	
-	call_deferred("emit_signal", "_c_sort_finished", sorted_rows)
+	call_deferred("emit_signal", "_c_sort_finished", _rows)
 
 func _select_single_row(row: int) -> void:
 	deselect_all_rows()
@@ -1514,29 +1529,38 @@ func _on_separator_input(event, index, type) -> void:
 
 func _on_header_clicked(column: int) -> void:
 	# Toggle sorting direction (ascending/descending)
-	var ascending = E_Sorting.ASCENDING
+	var sorting = E_Sorting.ASCENDING
 	
 	if has_meta("sort_column") and get_meta("sort_column") == column:
-		ascending = not get_meta("sort_ascending")
+		if get_meta("sorting_state") == E_Sorting.ASCENDING:
+			sorting = E_Sorting.DESCENDING
+		else:
+			sorting = E_Sorting.ASCENDING
 	
 	set_meta("sort_column", column)
-	set_meta("sort_ascending", ascending)
+	set_meta("sorting_state", sorting)
 	
-	sort_rows_by_column(column, ascending)
+	sort_rows_by_column(column, sorting)
 
 func _on_sorting_complete(sorted_rows: Array) -> void:
 	
-	_rows.clear()
-	_rows = sorted_rows.duplicate()
+	#_rows.clear()
+	#_rows = sorted_rows.duplicate()
 	
 	_sort_thread.wait_to_finish()
 	_sort_thread = null
 	
 	_culling_active_rows_old.clear()
+	
+	_recalc_row_offsets_visibility()
+	_refresh_last_visible_row()
+	
+	_create_h_separators()
+	
 	update_table()
 	
 	#last_selected_row = get_current_row()
-	emit_signal("column_sort_finished", get_meta("sort_column"), get_meta("sort_ascending"))
+	emit_signal("column_sort_finished", get_meta("sort_column"), get_meta("sorting_state"))
 
 #-----------------------------------------Subclasses-----------------------------------------------#
 
