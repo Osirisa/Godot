@@ -39,22 +39,18 @@ func _ready():
 	table2.add_rows_batch(arr)
 	#table.add_rows_batch(arr)
 
-
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta):
 	pass
 
-
 func _on_debug_next_page_pressed():
 	table2.current_page += 1
-
 
 func _on_debug_previous_page_pressed():
 	table2.current_page -= 1
 
 func _on_debug_add_column_pressed():
 	table2.add_column("test_column")
-
 
 func _on_debug_add_row_pressed():
 	var label := Label.new()

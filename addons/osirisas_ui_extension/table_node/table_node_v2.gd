@@ -245,7 +245,7 @@ var _sort_thread: Thread = null
  
 # Pagination extra
 var _max_pages: int = 0
-
+var _rows_visible_on_page: Array[RowContent] = []
 var _shortened := false
 
 # Culling extra
@@ -344,7 +344,7 @@ func add_column(title: String, cell_width := standard_cell_dimension.x, column_v
 	_update_visible_rows.call_deferred()
 
 func insert_column(title, column_pos, cell_width := standard_cell_dimension.x, column_visiblity := true):
-	if not _table_util.check_column_input(column_pos, _column_count-1):
+	if not _table_util.check_column_input(column_pos, _column_count - 1):
 		return
 	
 	column_widths.insert(column_pos, cell_width)
@@ -1199,9 +1199,14 @@ func _create_h_separators() -> void:
 		if max_row_count_per_page * (current_page + 1) > _row_count:
 			end_idx = _row_count - (max_row_count_per_page * current_page)
 			end_idx -= offset
+		
+		end_idx = clampi(end_idx, 0, max_row_count_per_page)
 	
 	start_idx = clampi(start_idx, 0, _row_count)
 	end_idx = clampi(end_idx, 0, _row_count)
+	
+	#print("Start: " + str(start_idx))
+	#print("End: " + str(end_idx))
 	
 	for idx in range(start_idx, end_idx):  # No separator after the last row
 		var sep = HSeparator.new()
@@ -1214,22 +1219,18 @@ func _create_h_separators() -> void:
 			_horizontal_separators.append(sep)
 		
 		var row := idx
-		#if has_meta("sorting_state"):
-			#if get_meta("sorting_state") == E_Sorting.DESCENDING:
-				##print("descending ")
-				##row -= offset
-				#pass
-			#else:
-				##print("ascending +")
-				#row += offset
-		#else:
-			#print("nothing +")
-		row += offset
-		#print(offset)
-		#var row = idx
+		if has_meta("sorting_state"):
+			if not get_meta("sorting_state") == E_Sorting.DESCENDING:
+				#print("ascending +")
+				row += offset
+		else:
+			row += offset
 		
 		var callable = Callable(self, "_on_separator_input").bind(row ,HSeparator)
 		sep.connect("gui_input", callable)
+	
+	#print("Offset: " + str(offset))
+	#print("End: " + str(end_idx))
 
 func _create_v_separators() -> void:
 	for v_sep in _vertical_separators:
@@ -1277,11 +1278,20 @@ func _update_h_separators() -> void:
 		if pagination:
 			var invis_count = _invisible_rows.size()
 			var offset = invis_count - max_row_count_per_page * int(invis_count / max_row_count_per_page)
+			#var offset = _offset_rows_visibility_pages[current_page]
+			
 			
 			index += (max_row_count_per_page * current_page)
-			index += offset
+			
+			if has_meta("sorting_state"):
+				if not get_meta("sorting_state") == E_Sorting.DESCENDING:
+					#print("ascending +")
+					index += offset
+			else:
+				index += offset
+			
 			index = clampi(index, 0, _row_count - 1)
-
+			
 		if _rows[index].row_visible:
 			pos += _rows[index].row_height_temp
 			
@@ -1513,6 +1523,7 @@ func _on_separator_input(event, index, type) -> void:
 		
 		if type == HSeparator:
 			_rows[index + (max_row_count_per_page * current_page)].row_height_temp = max(min_size.y, _rows[index + (max_row_count_per_page * current_page)].row_height_temp + event.relative.y)
+			print("index: " + str(index + (max_row_count_per_page * current_page)))
 			changed = true
 		
 	if event is InputEventMouseButton and event.double_click:
@@ -1600,3 +1611,5 @@ class RowContent:
 	
 	var row_height: int = 0
 	var row_height_temp: int = 0
+	
+	var horizontal_seperator: HSeparator = null 
