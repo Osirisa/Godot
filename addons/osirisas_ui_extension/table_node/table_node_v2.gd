@@ -123,12 +123,13 @@ enum E_Sorting {
 		
 		_refresh_y_offsets_arr()
 		
-		_clr_body.call_deferred()
+		_culling_active_rows_old.clear()
+
+		_update_visible_rows.call_deferred()
 		#_create_h_separators.call_deferred()
-		_update_h_separators.call_deferred()
+		#_update_h_separators.call_deferred()
 		_update_v_separators.call_deferred()
 		_update_body_size.call_deferred()
-		_update_visible_rows.call_deferred()
 		
 		_scroll_container.get_v_scroll_bar().value = 0
 
@@ -140,12 +141,14 @@ enum E_Sorting {
 		_refresh_max_pages()
 		_refresh_y_offsets_arr()
 		
-		_clr_body.call_deferred()
+		_culling_active_rows_old.clear()
+
+		_update_visible_rows.call_deferred()
 		#_create_h_separators.call_deferred()
-		_update_h_separators.call_deferred()
+		#_update_h_separators.call_deferred()
 		_update_v_separators.call_deferred()
 		_update_body_size.call_deferred()
-		_update_visible_rows.call_deferred()
+		
 		
 		_scroll_container.get_v_scroll_bar().value = 0
 
@@ -179,11 +182,10 @@ var current_page: int = 0:
 		
 		_refresh_y_offsets_arr()
 		
-		_clr_body.call_deferred()
-		#_create_h_separators.call_deferred()
-		_update_h_separators.call_deferred()
-		_update_v_separators.call_deferred()
+		_culling_active_rows_old.clear()
 		_update_visible_rows.call_deferred()
+		#_update_h_separators.call_deferred()
+		_update_v_separators.call_deferred()
 
 #-----------------------------------------Private Var----------------------------------------------#
 
@@ -197,8 +199,8 @@ var _row_count: int = 0
 # Array for the changed cell widths (due to resizing)
 var _column_widths_temp := []
 
-var _x_offsets := []
-var _y_offsets := []
+var _x_offsets: Array[int] = []
+var _y_offsets: Array[int] = []
 
 # Array with all the Rows (and its contents) in it
 var _rows: Array[RowContent] = []
@@ -301,7 +303,7 @@ func _ready():
 	_create_headers.call_deferred()
 	#_create_h_separators.call_deferred()
 	_create_v_separators.call_deferred()
-	_update_h_separators.call_deferred()
+	#_update_h_separators.call_deferred()
 	_update_v_separators.call_deferred()
 	
 	clip_contents = true
@@ -338,7 +340,7 @@ func add_column(title: String, cell_width := standard_cell_dimension.x, column_v
 	_create_headers.call_deferred()
 	_create_v_separators.call_deferred()
 	_update_v_separators.call_deferred()
-	_update_h_separators.call_deferred()
+	#_update_h_separators.call_deferred()
 	_update_visible_rows.call_deferred()
 
 func insert_column(title, column_pos, cell_width := standard_cell_dimension.x, column_visiblity := true):
@@ -368,7 +370,7 @@ func insert_column(title, column_pos, cell_width := standard_cell_dimension.x, c
 	_create_headers.call_deferred()
 	_create_v_separators.call_deferred()
 	_update_v_separators.call_deferred()
-	_update_h_separators.call_deferred()
+	#_update_h_separators.call_deferred()
 	_update_visible_rows.call_deferred()
 
 func remove_column(column_pos):
@@ -402,7 +404,7 @@ func remove_column(column_pos):
 	_create_headers.call_deferred()
 	_create_v_separators.call_deferred()
 	_update_v_separators.call_deferred()
-	_update_h_separators.call_deferred()
+	#_update_h_separators.call_deferred()
 	_update_visible_rows.call_deferred()
 
 func get_column_count() -> int:
@@ -438,7 +440,7 @@ func add_row(data: Array[Control] = [], height: float = standard_cell_dimension.
 	_update_body_size()
 	
 	#_create_h_separators.call_deferred()
-	_update_h_separators.call_deferred()
+	#_update_h_separators.call_deferred()
 	_update_v_separators.call_deferred()
 	_update_visible_rows.call_deferred()
 
@@ -466,8 +468,10 @@ func insert_row(data: Array[Control], row_pos: int, height: float = standard_cel
 	_refresh_y_offsets_arr()
 	_update_body_size()
 	
+	_culling_active_rows_old.clear()
+
 	#_create_h_separators.call_deferred()
-	_update_h_separators.call_deferred()
+	#_update_h_separators.call_deferred()
 	_update_v_separators.call_deferred()
 	_update_visible_rows.call_deferred()
 
@@ -499,7 +503,7 @@ func add_rows_batch(data :Array, height: float = standard_cell_dimension.y) -> v
 	_update_body_size()
 	
 	#_create_h_separators.call_deferred()
-	_update_h_separators.call_deferred()
+	#_update_h_separators.call_deferred()
 	_update_visible_rows.call_deferred()
 
 ## Overrides the row from the Table 
@@ -522,7 +526,7 @@ func set_row(data: Array[Control], row: int, clip_text: bool = true, height: flo
 	_update_body_size()
 	
 	#_create_h_separators.call_deferred()
-	_update_h_separators.call_deferred()
+	#_update_h_separators.call_deferred()
 	_update_visible_rows.call_deferred()
 
 ## Removes the row from the Table
@@ -530,7 +534,9 @@ func remove_row(row: int) -> void:
 	if not _table_util.check_row_input(row, _row_count - 1):
 		return
 	
-	for node in _rows[row].nodes:
+	var row_object = _rows[row]
+
+	for node in row_object.nodes:
 		var parent = node.get_parent()
 
 		if parent:
@@ -538,9 +544,13 @@ func remove_row(row: int) -> void:
 		else:
 			node.queue_free()
 
-	if not _rows[row].row_visible:
+	if not row_object.row_visible:
 			_invisible_rows.erase(_rows[row])
 	
+	if row_object.horizontal_seperator:
+		_separator_group.remove_child(row_object.horizontal_seperator)
+		row_object.horizontal_seperator.queue_free()
+
 	_rows.remove_at(row)
 	
 	_row_count = _row_count - 1 if _row_count > 0 else 0
@@ -557,7 +567,7 @@ func remove_row(row: int) -> void:
 		_refresh_y_offsets_arr()
 		
 		#_create_h_separators.call_deferred()
-		_update_h_separators.call_deferred()
+		#_update_h_separators.call_deferred()
 		_update_v_separators.call_deferred()
 		_update_visible_rows.call_deferred()	
 	
@@ -586,7 +596,7 @@ func remove_rows_batch(rows_to_remove: Array[int]) -> void:
 		_culling_active_rows_old.clear()
 		
 		#_create_h_separators.call_deferred()
-		_update_h_separators.call_deferred()
+		#_update_h_separators.call_deferred()
 		_update_v_separators.call_deferred()
 		_update_visible_rows.call_deferred()	
 	
@@ -618,7 +628,7 @@ func clear() -> void:
 	_create_headers.call_deferred()
 	#_create_h_separators.call_deferred()
 	_create_v_separators.call_deferred()
-	_update_h_separators.call_deferred()
+	#_update_h_separators.call_deferred()
 	_update_v_separators.call_deferred()
 	_update_visible_rows.call_deferred()
 
@@ -626,7 +636,7 @@ func update_table() -> void:
 	_refresh_y_offsets_arr()
 	_refresh_x_offsets_arr()
 	
-	_update_h_separators.call_deferred()
+	#_update_h_separators.call_deferred()
 	_update_v_separators.call_deferred()
 
 	_update_visible_rows.call_deferred()
@@ -671,9 +681,9 @@ func set_row_height(row: int, height: float) -> void:
 	_rows[row].row_height_temp = height
 
 	_refresh_y_offsets_arr()
-
-	_update_h_separators.call_deferred()
 	_update_visible_rows.call_deferred()
+	#_update_h_separators.call_deferred()
+	
 
 func set_column_width(column: int, width: float) -> void:
 	if not _table_util.check_column_input(column, _column_count - 1):
@@ -693,19 +703,22 @@ func set_visibility_row(row: int, visible: bool) -> void:
 	if not _table_util.check_row_input(row, _row_count- 1):
 		return
 	
-	var nodes = _rows[row].nodes
+	var row_object = _rows[row]
+	var nodes = row_object.nodes
 	
 	for node_idx in range(nodes.size()):
 		if _column_visiblity[node_idx]:
 			nodes[node_idx].visible = visible
 	
-	_rows[row].horizontal_seperator.visible = visible
-	_rows[row].row_visible = visible
+	if row_object.horizontal_seperator != null:
+		row_object.horizontal_seperator.visible = visible
+	
+	row_object.row_visible = visible
 	
 	if visible:
-		_invisible_rows.erase(_rows[row])
+		_invisible_rows.erase(row_object)
 	else:
-		_invisible_rows.append(_rows[row])
+		_invisible_rows.append(row_object)
 	
 	_refresh_max_pages()
 	_refresh_last_visible_row()
@@ -718,10 +731,9 @@ func set_visibility_row(row: int, visible: bool) -> void:
 		_refresh_y_offsets_arr()
 		_culling_active_rows_old.clear()
 		
-		#_create_h_separators.call_deferred()
-		_update_h_separators.call_deferred()
+		_update_visible_rows.call_deferred()
+		#_update_h_separators.call_deferred()
 		_update_v_separators.call_deferred()
-		_update_visible_rows.call_deferred()	
 	
 	_update_body_size()
 
@@ -1047,6 +1059,12 @@ func _update_visible_rows(value: int = 0) -> void:
 		
 		for row in _rows:
 			row.row_culling_rendered = false
+			
+			if row.horizontal_seperator:
+				#print(row.horizontal_seperator)
+				_separator_group.remove_child(row.horizontal_seperator)
+				row.horizontal_seperator.queue_free()
+				row.horizontal_seperator = null
 		
 	elif row_culling:
 		var clr_arr := []
@@ -1057,7 +1075,11 @@ func _update_visible_rows(value: int = 0) -> void:
 		for row_index in clr_arr:
 			var row = _rows[row_index]
 			row.row_culling_rendered = false
-			_separator_group.remove_child(row.horizontal_seperator)
+
+			if row.horizontal_seperator:
+				_separator_group.remove_child(row.horizontal_seperator)
+				row.horizontal_seperator.queue_free()
+				row.horizontal_seperator = null
 			
 			for node in row.nodes:
 				var parent = node.get_parent()
@@ -1070,19 +1092,26 @@ func _update_visible_rows(value: int = 0) -> void:
 	
 	begin_bulk_theme_override()
 	var row_idx: int = start_index
+	print("pre_loop: " + str(end_index))
+
 	while row_idx < end_index:
 		
+		print("pre: "+ str(end_index))
+		print(row_idx)
 		var row = _rows[row_idx]
+
 		_culling_active_rows_old.append(row_idx)
 		row.row_culling_rendered = true
 		
 		if row.row_visible:
-			if _separator_group.get_children().find(row.horizontal_seperator) == -1:
+			if not row.horizontal_seperator:
+				row.horizontal_seperator = HSeparator.new()
+
 				row.horizontal_seperator.name = "HSep%d" % row_idx
 				row.horizontal_seperator.mouse_default_cursor_shape = Control.CURSOR_VSIZE
 				
 				var callable = Callable(self, "_on_hori_separator_input").bind(row)
-				if not row.horizontal_seperator.is_connected("_on_hori_separator_input",callable):
+				if not row.horizontal_seperator.is_connected("gui_input", callable):
 					row.horizontal_seperator.connect("gui_input", callable)
 				
 				_separator_group.add_child(row.horizontal_seperator)
@@ -1111,9 +1140,12 @@ func _update_visible_rows(value: int = 0) -> void:
 				_update_row_selection_visuals(row)
 		else:
 			end_index = clampi(end_index + 1, 0, _row_count)
+			print(end_index)
 		
 		row_idx += 1
 	end_bulk_theme_override()
+
+	_update_h_separators.call_deferred()
 
 func _set_properties(node: Control) -> void:
 	if node is LineEdit:
@@ -1289,12 +1321,13 @@ func _update_h_separators() -> void:
 		
 		if row.row_visible:
 			pos += row.row_height_temp
-			
-			separator.position = Vector2(0, pos)
-			separator.visible = true
-			separator.set_size(Vector2(_x_offsets[_last_visible_column] + _column_widths_temp[_last_visible_column], 1))
+			if separator != null:
+				separator.position = Vector2(0, _y_offsets[idx] + row.row_height_temp - 2)
+				separator.visible = true
+				separator.set_size(Vector2(_x_offsets[_last_visible_column] + _column_widths_temp[_last_visible_column], 1))
 		else:
-			separator.visible = false
+			if separator != null:
+				separator.visible = false
 	
 	#_update_headers.call_deferred()
 	_update_body_size()
@@ -1341,7 +1374,7 @@ func _update_v_separators() -> void:
 func _refresh_x_offsets_arr() -> void:
 	_x_offsets.clear()
 	
-	var offsets := []
+	var offsets: Array[int] = []
 	offsets.resize(_column_count)
 	offsets.fill(0)
 	
@@ -1359,7 +1392,7 @@ func _refresh_x_offsets_arr() -> void:
 func _refresh_y_offsets_arr() -> void:
 	_y_offsets.clear()
 	
-	var offsets := []
+	var offsets: Array[int] = []
 	var start: int
 	var end: int
 	
@@ -1608,4 +1641,4 @@ class RowContent:
 	var row_height: int = 0
 	var row_height_temp: int = 0
 	
-	var horizontal_seperator := HSeparator.new()
+	var horizontal_seperator: HSeparator = null
