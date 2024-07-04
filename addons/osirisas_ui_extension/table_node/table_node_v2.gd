@@ -124,7 +124,7 @@ enum E_Sorting {
 		_refresh_y_offsets_arr()
 		
 		_clr_body.call_deferred()
-		_create_h_separators.call_deferred()
+		#_create_h_separators.call_deferred()
 		_update_h_separators.call_deferred()
 		_update_v_separators.call_deferred()
 		_update_body_size.call_deferred()
@@ -141,7 +141,7 @@ enum E_Sorting {
 		_refresh_y_offsets_arr()
 		
 		_clr_body.call_deferred()
-		_create_h_separators.call_deferred()
+		#_create_h_separators.call_deferred()
 		_update_h_separators.call_deferred()
 		_update_v_separators.call_deferred()
 		_update_body_size.call_deferred()
@@ -180,7 +180,7 @@ var current_page: int = 0:
 		_refresh_y_offsets_arr()
 		
 		_clr_body.call_deferred()
-		_create_h_separators.call_deferred()
+		#_create_h_separators.call_deferred()
 		_update_h_separators.call_deferred()
 		_update_v_separators.call_deferred()
 		_update_visible_rows.call_deferred()
@@ -217,8 +217,6 @@ var _header_separator_group := Control.new()
 
 var _header_separators := []
 var _vertical_separators := []
-
-var _horizontal_separators := []
 
 # Groups for header and body for cleaner overview
 var _header_cell_group := Control.new()
@@ -301,7 +299,7 @@ func _ready():
 	
 	
 	_create_headers.call_deferred()
-	_create_h_separators.call_deferred()
+	#_create_h_separators.call_deferred()
 	_create_v_separators.call_deferred()
 	_update_h_separators.call_deferred()
 	_update_v_separators.call_deferred()
@@ -427,6 +425,7 @@ func add_row(data: Array[Control] = [], height: float = standard_cell_dimension.
 	new_row.row_height = height
 	new_row.row_height_temp = height
 	
+	
 	_rows.append(new_row)
 	
 	_row_count += 1
@@ -438,7 +437,7 @@ func add_row(data: Array[Control] = [], height: float = standard_cell_dimension.
 	_refresh_y_offsets_arr()
 	_update_body_size()
 	
-	_create_h_separators.call_deferred()
+	#_create_h_separators.call_deferred()
 	_update_h_separators.call_deferred()
 	_update_v_separators.call_deferred()
 	_update_visible_rows.call_deferred()
@@ -467,7 +466,7 @@ func insert_row(data: Array[Control], row_pos: int, height: float = standard_cel
 	_refresh_y_offsets_arr()
 	_update_body_size()
 	
-	_create_h_separators.call_deferred()
+	#_create_h_separators.call_deferred()
 	_update_h_separators.call_deferred()
 	_update_v_separators.call_deferred()
 	_update_visible_rows.call_deferred()
@@ -499,7 +498,7 @@ func add_rows_batch(data :Array, height: float = standard_cell_dimension.y) -> v
 	_refresh_y_offsets_arr()
 	_update_body_size()
 	
-	_create_h_separators.call_deferred()
+	#_create_h_separators.call_deferred()
 	_update_h_separators.call_deferred()
 	_update_visible_rows.call_deferred()
 
@@ -522,7 +521,7 @@ func set_row(data: Array[Control], row: int, clip_text: bool = true, height: flo
 	_refresh_y_offsets_arr()
 	_update_body_size()
 	
-	_create_h_separators.call_deferred()
+	#_create_h_separators.call_deferred()
 	_update_h_separators.call_deferred()
 	_update_visible_rows.call_deferred()
 
@@ -557,7 +556,7 @@ func remove_row(row: int) -> void:
 		_refresh_last_visible_row()
 		_refresh_y_offsets_arr()
 		
-		_create_h_separators.call_deferred()
+		#_create_h_separators.call_deferred()
 		_update_h_separators.call_deferred()
 		_update_v_separators.call_deferred()
 		_update_visible_rows.call_deferred()	
@@ -586,7 +585,7 @@ func remove_rows_batch(rows_to_remove: Array[int]) -> void:
 		_refresh_y_offsets_arr()
 		_culling_active_rows_old.clear()
 		
-		_create_h_separators.call_deferred()
+		#_create_h_separators.call_deferred()
 		_update_h_separators.call_deferred()
 		_update_v_separators.call_deferred()
 		_update_visible_rows.call_deferred()	
@@ -617,7 +616,7 @@ func clear() -> void:
 	_update_body_size()
 	
 	_create_headers.call_deferred()
-	_create_h_separators.call_deferred()
+	#_create_h_separators.call_deferred()
 	_create_v_separators.call_deferred()
 	_update_h_separators.call_deferred()
 	_update_v_separators.call_deferred()
@@ -700,6 +699,7 @@ func set_visibility_row(row: int, visible: bool) -> void:
 		if _column_visiblity[node_idx]:
 			nodes[node_idx].visible = visible
 	
+	_rows[row].horizontal_seperator.visible = visible
 	_rows[row].row_visible = visible
 	
 	if visible:
@@ -718,7 +718,7 @@ func set_visibility_row(row: int, visible: bool) -> void:
 		_refresh_y_offsets_arr()
 		_culling_active_rows_old.clear()
 		
-		_create_h_separators.call_deferred()
+		#_create_h_separators.call_deferred()
 		_update_h_separators.call_deferred()
 		_update_v_separators.call_deferred()
 		_update_visible_rows.call_deferred()	
@@ -1057,6 +1057,7 @@ func _update_visible_rows(value: int = 0) -> void:
 		for row_index in clr_arr:
 			var row = _rows[row_index]
 			row.row_culling_rendered = false
+			_separator_group.remove_child(row.horizontal_seperator)
 			
 			for node in row.nodes:
 				var parent = node.get_parent()
@@ -1076,7 +1077,16 @@ func _update_visible_rows(value: int = 0) -> void:
 		row.row_culling_rendered = true
 		
 		if row.row_visible:
-			#print(str(end_index) + "visible")
+			if _separator_group.get_children().find(row.horizontal_seperator) == -1:
+				row.horizontal_seperator.name = "HSep%d" % row_idx
+				row.horizontal_seperator.mouse_default_cursor_shape = Control.CURSOR_VSIZE
+				
+				var callable = Callable(self, "_on_hori_separator_input").bind(row)
+				if not row.horizontal_seperator.is_connected("_on_hori_separator_input",callable):
+					row.horizontal_seperator.connect("gui_input", callable)
+				
+				_separator_group.add_child(row.horizontal_seperator)
+			
 			for col_idx in range(_column_count):
 				var nodes = row.nodes
 				var node
@@ -1178,59 +1188,59 @@ func _create_margin_container(node: Control, row_index: int, col_index:int) -> M
 		
 	return margin_parent
 
-func _create_h_separators() -> void:
-	for sep in _horizontal_separators:
-		sep.queue_free()
-	_horizontal_separators.clear()
-	
-	var start_idx: int = 0
-	var end_idx: int = _row_count
-	
-	var offset: int = 0
-	
-	if pagination:
-		var invis_count = _invisible_rows.size()
-		offset = invis_count - max_row_count_per_page * int (invis_count / max_row_count_per_page)
-		end_idx = max_row_count_per_page
-		
-		if not _offset_rows_visibility_pages.is_empty():
-			end_idx = end_idx + _offset_rows_visibility_pages[current_page]
-		
-		if max_row_count_per_page * (current_page + 1) > _row_count:
-			end_idx = _row_count - (max_row_count_per_page * current_page)
-			end_idx -= offset
-		
-		end_idx = clampi(end_idx, 0, max_row_count_per_page)
-	
-	start_idx = clampi(start_idx, 0, _row_count)
-	end_idx = clampi(end_idx, 0, _row_count)
-	
-	#print("Start: " + str(start_idx))
-	#print("End: " + str(end_idx))
-	
-	for idx in range(start_idx, end_idx):  # No separator after the last row
-		var sep = HSeparator.new()
-		sep.name = "HSep%d" % idx
-		sep.mouse_default_cursor_shape = Control.CURSOR_VSIZE
-		
-		#print("addchild")
-		if is_instance_valid(_separator_group):
-			_separator_group.add_child(sep)
-			_horizontal_separators.append(sep)
-		
-		var row := idx
-		if has_meta("sorting_state"):
-			if not get_meta("sorting_state") == E_Sorting.DESCENDING:
-				#print("ascending +")
-				row += offset
-		else:
-			row += offset
-		
-		var callable = Callable(self, "_on_separator_input").bind(row ,HSeparator)
-		sep.connect("gui_input", callable)
-	
-	#print("Offset: " + str(offset))
-	#print("End: " + str(end_idx))
+#func _create_h_separators() -> void:
+	#for sep in _horizontal_separators:
+		#sep.queue_free()
+	#_horizontal_separators.clear()
+	#
+	#var start_idx: int = 0
+	#var end_idx: int = _row_count
+	#
+	#var offset: int = 0
+	#
+	#if pagination:
+		#var invis_count = _invisible_rows.size()
+		#offset = invis_count - max_row_count_per_page * int (invis_count / max_row_count_per_page)
+		#end_idx = max_row_count_per_page
+		#
+		#if not _offset_rows_visibility_pages.is_empty():
+			#end_idx = end_idx + _offset_rows_visibility_pages[current_page]
+		#
+		#if max_row_count_per_page * (current_page + 1) > _row_count:
+			#end_idx = _row_count - (max_row_count_per_page * current_page)
+			#end_idx -= offset
+		#
+		#end_idx = clampi(end_idx, 0, max_row_count_per_page)
+	#
+	#start_idx = clampi(start_idx, 0, _row_count)
+	#end_idx = clampi(end_idx, 0, _row_count)
+	#
+	##print("Start: " + str(start_idx))
+	##print("End: " + str(end_idx))
+	#
+	#for idx in range(start_idx, end_idx):  # No separator after the last row
+		#var sep = HSeparator.new()
+		#sep.name = "HSep%d" % idx
+		#sep.mouse_default_cursor_shape = Control.CURSOR_VSIZE
+		#
+		##print("addchild")
+		#if is_instance_valid(_separator_group):
+			#_separator_group.add_child(sep)
+			#_horizontal_separators.append(sep)
+		#
+		#var row := idx
+		#if has_meta("sorting_state"):
+			#if not get_meta("sorting_state") == E_Sorting.DESCENDING:
+				##print("ascending +")
+				#row += offset
+		#else:
+			#row += offset
+		#
+		#var callable = Callable(self, "_on_separator_input").bind(row ,HSeparator)
+		#sep.connect("gui_input", callable)
+	#
+	##print("Offset: " + str(offset))
+	##print("End: " + str(end_idx))
 
 func _create_v_separators() -> void:
 	for v_sep in _vertical_separators:
@@ -1261,7 +1271,7 @@ func _create_v_separators() -> void:
 			_separator_group.add_child(sep)
 			_vertical_separators.append(sep)
 		
-		var callable = Callable(self, "_on_separator_input").bind(i,VSeparator)
+		var callable = Callable(self, "_on_vert_separator_input").bind(i)
 		sep_header.connect("gui_input", callable)
 		sep.connect("gui_input", callable)
 
@@ -1271,38 +1281,22 @@ func _update_h_separators() -> void:
 	
 	if _rows.is_empty():
 		return
-	
-	for i in range (_horizontal_separators.size()):
-		index = i
 		
-		if pagination:
-			var invis_count = _invisible_rows.size()
-			var offset = invis_count - max_row_count_per_page * int(invis_count / max_row_count_per_page)
-			#var offset = _offset_rows_visibility_pages[current_page]
+	for idx in _culling_active_rows_old:
+		
+		var row: RowContent = _rows[idx]
+		var separator: HSeparator = row.horizontal_seperator
+		
+		if row.row_visible:
+			pos += row.row_height_temp
 			
-			
-			index += (max_row_count_per_page * current_page)
-			
-			if has_meta("sorting_state"):
-				if not get_meta("sorting_state") == E_Sorting.DESCENDING:
-					#print("ascending +")
-					index += offset
-			else:
-				index += offset
-			
-			index = clampi(index, 0, _row_count - 1)
-			
-		if _rows[index].row_visible:
-			pos += _rows[index].row_height_temp
-			
-			_horizontal_separators[i].position = Vector2(0, pos)
-			_horizontal_separators[i].visible = true
-			
-			_horizontal_separators[i].set_size(Vector2(_x_offsets[_last_visible_column] + _column_widths_temp[_last_visible_column], 1))
+			separator.position = Vector2(0, pos)
+			separator.visible = true
+			separator.set_size(Vector2(_x_offsets[_last_visible_column] + _column_widths_temp[_last_visible_column], 1))
 		else:
-			_horizontal_separators[i].visible = false
+			separator.visible = false
 	
-	_update_headers.call_deferred()
+	#_update_headers.call_deferred()
 	_update_body_size()
 
 func _update_v_separators() -> void:
@@ -1511,29 +1505,33 @@ func _on_cell_gui_input(event: InputEvent,row_c: RowContent, node: Control) -> v
 			#print("select")
 			_select_single_row(row)
 
-func _on_separator_input(event, index, type) -> void:
+func _on_vert_separator_input(event, index: int) -> void:
 	
 	var changed := false
 	
 	if event is InputEventMouseMotion and event.button_mask & MOUSE_BUTTON_LEFT and resizing:
 		# Adjust the column width based on mouse movement
-		if type == VSeparator:
-			_column_widths_temp[index] = max(min_size.x, _column_widths_temp[index] + int(event.relative.x))
-			changed = true
-		
-		if type == HSeparator:
-			_rows[index + (max_row_count_per_page * current_page)].row_height_temp = max(min_size.y, _rows[index + (max_row_count_per_page * current_page)].row_height_temp + event.relative.y)
-			print("index: " + str(index + (max_row_count_per_page * current_page)))
-			changed = true
+		_column_widths_temp[index] = max(min_size.x, _column_widths_temp[index] + int(event.relative.x))
+		changed = true
 		
 	if event is InputEventMouseButton and event.double_click:
-		if type == VSeparator:
-			_column_widths_temp[index] = column_widths[index]
-			changed = true
-			
-		if type == HSeparator:
-			_rows[index + (max_row_count_per_page * current_page)].row_height_temp = _rows[index + (max_row_count_per_page * current_page)].row_height
-			changed = true
+		_column_widths_temp[index] = column_widths[index]
+		changed = true
+	
+	if changed:
+		update_table()
+
+func _on_hori_separator_input(event, row: RowContent) -> void:
+	
+	var changed := false
+	
+	if event is InputEventMouseMotion and event.button_mask & MOUSE_BUTTON_LEFT and resizing:
+		row.row_height_temp = max(min_size.y, row.row_height_temp + event.relative.y)
+		changed = true
+		
+	if event is InputEventMouseButton and event.double_click:
+		row.row_height_temp = row.row_height
+		changed = true
 	
 	if changed:
 		update_table()
@@ -1565,8 +1563,6 @@ func _on_sorting_complete(sorted_rows: Array) -> void:
 	
 	_recalc_row_offsets_visibility()
 	_refresh_last_visible_row()
-	
-	_create_h_separators()
 	
 	update_table()
 	
@@ -1612,4 +1608,4 @@ class RowContent:
 	var row_height: int = 0
 	var row_height_temp: int = 0
 	
-	var horizontal_seperator: HSeparator = null 
+	var horizontal_seperator := HSeparator.new()
