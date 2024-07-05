@@ -876,6 +876,7 @@ func get_max_pages() -> int:
 #endregion
 
 #-----------------------------------------Private methods------------------------------------------#
+
 func _init_v_scroll() -> void:
 	var callable_culling := Callable(self,"_update_visible_rows")
 	
