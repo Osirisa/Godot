@@ -1473,8 +1473,8 @@ func _on_cell_gui_input(event: InputEvent,row_c: RowContent, node: Control) -> v
 	var row = _rows.find(row_c)
 	var column = row_c.nodes.find(node)
 	
-	if event is InputEventMouseButton and event.double_click and lable_edit:
-		_edit_cell(row,column)
+	if event is InputEventMouseButton and event.double_click and lable_edit and row_c.editable[column]:
+		_edit_cell(row, column)
 	
 	if event is InputEventMouseButton and event.pressed and event.button_mask & MOUSE_BUTTON_LEFT:
 		if has_meta("old_line_edit"):

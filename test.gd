@@ -17,7 +17,6 @@ func _ready():
 		var button := Button.new()
 		var label2 := Label.new()
 		var line_edit := LineEdit.new()
-		#var cb = MenuButton.new()
 		
 		line_edit.clip_contents = true
 		
@@ -31,13 +30,9 @@ func _ready():
 		label2.text = "going strong"
 		
 		button.text = "press me " + str(randi())
-		#cb.text = "combobox?"
-		
-		#arr.append([label,button,line_edit,label2,cb])
 		arr.append([label,button,line_edit,label2])
-		
+	
 	table2.add_rows_batch(arr)
-	#table.add_rows_batch(arr)
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta):
