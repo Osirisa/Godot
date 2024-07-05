@@ -1,6 +1,6 @@
-[gd_scene load_steps=2 format=3 uid="uid://cftbv7mven0ck"]
+[gd_scene load_steps=2 format=3 uid="uid://cf17idd33fuj7"]
 
-[ext_resource type="Script" path="res://addons/osirisas_ui_extension/table_node/table_node_v2.gd" id="1_hy4fv"]
+[ext_resource type="Script" path="res://addons/osirisas_ui_extension/table_node/o_table_node.gd" id="1_hy4fv"]
 
 [node name="Control" type="Control"]
 layout_mode = 3

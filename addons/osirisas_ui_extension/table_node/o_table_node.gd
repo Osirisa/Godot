@@ -1,5 +1,5 @@
 @tool
-class_name TableNode_v2
+class_name O_TableNode
 extends Control
 
 ## This Class provides you with a Table where you can add | remove | hide rows and columns

@@ -1,7 +1,7 @@
 extends Control
 
 @onready
-var table2: TableNode_v2 = %"Table2"
+var table2: O_TableNode = %"Table2"
 
 @onready
 var input: LineEdit = %debug_LE
