@@ -829,6 +829,8 @@ func deselect_all_rows() -> void:
 		row.deselect = true
 		_update_row_selection_visuals(row)
 	
+	_last_selected_row = -1
+	_current_row = null
 	_selected_rows.clear()
 
 ## Returns true if something is selected, else false
@@ -1422,9 +1424,6 @@ func _edit_cell(row_idx: int, column_idx: int) -> void:
 	var cell = _rows[row_idx].nodes[column_idx]
 	
 	if cell is Label:
-		
-		set_meta("old_label", cell)
-		
 		var line_edit = LineEdit.new()
 		
 		line_edit.clip_contents = cell.clip_text
@@ -1443,10 +1442,19 @@ func _edit_cell(row_idx: int, column_idx: int) -> void:
 		var callable_move_on = Callable(self,"_on_edit_text_focus_lost").bind(row_idx, column_idx, line_edit)
 		line_edit.connect("focus_exited", callable_move_on)
 		
+		if has_meta("old_line_edit"):
+			var cell_edit_line_edit = get_meta("old_line_edit")
+			if cell_edit_line_edit.is_inside_tree():
+				cell_edit_line_edit.release_focus()
+		
+		set_meta("old_label", cell)
+		
 		set_cell(line_edit, row_idx, column_idx)
 		
 		emit_signal("cell_edit")
+		set_meta("old_line_edit", line_edit)
 		line_edit.grab_focus.call_deferred()
+
 
 func _clear_node_theme(node: Control):
 	node.theme = null
@@ -1469,6 +1477,11 @@ func _on_cell_gui_input(event: InputEvent,row_c: RowContent, node: Control) -> v
 		_edit_cell(row,column)
 	
 	if event is InputEventMouseButton and event.pressed and event.button_mask & MOUSE_BUTTON_LEFT:
+		if has_meta("old_line_edit"):
+			var cell_edit_line_edit = get_meta("old_line_edit")
+			if cell_edit_line_edit.is_inside_tree():
+				cell_edit_line_edit.release_focus()
+			
 		emit_signal("cell_clicked",row,column)
 	
 	if event is InputEventMouseButton and event.pressed and event.button_mask & MOUSE_BUTTON_LEFT:
@@ -1499,14 +1512,17 @@ func _commit_text(line_edit:LineEdit, new_text:String, row:int, column:int) -> v
 	
 	if has_meta("old_label"):
 		label= get_meta("old_label")
+		set_meta("old_label", null)
 	else:
 		label = Label.new()
 		label.clip_text = line_edit.clip_contents
 		label.horizontal_alignment = line_edit.alignment
 	
 	label.text = new_text
+	_clear_node_theme(label)
 	
 	set_cell(label, row, column)
+	#_update_row_selection_visuals.call_deferred()
 	emit_signal("cell_edit_finished")
 
 func _on_vert_separator_input(event, index: int) -> void:
@@ -1544,6 +1560,8 @@ func _on_hori_separator_input(event, row: RowContent) -> void:
 func _on_header_clicked(column: int) -> void:
 	# Toggle sorting direction (ascending/descending)
 	var sorting = E_Sorting.ASCENDING
+	
+	deselect_all_rows()
 	
 	if has_meta("sort_column") and get_meta("sort_column") == column:
 		if get_meta("sorting_state") == E_Sorting.ASCENDING:
