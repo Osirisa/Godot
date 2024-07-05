@@ -10,13 +10,13 @@ extends Control
 #-----------------------------------------Signals--------------------------------------------------#
 
 ## Signal when the user clicks on a cell
-signal cell_clicked(row:int, column:int)
+signal cell_clicked(row: int, column: int)
 
 ## Signal when the user edits a cell (double click)
-signal cell_edit(row:int,column:int)
+signal cell_edit(row: int,column: int)
 
 ## Signal when the user edited
-signal cell_edit_finished(row:int,column:int)
+signal cell_edit_finished(row: int, column: int)
 
 ## Signal when a column sorting was requested
 signal column_sort_requested(column: int, sort: E_Sorting)
@@ -24,8 +24,8 @@ signal column_sort_requested(column: int, sort: E_Sorting)
 ## Signal when a column sorting was finished
 signal column_sort_finished(column: int, sort: E_Sorting)
 
-## Private Signal (for the sorting thread, gives out the new sorted array)
-signal _c_sort_finished(sorted_rows: Array)
+## Private Signal (for the sorting thread)
+signal _c_sort_finished()
 #-----------------------------------------Enums----------------------------------------------------#
 enum E_Sorting {
 	ASCENDING,
@@ -99,6 +99,11 @@ enum E_Sorting {
 ## To stop the resizing below a certain threshhold of the cell
 @export var min_size := Vector2i(50,20)
 
+@export_category("Label editable")
+## Enables the editing via doubleclick on a label
+@export var lable_edit := true
+
+
 @export_category("Special")
 @export_group("Culling")
 ## Culling makes it that only so many rows are being inserted to maximize performacne (For Large Tables)
@@ -122,12 +127,9 @@ enum E_Sorting {
 		pagination = value
 		
 		_refresh_y_offsets_arr()
-		
 		_culling_active_rows_old.clear()
 
 		_update_visible_rows.call_deferred()
-		#_create_h_separators.call_deferred()
-		#_update_h_separators.call_deferred()
 		_update_v_separators.call_deferred()
 		_update_body_size.call_deferred()
 		
@@ -140,15 +142,11 @@ enum E_Sorting {
 		
 		_refresh_max_pages()
 		_refresh_y_offsets_arr()
-		
 		_culling_active_rows_old.clear()
-
+		
 		_update_visible_rows.call_deferred()
-		#_create_h_separators.call_deferred()
-		#_update_h_separators.call_deferred()
 		_update_v_separators.call_deferred()
 		_update_body_size.call_deferred()
-		
 		
 		_scroll_container.get_v_scroll_bar().value = 0
 
@@ -171,12 +169,10 @@ var current_page: int = 0:
 		_culling_active_rows_old.clear()
 		
 		if _shortened:
-			#print("update shortened")
 			_update_body_size.call_deferred()
 			_shortened = false
 		
 		if ((current_page + 1) * max_row_count_per_page) > _row_count:
-			#print("update")
 			_update_body_size.call_deferred()
 			_shortened = true
 		
@@ -184,7 +180,6 @@ var current_page: int = 0:
 		
 		_culling_active_rows_old.clear()
 		_update_visible_rows.call_deferred()
-		#_update_h_separators.call_deferred()
 		_update_v_separators.call_deferred()
 
 #-----------------------------------------Private Var----------------------------------------------#
@@ -301,9 +296,7 @@ func _ready():
 	
 	
 	_create_headers.call_deferred()
-	#_create_h_separators.call_deferred()
 	_create_v_separators.call_deferred()
-	#_update_h_separators.call_deferred()
 	_update_v_separators.call_deferred()
 	
 	clip_contents = true
@@ -340,7 +333,6 @@ func add_column(title: String, cell_width := standard_cell_dimension.x, column_v
 	_create_headers.call_deferred()
 	_create_v_separators.call_deferred()
 	_update_v_separators.call_deferred()
-	#_update_h_separators.call_deferred()
 	_update_visible_rows.call_deferred()
 
 func insert_column(title, column_pos, cell_width := standard_cell_dimension.x, column_visiblity := true):
@@ -370,7 +362,6 @@ func insert_column(title, column_pos, cell_width := standard_cell_dimension.x, c
 	_create_headers.call_deferred()
 	_create_v_separators.call_deferred()
 	_update_v_separators.call_deferred()
-	#_update_h_separators.call_deferred()
 	_update_visible_rows.call_deferred()
 
 func remove_column(column_pos):
@@ -404,7 +395,6 @@ func remove_column(column_pos):
 	_create_headers.call_deferred()
 	_create_v_separators.call_deferred()
 	_update_v_separators.call_deferred()
-	#_update_h_separators.call_deferred()
 	_update_visible_rows.call_deferred()
 
 func get_column_count() -> int:
@@ -439,8 +429,6 @@ func add_row(data: Array[Control] = [], height: float = standard_cell_dimension.
 	_refresh_y_offsets_arr()
 	_update_body_size()
 	
-	#_create_h_separators.call_deferred()
-	#_update_h_separators.call_deferred()
 	_update_v_separators.call_deferred()
 	_update_visible_rows.call_deferred()
 
@@ -455,23 +443,18 @@ func insert_row(data: Array[Control], row_pos: int, height: float = standard_cel
 	new_row.row_visible = true
 	new_row.row_height = height
 	new_row.row_height_temp = height
-	
 	_rows.insert(row_pos, new_row)
 	
 	_row_count += 1
 	
-
 	_refresh_max_pages()
 	_fill_rows_arr()
-
+	
 	_refresh_last_visible_row()
 	_refresh_y_offsets_arr()
 	_update_body_size()
-	
 	_culling_active_rows_old.clear()
-
-	#_create_h_separators.call_deferred()
-	#_update_h_separators.call_deferred()
+	
 	_update_v_separators.call_deferred()
 	_update_visible_rows.call_deferred()
 
@@ -497,13 +480,10 @@ func add_rows_batch(data :Array, height: float = standard_cell_dimension.y) -> v
 	
 	_refresh_max_pages()
 	_fill_rows_arr()
-
 	_refresh_last_visible_row()
 	_refresh_y_offsets_arr()
 	_update_body_size()
 	
-	#_create_h_separators.call_deferred()
-	#_update_h_separators.call_deferred()
 	_update_visible_rows.call_deferred()
 
 ## Overrides the row from the Table 
@@ -525,8 +505,6 @@ func set_row(data: Array[Control], row: int, clip_text: bool = true, height: flo
 	_refresh_y_offsets_arr()
 	_update_body_size()
 	
-	#_create_h_separators.call_deferred()
-	#_update_h_separators.call_deferred()
 	_update_visible_rows.call_deferred()
 
 ## Removes the row from the Table
@@ -566,8 +544,6 @@ func remove_row(row: int) -> void:
 		_refresh_last_visible_row()
 		_refresh_y_offsets_arr()
 		
-		#_create_h_separators.call_deferred()
-		#_update_h_separators.call_deferred()
 		_update_v_separators.call_deferred()
 		_update_visible_rows.call_deferred()	
 	
@@ -595,8 +571,6 @@ func remove_rows_batch(rows_to_remove: Array[int]) -> void:
 		_refresh_y_offsets_arr()
 		_culling_active_rows_old.clear()
 		
-		#_create_h_separators.call_deferred()
-		#_update_h_separators.call_deferred()
 		_update_v_separators.call_deferred()
 		_update_visible_rows.call_deferred()	
 	
@@ -626,9 +600,7 @@ func clear() -> void:
 	_update_body_size()
 	
 	_create_headers.call_deferred()
-	#_create_h_separators.call_deferred()
 	_create_v_separators.call_deferred()
-	#_update_h_separators.call_deferred()
 	_update_v_separators.call_deferred()
 	_update_visible_rows.call_deferred()
 
@@ -636,9 +608,7 @@ func update_table() -> void:
 	_refresh_y_offsets_arr()
 	_refresh_x_offsets_arr()
 	
-	#_update_h_separators.call_deferred()
 	_update_v_separators.call_deferred()
-
 	_update_visible_rows.call_deferred()
 
 #endregion
@@ -671,7 +641,9 @@ func set_cell(node: Control,row: int, column: int) -> void:
 		return
 	
 	_rows[row].nodes[column] = node
-
+	
+	_culling_active_rows_old.clear()
+	
 	_update_visible_rows.call_deferred()
 
 func set_row_height(row: int, height: float) -> void:
@@ -682,7 +654,6 @@ func set_row_height(row: int, height: float) -> void:
 
 	_refresh_y_offsets_arr()
 	_update_visible_rows.call_deferred()
-	#_update_h_separators.call_deferred()
 	
 
 func set_column_width(column: int, width: float) -> void:
@@ -732,7 +703,6 @@ func set_visibility_row(row: int, visible: bool) -> void:
 		_culling_active_rows_old.clear()
 		
 		_update_visible_rows.call_deferred()
-		#_update_h_separators.call_deferred()
 		_update_v_separators.call_deferred()
 	
 	_update_body_size()
@@ -1075,7 +1045,7 @@ func _update_visible_rows(value: int = 0) -> void:
 		for row_index in clr_arr:
 			var row = _rows[row_index]
 			row.row_culling_rendered = false
-
+			
 			if row.horizontal_seperator:
 				_separator_group.remove_child(row.horizontal_seperator)
 				row.horizontal_seperator.queue_free()
@@ -1092,21 +1062,17 @@ func _update_visible_rows(value: int = 0) -> void:
 	
 	begin_bulk_theme_override()
 	var row_idx: int = start_index
-	print("pre_loop: " + str(end_index))
-
+	
 	while row_idx < end_index:
-		
-		print("pre: "+ str(end_index))
-		print(row_idx)
 		var row = _rows[row_idx]
-
+		
 		_culling_active_rows_old.append(row_idx)
 		row.row_culling_rendered = true
 		
 		if row.row_visible:
 			if not row.horizontal_seperator:
 				row.horizontal_seperator = HSeparator.new()
-
+				
 				row.horizontal_seperator.name = "HSep%d" % row_idx
 				row.horizontal_seperator.mouse_default_cursor_shape = Control.CURSOR_VSIZE
 				
@@ -1130,7 +1096,7 @@ func _update_visible_rows(value: int = 0) -> void:
 					_body_cell_group.add_child(margin_parent)
 					change_pos = false
 					
-				elif !(parent.size.x == _column_widths_temp[col_idx]) or !(parent.size.y == row.row_height_temp):
+				elif parent.size.x != _column_widths_temp[col_idx] or parent.size.y != row.row_height_temp:
 					parent.custom_minimum_size = Vector2(_column_widths_temp[col_idx], row.row_height_temp)
 					parent.size =  Vector2(_column_widths_temp[col_idx], row.row_height_temp)
 					
@@ -1143,8 +1109,9 @@ func _update_visible_rows(value: int = 0) -> void:
 			print(end_index)
 		
 		row_idx += 1
+	
 	end_bulk_theme_override()
-
+	
 	_update_h_separators.call_deferred()
 
 func _set_properties(node: Control) -> void:
@@ -1219,60 +1186,6 @@ func _create_margin_container(node: Control, row_index: int, col_index:int) -> M
 		margin_parent.theme = body_theme
 		
 	return margin_parent
-
-#func _create_h_separators() -> void:
-	#for sep in _horizontal_separators:
-		#sep.queue_free()
-	#_horizontal_separators.clear()
-	#
-	#var start_idx: int = 0
-	#var end_idx: int = _row_count
-	#
-	#var offset: int = 0
-	#
-	#if pagination:
-		#var invis_count = _invisible_rows.size()
-		#offset = invis_count - max_row_count_per_page * int (invis_count / max_row_count_per_page)
-		#end_idx = max_row_count_per_page
-		#
-		#if not _offset_rows_visibility_pages.is_empty():
-			#end_idx = end_idx + _offset_rows_visibility_pages[current_page]
-		#
-		#if max_row_count_per_page * (current_page + 1) > _row_count:
-			#end_idx = _row_count - (max_row_count_per_page * current_page)
-			#end_idx -= offset
-		#
-		#end_idx = clampi(end_idx, 0, max_row_count_per_page)
-	#
-	#start_idx = clampi(start_idx, 0, _row_count)
-	#end_idx = clampi(end_idx, 0, _row_count)
-	#
-	##print("Start: " + str(start_idx))
-	##print("End: " + str(end_idx))
-	#
-	#for idx in range(start_idx, end_idx):  # No separator after the last row
-		#var sep = HSeparator.new()
-		#sep.name = "HSep%d" % idx
-		#sep.mouse_default_cursor_shape = Control.CURSOR_VSIZE
-		#
-		##print("addchild")
-		#if is_instance_valid(_separator_group):
-			#_separator_group.add_child(sep)
-			#_horizontal_separators.append(sep)
-		#
-		#var row := idx
-		#if has_meta("sorting_state"):
-			#if not get_meta("sorting_state") == E_Sorting.DESCENDING:
-				##print("ascending +")
-				#row += offset
-		#else:
-			#row += offset
-		#
-		#var callable = Callable(self, "_on_separator_input").bind(row ,HSeparator)
-		#sep.connect("gui_input", callable)
-	#
-	##print("Offset: " + str(offset))
-	##print("End: " + str(end_idx))
 
 func _create_v_separators() -> void:
 	for v_sep in _vertical_separators:
@@ -1435,7 +1348,7 @@ func _sort_thread_function(args: Array) -> void:
 	var sorter = Sorter.new(column, ascending)
 	_rows.sort_custom(sorter._sort)
 	
-	call_deferred("emit_signal", "_c_sort_finished", _rows)
+	call_deferred("emit_signal", "_c_sort_finished")
 
 func _select_single_row(row: int) -> void:
 	deselect_all_rows()
@@ -1505,6 +1418,36 @@ func _update_row_selection_visuals(row: RowContent) -> void:
 		
 		row.deselect = false
 
+func _edit_cell(row_idx: int, column_idx: int) -> void:
+	var cell = _rows[row_idx].nodes[column_idx]
+	
+	if cell is Label:
+		
+		set_meta("old_label", cell)
+		
+		var line_edit = LineEdit.new()
+		
+		line_edit.clip_contents = cell.clip_text
+		line_edit.alignment = cell.horizontal_alignment
+		
+		var original_text = cell.text
+		line_edit.text = cell.text
+		line_edit.select_all()
+		
+		var callable_enter = Callable(self,"_on_edit_text_entered").bind(row_idx, column_idx, line_edit)
+		line_edit.connect("text_submitted", callable_enter)
+		
+		var callable_cancel = Callable(self,"_on_edit_input_event").bind(row_idx, column_idx, original_text, line_edit)
+		line_edit.connect("gui_input", callable_cancel)
+		
+		var callable_move_on = Callable(self,"_on_edit_text_focus_lost").bind(row_idx, column_idx, line_edit)
+		line_edit.connect("focus_exited", callable_move_on)
+		
+		set_cell(line_edit, row_idx, column_idx)
+		
+		emit_signal("cell_edit")
+		line_edit.grab_focus.call_deferred()
+
 func _clear_node_theme(node: Control):
 	node.theme = null
 	var parent = node.get_parent()
@@ -1522,12 +1465,12 @@ func _on_cell_gui_input(event: InputEvent,row_c: RowContent, node: Control) -> v
 	var row = _rows.find(row_c)
 	var column = row_c.nodes.find(node)
 	
-	if event is InputEventMouseButton and event.double_click:
-		#_edit_cell(row,column)
-		pass
+	if event is InputEventMouseButton and event.double_click and lable_edit:
+		_edit_cell(row,column)
+	
 	if event is InputEventMouseButton and event.pressed and event.button_mask & MOUSE_BUTTON_LEFT:
 		emit_signal("cell_clicked",row,column)
-		
+	
 	if event is InputEventMouseButton and event.pressed and event.button_mask & MOUSE_BUTTON_LEFT:
 		if Input.is_key_pressed(KEY_SHIFT):
 			_select_multiple_rows(row)
@@ -1537,6 +1480,34 @@ func _on_cell_gui_input(event: InputEvent,row_c: RowContent, node: Control) -> v
 		else:
 			#print("select")
 			_select_single_row(row)
+
+func _on_edit_text_entered(new_text:String, row:int, column:int, line_edit:LineEdit) -> void:
+	line_edit.set_block_signals(true)
+	_commit_text(line_edit,line_edit.text, row, column)
+
+func _on_edit_text_focus_lost(row:int, column:int, line_edit:LineEdit) -> void:
+	line_edit.set_block_signals(true)
+	_commit_text(line_edit,line_edit.text, row, column)
+
+func _on_edit_input_event(event:InputEvent, row:int, column:int, original_text:String, line_edit:LineEdit) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		line_edit.set_block_signals(true)
+		_commit_text(line_edit, original_text, row, column)
+
+func _commit_text(line_edit:LineEdit, new_text:String, row:int, column:int) -> void:
+	var label: Label
+	
+	if has_meta("old_label"):
+		label= get_meta("old_label")
+	else:
+		label = Label.new()
+		label.clip_text = line_edit.clip_contents
+		label.horizontal_alignment = line_edit.alignment
+	
+	label.text = new_text
+	
+	set_cell(label, row, column)
+	emit_signal("cell_edit_finished")
 
 func _on_vert_separator_input(event, index: int) -> void:
 	
@@ -1553,6 +1524,7 @@ func _on_vert_separator_input(event, index: int) -> void:
 	
 	if changed:
 		update_table()
+		_update_headers.call_deferred()
 
 func _on_hori_separator_input(event, row: RowContent) -> void:
 	
@@ -1584,10 +1556,7 @@ func _on_header_clicked(column: int) -> void:
 	
 	sort_rows_by_column(column, sorting)
 
-func _on_sorting_complete(sorted_rows: Array) -> void:
-	
-	#_rows.clear()
-	#_rows = sorted_rows.duplicate()
+func _on_sorting_complete() -> void:
 	
 	_sort_thread.wait_to_finish()
 	_sort_thread = null
