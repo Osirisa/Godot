@@ -99,7 +99,7 @@ signal sorting_complete(sorted_rows)
 #var do_once:= true
 ##-------------------------------------------
 
-const table_util = preload("res://addons/osirisas_ui_extension/table_node/table_utility.gd")
+const table_util = preload("res://addons/osirisas_ui_extension/table_node/o_table_utility.gd")
 
 var columns: int
 
