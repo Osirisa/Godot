@@ -32,18 +32,14 @@ func _ready():
 		button.text = "press me " + str(randi())
 		arr.append([label,button,line_edit,label2])
 	
-	var time1 = O_Time.new(1,10,24)
-	var time2 = O_Time.new(1,5,24)
-	
-	time2.minute -= 65
-	print(time2)
-	time2.second -= 24
-	print(time2)
-	time2.second -= 24
-	print(time2)
-	#print(time2.get_difference(time1))
-	
-	table2.add_rows_batch(arr)
+	var date1 = O_Date.new(2014,1,1)
+	print(date1)
+	date1.month += 24
+	print(date1)
+	date1.month += 1
+	print(date1)
+	date1.day += 30
+	print(date1)
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta):

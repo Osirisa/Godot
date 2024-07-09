@@ -1,52 +1,68 @@
 extends Resource
 class_name O_Time
 
-var hour: int
+var hour: int:
+	set(value):
+		hour = value
+		
+		if abs(value) > 0:
+			if not _block_set:
+				_block_set = true
+				var tot_time = get_time_in_seconds()
+				
+				if tot_time < 0:
+					_negative = true
+				else:
+					_negative = false
+				
+				hour = tot_time / 3600
+				minute = (tot_time - (hour * 3600)) / 60
+				second = ((tot_time - (hour * 3600)) - (minute * 60))
+				
+				_block_set = false
+
 var minute: int:
 	set(value):
-		var correction := int(value / 60)
-		#print(correction)
-		if correction >= 0 and value > 0:
-			hour += correction
-			minute = value % 60
-			#print("pos1_min")
-		else:
-			if hour >= abs(correction) + 1:
-				hour += correction
-				minute = value % 60
-				#print("pos2_min")
-			else:
-				#print("neg_min")
-				_negative = true
-				correction += hour
+		minute = value
+		
+		if abs(value) > 0:
+			if not _block_set:
+				_block_set = true
+				var tot_time = get_time_in_seconds()
 				
-				minute = 60 - value % 60
+				if tot_time < 0:
+					_negative = true
+				else:
+					_negative = false
+				
+				hour = tot_time / 3600
+				minute = (tot_time - (hour * 3600)) / 60
+				second = ((tot_time - hour * 3600) - (minute * 60))
+				
+				_block_set = false
 
 var second: int:
 	set(value):
-		var correction := int(value / 60)
-		if correction >= 0 and value > 0:
-			minute += correction
-			second = value % 60
-			#print("pos1")
-		else:
-			if minute >= abs(correction) + 1:
-				minute += correction - 1
-				second = value % 60
-				#print("pos2")
-			else:
-				if hour < abs(correction / 60) + 1:
-					#print("neg")
+		second = value
+		
+		if abs(value) > 0:
+			if not _block_set:
+				_block_set = true
+				var tot_time = get_time_in_seconds()
+				
+				if tot_time < 0:
 					_negative = true
-					correction += hour
-					minute = correction
-					second = 60 - value % 60
 				else:
-					#print("pos3")
-					minute += correction
-					second = value % 60
+					_negative = false
+				
+				hour = tot_time / 3600
+				minute = (tot_time - (hour * 3600)) / 60
+				second = ((tot_time - (hour * 3600)) - (minute * 60))
+				
+				_block_set = false
 
 var _negative := false
+var _block_set := false
 
 func _init(i_hour: int = 0, i_minute: int = 0, i_second: int = 0):
 	hour = i_hour
@@ -55,7 +71,7 @@ func _init(i_hour: int = 0, i_minute: int = 0, i_second: int = 0):
 
 func _to_string() -> String:
 	if _negative:
-		return "- " + str(abs(hour)).pad_zeros(2) + ":" + str(abs(minute)).pad_zeros(2) + ":" + str(abs(second)).pad_zeros(2)
+		return "-" + str(abs(hour)).pad_zeros(2) + ":" + str(abs(minute)).pad_zeros(2) + ":" + str(abs(second)).pad_zeros(2)
 	else:
 		return str(hour).pad_zeros(2) + ":" + str(minute).pad_zeros(2) + ":" + str(second).pad_zeros(2)
 
@@ -63,7 +79,7 @@ func to_string_formated(format: String) -> String:
 	return ""
 
 static func from_string(time_str: String, format: String) -> O_Time:
-	var regex_pattern = format
+	var regex_pattern := format
 	
 	regex_pattern = regex_pattern.replace("hh", "(?<hour>[0-9]+)")
 	regex_pattern = regex_pattern.replace("mm", "(?<minute>[0-5]?[0-9])")
@@ -82,9 +98,9 @@ static func from_string(time_str: String, format: String) -> O_Time:
 		push_error("Date string does not match format")
 		return null
 	
-	var hour_s = int(matches.get_string("hour"))
-	var minute_s = int(matches.get_string("minute"))
-	var second_s = int(matches.get_string("second"))
+	var hour_s := int(matches.get_string("hour"))
+	var minute_s := int(matches.get_string("minute"))
+	var second_s := int(matches.get_string("second"))
 	
 	return O_Time.new(hour_s, minute_s, second_s)
 
@@ -121,3 +137,6 @@ func equals(other_date: O_Time) -> bool:
 		return false
 	
 	return true
+
+func get_time_in_seconds() -> int:
+	return hour * 3600 + minute * 60 + second 

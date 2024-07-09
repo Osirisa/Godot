@@ -42,45 +42,62 @@ const MONTH_DAYS_LEAP = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 
 var year := 1:
 	set(value):
-		if value == 0:
-			push_warning("Year can't be 0 -> now 1 BC -> -1")
-			year = -1
-		else :
-			year = value
+		year = value
+		if month == 2:
+			if not _block_set:
+				_block_set = true
+				
+				var julian_date = to_julian()
+				var new_g_date = O_TimeUtil.calc_from_jd(julian_date)
+				
+				year = new_g_date[0]
+				month = new_g_date[1]
+				day = new_g_date[2]
+				
+				_block_set = false
 
+## The Month | NOTE: Calculations with adding and subtracting months could be values you not expect
+## Rather use Days!!
+## Example: 2012.12.31 - 1 month is 2012.12.01 or 2021.12.01
 var month := 1:
 	set(value):
-		if value > 12:
-			var correction = int(value / 12)
-			year += correction
-			month = value - correction * 12
-			min(month, 1)
+		month = value % 12
+		
+		if not _block_set:
+			_block_set = true
 			
-		elif value < 0:
-			var correction = int(value / 12) + 1
-			year -= correction
-			month = value + correction * 12
-			month = min(month, 1)
+			year += value / 12
 			
-		elif value == 0:
-			push_warning("Month can't be 0 -> now january -> 1")
-			month = 1
+			var julian_date = to_julian()
+			var new_g_date = O_TimeUtil.calc_from_jd(julian_date)
 			
-		else:
-			month = value
+			year = new_g_date[0]
+			month = new_g_date[1]
+			day = new_g_date[2]
+			
+			_block_set = false
 
 var day := 1: 
 	set(value):
-		if value > days_in_month() or day < 1:
-			var julian_date = to_julian()
-			var new_julian_date = julian_date + value - day
-			var new_g_date = from_julian(new_julian_date)
-			
-			year = new_g_date.year
-			month = new_g_date.month
-			day = new_g_date.day
+		day = value
+		
+		if day > MONTH_DAYS[month - 1] or value < 1:
+			if not _block_set:
+				_block_set = true
+				
+				var julian_date = to_julian()
+				var new_g_date = O_TimeUtil.calc_from_jd(julian_date)
+				
+				year = new_g_date[0]
+				month = new_g_date[1]
+				day = new_g_date[2]
+				
+				_block_set = false
 
 #-----------------------------------------Private Var----------------------------------------------#
+
+var _block_set := false
+
 #-----------------------------------------Onready Var----------------------------------------------#
 
 #-----------------------------------------Init and Ready-------------------------------------------#
@@ -151,6 +168,8 @@ static func from_julian(julian_date: float) -> O_Date:
 static func current_date() -> O_Date:
 	var curr_date_dict := Time.get_datetime_dict_from_system()
 	return O_Date.new(curr_date_dict.year, curr_date_dict.month, curr_date_dict.day)
+
+## TBD: GET WEEKDAYS
 
 func equals(other_date: O_Date) -> bool:
 	if not year == other_date.year:
