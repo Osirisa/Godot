@@ -67,8 +67,25 @@ func _to_string() -> String:
 	return str(year) + "-" + str(month).pad_zeros(2) + "-" + str(day).pad_zeros(2) + " " + str(hour).pad_zeros(2) + ":" + str(minute).pad_zeros(2) + ":" + str(second).pad_zeros(2)
 
 func to_string_formatted(format: String) -> String:
-	return ""
-	pass
+	var replacements = {
+		"DD": str(day).pad_zeros(2),
+		"D": str(day),
+		"MM": str(month).pad_zeros(2),
+		"M": str(month),
+		"YYYY": str(year),
+		"YY": str(year).right(2),
+		"hh": str(hour).pad_zeros(2),
+		"h": str(hour),
+		"mm": str(minute).pad_zeros(2),
+		"m": str(minute),
+		"ss": str(second).pad_zeros(2),
+		"s": str(second)
+	}
+
+	for key in replacements.keys():
+		format = format.replace(key, replacements[key])
+	
+	return format
 
 ## Takes in a string containing a date and a time and a format to show where the numbers are[br]
 ## Example: "2024-07-08|8:7:06" and "YYYY-MM-DD|hh:mm:ss"

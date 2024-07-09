@@ -41,6 +41,8 @@ func _ready():
 	date1.day += 30
 	print(date1)
 
+	print(O_Date.E_WEEKDAYS.find_key(date1.get_weekday()))
+
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta):
 	pass

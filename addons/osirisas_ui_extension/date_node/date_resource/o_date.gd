@@ -9,13 +9,13 @@ class_name O_Date
 #-----------------------------------------Enums----------------------------------------------------#
 
 enum E_WEEKDAYS {
-	MONDAY,
-	TUESDAY,
-	WEDNESDAY,
-	THURSDAY,
-	FRIDAY,
-	SATURDAY,
-	SUNDAY
+	MONDAY = 1,
+	TUESDAY = 2,
+	WEDNESDAY = 3,
+	THURSDAY = 4,
+	FRIDAY = 5,
+	SATURDAY = 6,
+	SUNDAY = 7
 }
 
 enum E_MONTHS {
@@ -58,7 +58,7 @@ var year := 1:
 
 ## The Month | NOTE: Calculations with adding and subtracting months could be values you not expect
 ## Rather use Days!!
-## Example: 2012.12.31 - 1 month is 2012.12.01 or 2021.12.01
+## Example: 2012.12.31 - 1 month is 2012.12.01
 var month := 1:
 	set(value):
 		month = value % 12
@@ -115,6 +115,21 @@ func _to_string() -> String:
 
 #-----------------------------------------Public methods-------------------------------------------#
 
+func to_string_formatted(format: String) -> String:
+	var replacements = {
+		"DD": str(day).pad_zeros(2),
+		"D": str(day),
+		"MM": str(month).pad_zeros(2),
+		"M": str(month),
+		"YYYY": str(year),
+		"YY": str(year).right(2)
+	}
+
+	for key in replacements.keys():
+		format = format.replace(key, replacements[key])
+	
+	return format
+
 ## Method to set the date
 func set_date(i_year: int, i_month: int, i_day: int) -> void:
 	year = i_year
@@ -169,7 +184,31 @@ static func current_date() -> O_Date:
 	var curr_date_dict := Time.get_datetime_dict_from_system()
 	return O_Date.new(curr_date_dict.year, curr_date_dict.month, curr_date_dict.day)
 
-## TBD: GET WEEKDAYS
+func get_weekday() -> E_WEEKDAYS:
+	var A = year
+	var M = month
+	var D = day
+
+	var month_offset_normal: Array[int] = [0, 3, 3, 6, 1, 4, 6, 2, 5, 0, 3, 5]
+	var month_offset_leap: Array[int] = [0, 3, 4, 0, 2, 5, 0, 3, 6, 1, 4, 6]
+
+	var offset: int
+
+	if is_leap_year():
+		offset = month_offset_leap[M - 1]
+	else:
+		offset = month_offset_normal[M - 1]
+
+	var weekday = (D + offset + 5*((A-1)%4) + 4*((A-1)%100) + 6*((A-1)%400))%7
+
+	match weekday:
+		0:
+			return E_WEEKDAYS.SUNDAY
+		1, 2, 3, 4, 5, 6:
+			return weekday
+		_:
+			return -1
+	return weekday
 
 func equals(other_date: O_Date) -> bool:
 	if not year == other_date.year:

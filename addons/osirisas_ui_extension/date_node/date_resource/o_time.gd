@@ -76,7 +76,19 @@ func _to_string() -> String:
 		return str(hour).pad_zeros(2) + ":" + str(minute).pad_zeros(2) + ":" + str(second).pad_zeros(2)
 
 func to_string_formated(format: String) -> String:
-	return ""
+	var replacements = {
+		"hh": str(hour).pad_zeros(2),
+		"h": str(hour),
+		"mm": str(minute).pad_zeros(2),
+		"m": str(minute),
+		"ss": str(second).pad_zeros(2),
+		"s": str(second)
+	}
+
+	for key in replacements.keys():
+		format = format.replace(key, replacements[key])
+	
+	return format
 
 static func from_string(time_str: String, format: String) -> O_Time:
 	var regex_pattern := format
