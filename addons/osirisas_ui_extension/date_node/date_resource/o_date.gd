@@ -245,6 +245,22 @@ func equals(other_date: O_Date) -> bool:
 	
 	return true
 
+static func is_valid_date(year: int, month: int, day: int) -> bool:
+	if month < 1 or month > 12:
+		return false
+	
+	var monthdays: Array[int]
+	
+	if O_Date.is_year_leap_st(year):
+		monthdays = MONTH_DAYS_LEAP
+	else:
+		monthdays = MONTH_DAYS
+	
+	if day < 1 or day > monthdays[month - 1]:
+		return false
+	
+	return true
+
 func get_difference(other: O_Date) -> int:
 	var jd1: float = self.to_julian()
 	var jd2: float = other.to_julian()

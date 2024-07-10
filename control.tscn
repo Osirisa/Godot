@@ -108,7 +108,6 @@ layout_mode = 2
 [node name="O Date Line Edit" type="LineEdit" parent="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
 layout_mode = 2
 script = ExtResource("3_mi6px")
-format = "(?<day>[0-3]?[0-9])-(?<month>[0-1]?[0-9])-(?<year>[0-9]+)"
 
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_next_page" to="." method="_on_debug_next_page_pressed"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_previous_page" to="." method="_on_debug_previous_page_pressed"]
