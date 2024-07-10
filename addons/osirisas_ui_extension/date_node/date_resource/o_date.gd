@@ -4,7 +4,7 @@ class_name O_Date
 
 ## This Class provides you with a Date - Resource which is more convinient than the built in Date
 ## 
-## You can put in a date from a strint, compare it with other dates, check if that date is in a leap year, etc...
+## You can put in a date from a string, compare it with other dates, check if that date is in a leap year, etc...
 #-----------------------------------------Signals--------------------------------------------------#
 #-----------------------------------------Enums----------------------------------------------------#
 
@@ -34,8 +34,8 @@ enum E_MONTHS {
 }
 #-----------------------------------------Constants------------------------------------------------#
 
-const MONTH_DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-const MONTH_DAYS_LEAP = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+const MONTH_DAYS: Array[int] = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+const MONTH_DAYS_LEAP: Array[int] = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 
 #-----------------------------------------Export Var-----------------------------------------------#
 #-----------------------------------------Public Var-----------------------------------------------#
@@ -47,8 +47,8 @@ var year := 1:
 			if not _block_set:
 				_block_set = true
 				
-				var julian_date = to_julian()
-				var new_g_date = O_TimeUtil.calc_from_jd(julian_date)
+				var julian_date := to_julian()
+				var new_g_date := O_TimeUtil.calc_from_jd(julian_date)
 				
 				year = new_g_date[0]
 				month = new_g_date[1]
@@ -68,8 +68,8 @@ var month := 1:
 			
 			year += value / 12
 			
-			var julian_date = to_julian()
-			var new_g_date = O_TimeUtil.calc_from_jd(julian_date)
+			var julian_date := to_julian()
+			var new_g_date := O_TimeUtil.calc_from_jd(julian_date)
 			
 			year = new_g_date[0]
 			month = new_g_date[1]
@@ -85,8 +85,8 @@ var day := 1:
 			if not _block_set:
 				_block_set = true
 				
-				var julian_date = to_julian()
-				var new_g_date = O_TimeUtil.calc_from_jd(julian_date)
+				var julian_date := to_julian()
+				var new_g_date := O_TimeUtil.calc_from_jd(julian_date)
 				
 				year = new_g_date[0]
 				month = new_g_date[1]
@@ -116,7 +116,7 @@ func _to_string() -> String:
 #-----------------------------------------Public methods-------------------------------------------#
 
 func to_string_formatted(format: String) -> String:
-	var replacements = {
+	var replacements := {
 		"DD": str(day).pad_zeros(2),
 		"D": str(day),
 		"MM": str(month).pad_zeros(2),
@@ -124,7 +124,7 @@ func to_string_formatted(format: String) -> String:
 		"YYYY": str(year),
 		"YY": str(year).right(2)
 	}
-
+	
 	for key in replacements.keys():
 		format = format.replace(key, replacements[key])
 	
@@ -185,30 +185,53 @@ static func current_date() -> O_Date:
 	return O_Date.new(curr_date_dict.year, curr_date_dict.month, curr_date_dict.day)
 
 func get_weekday() -> E_WEEKDAYS:
-	var A = year
-	var M = month
-	var D = day
-
-	var month_offset_normal: Array[int] = [0, 3, 3, 6, 1, 4, 6, 2, 5, 0, 3, 5]
-	var month_offset_leap: Array[int] = [0, 3, 4, 0, 2, 5, 0, 3, 6, 1, 4, 6]
-
+	var A := year
+	var M := month
+	var D := day
+	
+	const month_offset_normal: Array[int] = [0, 3, 3, 6, 1, 4, 6, 2, 5, 0, 3, 5]
+	const month_offset_leap: Array[int] = [0, 3, 4, 0, 2, 5, 0, 3, 6, 1, 4, 6]
+	
 	var offset: int
 
 	if is_leap_year():
 		offset = month_offset_leap[M - 1]
 	else:
 		offset = month_offset_normal[M - 1]
-
-	var weekday = (D + offset + 5*((A-1)%4) + 4*((A-1)%100) + 6*((A-1)%400))%7
-
+	
+	var weekday: int = (D + offset + 5*((A-1) % 4) + 4*((A-1) % 100) + 6*((A-1) % 400))%7
+	
 	match weekday:
 		0:
 			return E_WEEKDAYS.SUNDAY
-		1, 2, 3, 4, 5, 6:
-			return weekday
 		_:
-			return -1
+			return weekday
 	return weekday
+
+func get_week() -> int:
+	var jan_first := O_Date.new(year,1,1)
+	var jan_first_wd := jan_first.get_weekday()
+	var days_passed := get_day_of_year()
+	
+	var offset: int = (8 - jan_first_wd) % 7
+	var week_number: int = ((days_passed - (offset + 1)) / 7) + 1
+	
+	var first_day_of_first_week := O_Date.new(year, 1, 1 + offset)
+	if get_difference(first_day_of_first_week) < 0:
+		var last_day_prev_year := O_Date.new(year - 1, 12, 31)
+		week_number = last_day_prev_year.get_week()
+	
+	return week_number
+
+func get_day_of_year() -> int:
+	var days_passed: int = 0 
+	for i in month - 1:
+		if is_leap_year():
+			days_passed += MONTH_DAYS_LEAP[i]
+		else:
+			days_passed += MONTH_DAYS[i]
+	days_passed += day
+	return days_passed
 
 func equals(other_date: O_Date) -> bool:
 	if not year == other_date.year:
@@ -221,19 +244,15 @@ func equals(other_date: O_Date) -> bool:
 		return false
 	
 	return true
-	
+
 func get_difference(other: O_Date) -> int:
-	var jd1 = self.to_julian()
-	var jd2 = other.to_julian()
-	return abs(jd1 - jd2)
+	var jd1: float = self.to_julian()
+	var jd2: float = other.to_julian()
+	return jd1 - jd2
 
 ## Method to check if the year is a leap year
 func is_leap_year() -> bool:
-	if year == 0:
-		return false
-	if year % 4 == 0 and (year % 100 != 0 or year % 400 == 0):
-		return true
-	return false
+	return (year % 4 == 0) and (year % 100 != 0 or year % 400 == 0)
 
 ## Method to check if the year is a leap year
 static func is_year_leap_st(year: int) -> bool:
@@ -268,6 +287,7 @@ static func days_in_month_st(month: int, is_leap_year := false) -> int:
 		
 		_:
 			return 31
+
 
 func days_in_year() -> int:
 	return 366 if is_leap_year() else 365

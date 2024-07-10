@@ -32,16 +32,12 @@ func _ready():
 		button.text = "press me " + str(randi())
 		arr.append([label,button,line_edit,label2])
 	
-	var date1 = O_Date.new(2014,1,1)
-	print(date1)
-	date1.month += 24
-	print(date1)
-	date1.month += 1
-	print(date1)
-	date1.day += 30
-	print(date1)
-
-	print(O_Date.E_WEEKDAYS.find_key(date1.get_weekday()))
+	var date1 = O_Date.new(2024,7,10)
+	#print(date1)
+	#print(date1.get_week())
+	
+	date1.set_date(2024,1,1)
+	print(date1.get_week())
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta):

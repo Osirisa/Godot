@@ -9,8 +9,8 @@ var hour: int:
 			if not _block_set:
 				_block_set = true
 				
-				var julian_date = to_julian()
-				var new_g_date = O_TimeUtil.calc_from_jd(julian_date)
+				var julian_date := to_julian()
+				var new_g_date := O_TimeUtil.calc_from_jd(julian_date)
 				
 				year = new_g_date[0]
 				month = new_g_date[1]
@@ -27,8 +27,8 @@ var minute: int:
 			if not _block_set:
 				_block_set = true
 				
-				var julian_date = to_julian()
-				var new_g_date = O_TimeUtil.calc_from_jd(julian_date)
+				var julian_date := to_julian()
+				var new_g_date := O_TimeUtil.calc_from_jd(julian_date)
 				
 				year = new_g_date[0]
 				month = new_g_date[1]
@@ -46,8 +46,8 @@ var second: int:
 			if not _block_set:
 				_block_set = true
 				
-				var julian_date = to_julian()
-				var new_g_date = O_TimeUtil.calc_from_jd(julian_date)
+				var julian_date := to_julian()
+				var new_g_date := O_TimeUtil.calc_from_jd(julian_date)
 				
 				year = new_g_date[0]
 				month = new_g_date[1]
@@ -67,7 +67,7 @@ func _to_string() -> String:
 	return str(year) + "-" + str(month).pad_zeros(2) + "-" + str(day).pad_zeros(2) + " " + str(hour).pad_zeros(2) + ":" + str(minute).pad_zeros(2) + ":" + str(second).pad_zeros(2)
 
 func to_string_formatted(format: String) -> String:
-	var replacements = {
+	var replacements := {
 		"DD": str(day).pad_zeros(2),
 		"D": str(day),
 		"MM": str(month).pad_zeros(2),
@@ -90,7 +90,7 @@ func to_string_formatted(format: String) -> String:
 ## Takes in a string containing a date and a time and a format to show where the numbers are[br]
 ## Example: "2024-07-08|8:7:06" and "YYYY-MM-DD|hh:mm:ss"
 static func from_string(time_date_str: String, format: String) -> O_DateTime:
-	var regex_pattern = format
+	var regex_pattern := format
 	
 	regex_pattern = regex_pattern.replace("YYYY", "(?<year>[0-9]+)")
 	regex_pattern = regex_pattern.replace("MM", "(?<month>[0-1]?[0-9])")
@@ -101,8 +101,8 @@ static func from_string(time_date_str: String, format: String) -> O_DateTime:
 	#print(date_str)
 	#print(regex_pattern)
 	
-	var regex = RegEx.new()
-	var error = regex.compile(regex_pattern)
+	var regex := RegEx.new()
+	var error := regex.compile(regex_pattern)
 	if error != OK:
 		push_error("Invalid regex pattern")
 		return null
@@ -127,7 +127,7 @@ static func from_string(time_date_str: String, format: String) -> O_DateTime:
 	return O_DateTime.new(year_s, month_s, day_s, hour_s, minute_s, second_s)
 
 static func from_julian(julian_date: float) -> O_DateTime:
-	var date_arr = O_TimeUtil.calc_from_jd(julian_date)
+	var date_arr := O_TimeUtil.calc_from_jd(julian_date)
 	return O_DateTime.new(date_arr[0], date_arr[1], date_arr[2], date_arr[3], date_arr[4], date_arr[5])
 
 static func current_date_time() -> O_DateTime:

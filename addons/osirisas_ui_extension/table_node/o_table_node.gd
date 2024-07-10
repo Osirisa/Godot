@@ -64,20 +64,17 @@ enum E_Sorting {
 		column_widths = column_widths
 		_column_count = header_titles.size()
 		
-		#TBD::
-		#_init_v_separators()
 		_refresh_x_offsets_arr()
 		_create_v_separators()
 		_create_headers.call_deferred()
-		#_update_layout()
 		notify_property_list_changed()
 
 ## The cell height of the header
 @export var header_cell_height := 30:
 	set(value):
 		header_cell_height = value
-		#TBD::
-		#_update_layout()
+		_update_headers()
+		update_table()
 
 @export_category("Body")
 ## The starting widths for each column
@@ -87,8 +84,7 @@ enum E_Sorting {
 		
 		_column_widths_temp.clear()
 		_column_widths_temp = column_widths.duplicate()
-		#TBD::
-		#_update_layout()
+		update_table()
 
 ## The standard cell dimension a row / a column gets created with
 @export var standard_cell_dimension := Vector2i(150,25)

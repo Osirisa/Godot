@@ -76,7 +76,7 @@ func _to_string() -> String:
 		return str(hour).pad_zeros(2) + ":" + str(minute).pad_zeros(2) + ":" + str(second).pad_zeros(2)
 
 func to_string_formated(format: String) -> String:
-	var replacements = {
+	var replacements := {
 		"hh": str(hour).pad_zeros(2),
 		"h": str(hour),
 		"mm": str(minute).pad_zeros(2),
@@ -97,8 +97,8 @@ static func from_string(time_str: String, format: String) -> O_Time:
 	regex_pattern = regex_pattern.replace("mm", "(?<minute>[0-5]?[0-9])")
 	regex_pattern = regex_pattern.replace("ss", "(?<second>[0-5]?[0-9])")
 	
-	var regex = RegEx.new()
-	var error = regex.compile(regex_pattern)
+	var regex := RegEx.new()
+	var error := regex.compile(regex_pattern)
 	if error != OK:
 		push_error("Invalid regex pattern")
 		return null

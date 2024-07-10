@@ -2,6 +2,12 @@
 extends Control
 class_name TableNode
 
+## This Class provides you with a Table where you can add | remove | hide rows and columns
+## 
+## With the Table you can add | remove | hide rows and columns and fill the cells with
+## Control - nodes and its children (preferably Buttons, Line-Edits and Labels 
+## @deprecated
+
 #Signals
 ##Signal when the user clicks on a cell
 ##Return:	Row:int, Column:int

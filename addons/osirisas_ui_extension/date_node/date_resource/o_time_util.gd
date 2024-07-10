@@ -8,11 +8,11 @@ static func calc_jd(year: int, month: int, day: int, hour: int, minute: int, sec
 	var A = year / 100
 	var B = 2 - A + int(A / 4)
 	var JD = int(365.25 * (year + 4716)) + int(30.6001 * (month + 1)) + day + B - 1524.5
-
+	
 	# Add the fractional day component
 	var day_fraction = (hour + (minute / 60.0) + (second / 3600.0)) / 24.0
 	JD += day_fraction
-
+	
 	return JD
 
 static func calc_from_jd(julian_date) -> Array[int]:
@@ -33,15 +33,15 @@ static func calc_from_jd(julian_date) -> Array[int]:
 	
 	var date_arr: Array[int] = []
 	
-	var day = B - D - int(30.6001 * E)
-	var month = E - 1 if E < 14 else E - 13
-	var year = C - 4716 if month > 2 else C - 4715
+	var day: int = B - D - int(30.6001 * E)
+	var month: int = E - 1 if E < 14 else E - 13
+	var year: int = C - 4716 if month > 2 else C - 4715
 	
 	# Calculate the fractional day part to get time
 	var day_fraction = F * 24
-	var hour = int(day_fraction)
-	var minute = int((day_fraction - hour) * 60)
-	var second = int((((day_fraction - hour) * 60) - minute) * 60)
+	var hour := int(day_fraction)
+	var minute := int((day_fraction - hour) * 60)
+	var second := int((((day_fraction - hour) * 60) - minute) * 60)
 	
 	date_arr.append(year)
 	date_arr.append(month)
