@@ -4,7 +4,7 @@ extends ORegexLineEdit
 
 @export var format: String = "DD-MM-YYYY"
 
-var _separator: String
+var _separators: Array[String]
 var _positions: Array[int] = [0, 0, 0]
 var _year_short := false
 
@@ -25,6 +25,7 @@ func _analyze_format() -> void:
 	if _positions[2] == -1:
 		_positions[2] = format.find("YY")
 		_year_short == true
+
 
 func _on_text_changed(new_text: String) -> void:
 	var sanitized_text = new_text.strip_edges()
