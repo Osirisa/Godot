@@ -1,5 +1,5 @@
 extends Node
-class_name O_TimeUtil
+class_name OTimeUtil
 
 static func calc_jd(year: int, month: int, day: int, hour: int, minute: int, second: int) -> float:
 	if month <= 2:

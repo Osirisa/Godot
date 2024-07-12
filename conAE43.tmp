@@ -106,12 +106,9 @@ text = "insert row"
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="ODateLineEdit" type="LineEdit" parent="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
+[node name="O Date Line Edit" type="LineEdit" parent="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
 layout_mode = 2
-placeholder_text = "DD-MM-YYYY"
-clear_button_enabled = true
 script = ExtResource("3_mi6px")
-regex_validator = "[0-9]"
 
 [node name="ORegexLineEdit" type="LineEdit" parent="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
 layout_mode = 2

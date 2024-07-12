@@ -1,5 +1,5 @@
-extends O_Date
-class_name O_DateTime
+extends ODate
+class_name ODateTime
 
 var hour: int:
 	set(value):
@@ -10,7 +10,7 @@ var hour: int:
 				_block_set = true
 				
 				var julian_date := to_julian()
-				var new_g_date := O_TimeUtil.calc_from_jd(julian_date)
+				var new_g_date := OTimeUtil.calc_from_jd(julian_date)
 				
 				year = new_g_date[0]
 				month = new_g_date[1]
@@ -28,7 +28,7 @@ var minute: int:
 				_block_set = true
 				
 				var julian_date := to_julian()
-				var new_g_date := O_TimeUtil.calc_from_jd(julian_date)
+				var new_g_date := OTimeUtil.calc_from_jd(julian_date)
 				
 				year = new_g_date[0]
 				month = new_g_date[1]
@@ -47,7 +47,7 @@ var second: int:
 				_block_set = true
 				
 				var julian_date := to_julian()
-				var new_g_date := O_TimeUtil.calc_from_jd(julian_date)
+				var new_g_date := OTimeUtil.calc_from_jd(julian_date)
 				
 				year = new_g_date[0]
 				month = new_g_date[1]
@@ -89,7 +89,7 @@ func to_string_formatted(format: String) -> String:
 
 ## Takes in a string containing a date and a time and a format to show where the numbers are[br]
 ## Example: "2024-07-08|8:7:06" and "YYYY-MM-DD|hh:mm:ss"
-static func from_string(time_date_str: String, format: String) -> O_DateTime:
+static func from_string(time_date_str: String, format: String) -> ODateTime:
 	var regex_pattern := format
 	
 	regex_pattern = regex_pattern.replace("YYYY", "(?<year>[0-9]+)")
@@ -124,15 +124,15 @@ static func from_string(time_date_str: String, format: String) -> O_DateTime:
 	var minute_s = int(matches.get_string("minute"))
 	var second_s = int(matches.get_string("second"))
 	
-	return O_DateTime.new(year_s, month_s, day_s, hour_s, minute_s, second_s)
+	return ODateTime.new(year_s, month_s, day_s, hour_s, minute_s, second_s)
 
-static func from_julian(julian_date: float) -> O_DateTime:
-	var date_arr := O_TimeUtil.calc_from_jd(julian_date)
-	return O_DateTime.new(date_arr[0], date_arr[1], date_arr[2], date_arr[3], date_arr[4], date_arr[5])
+static func from_julian(julian_date: float) -> ODateTime:
+	var date_arr := OTimeUtil.calc_from_jd(julian_date)
+	return ODateTime.new(date_arr[0], date_arr[1], date_arr[2], date_arr[3], date_arr[4], date_arr[5])
 
-static func current_date_time() -> O_DateTime:
+static func current_date_time() -> ODateTime:
 	var curr_date_dict := Time.get_datetime_dict_from_system()
-	return O_DateTime.new(curr_date_dict.year, curr_date_dict.month, curr_date_dict.day, 
+	return ODateTime.new(curr_date_dict.year, curr_date_dict.month, curr_date_dict.day, 
 							curr_date_dict.hour, curr_date_dict.minute, curr_date_dict.second)
 
 func set_date_time(i_year: int, i_month: int, i_day: int, 
@@ -143,8 +143,8 @@ func set_date_time(i_year: int, i_month: int, i_day: int,
 	second = i_second
 
 func to_julian() -> float:
-	return O_TimeUtil.calc_jd(year, month, day, hour, minute, second)
+	return OTimeUtil.calc_jd(year, month, day, hour, minute, second)
 
 static func to_julian_st(day: int = 1, month: int = 1, year: int = 1, hour: int = 0, minute: int = 0, second: int = 0) -> float:
-	return O_TimeUtil.calc_jd(year, month, day, hour, minute, second)
+	return OTimeUtil.calc_jd(year, month, day, hour, minute, second)
 

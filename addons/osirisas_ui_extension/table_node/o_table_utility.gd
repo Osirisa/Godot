@@ -1,5 +1,5 @@
 extends Node
-class_name O_TableUtility
+class_name OTableUtility
 
 static func check_column_input(column: int,max_size: int) -> bool:
 	if column > max_size:

@@ -1,6 +1,6 @@
 # Date.gd
 extends Resource
-class_name O_Date
+class_name ODate
 
 ## This Class provides you with a Date - Resource which is more convinient than the built in Date
 ## 
@@ -48,7 +48,7 @@ var year := 1:
 				_block_set = true
 				
 				var julian_date := to_julian()
-				var new_g_date := O_TimeUtil.calc_from_jd(julian_date)
+				var new_g_date := OTimeUtil.calc_from_jd(julian_date)
 				
 				year = new_g_date[0]
 				month = new_g_date[1]
@@ -69,7 +69,7 @@ var month := 1:
 			year += value / 12
 			
 			var julian_date := to_julian()
-			var new_g_date := O_TimeUtil.calc_from_jd(julian_date)
+			var new_g_date := OTimeUtil.calc_from_jd(julian_date)
 			
 			year = new_g_date[0]
 			month = new_g_date[1]
@@ -86,7 +86,7 @@ var day := 1:
 				_block_set = true
 				
 				var julian_date := to_julian()
-				var new_g_date := O_TimeUtil.calc_from_jd(julian_date)
+				var new_g_date := OTimeUtil.calc_from_jd(julian_date)
 				
 				year = new_g_date[0]
 				month = new_g_date[1]
@@ -137,7 +137,7 @@ func set_date(i_year: int, i_month: int, i_day: int) -> void:
 	day = i_day
 
 ## Method to create a Date object from a string and a format using regex
-static func from_string(date_str: String, format: String) -> O_Date:
+static func from_string(date_str: String, format: String) -> ODate:
 	var regex_pattern = format
 	
 	regex_pattern = regex_pattern.replace("YYYY", "(?<year>[0-9]+)")
@@ -167,22 +167,22 @@ static func from_string(date_str: String, format: String) -> O_Date:
 	var month_s = int(matches.get_string("month"))
 	var day_s = int(matches.get_string("day"))
 	
-	return O_Date.new(year_s, month_s, day_s)
+	return ODate.new(year_s, month_s, day_s)
 
 ## Method to create a Date object from a amount of days
-static func from_days_since_epoch(days: int) -> O_Date:
+static func from_days_since_epoch(days: int) -> ODate:
 	var jd_epoch_start = to_julian_st(1,1,1)
 	var jd = jd_epoch_start + days
 	
 	return from_julian(jd)
 
-static func from_julian(julian_date: float) -> O_Date:
-	var date_arr = O_TimeUtil.calc_from_jd(julian_date)
-	return O_Date.new(date_arr[0], date_arr[1], date_arr[2])
+static func from_julian(julian_date: float) -> ODate:
+	var date_arr = OTimeUtil.calc_from_jd(julian_date)
+	return ODate.new(date_arr[0], date_arr[1], date_arr[2])
 
-static func current_date() -> O_Date:
+static func current_date() -> ODate:
 	var curr_date_dict := Time.get_datetime_dict_from_system()
-	return O_Date.new(curr_date_dict.year, curr_date_dict.month, curr_date_dict.day)
+	return ODate.new(curr_date_dict.year, curr_date_dict.month, curr_date_dict.day)
 
 func get_weekday() -> E_WEEKDAYS:
 	var A := year
@@ -209,16 +209,16 @@ func get_weekday() -> E_WEEKDAYS:
 	return weekday
 
 func get_week() -> int:
-	var jan_first := O_Date.new(year,1,1)
+	var jan_first := ODate.new(year,1,1)
 	var jan_first_wd := jan_first.get_weekday()
 	var days_passed := get_day_of_year()
 	
 	var offset: int = (8 - jan_first_wd) % 7
 	var week_number: int = ((days_passed - (offset + 1)) / 7) + 1
 	
-	var first_day_of_first_week := O_Date.new(year, 1, 1 + offset)
+	var first_day_of_first_week := ODate.new(year, 1, 1 + offset)
 	if get_difference(first_day_of_first_week) < 0:
-		var last_day_prev_year := O_Date.new(year - 1, 12, 31)
+		var last_day_prev_year := ODate.new(year - 1, 12, 31)
 		week_number = last_day_prev_year.get_week()
 	
 	return week_number
@@ -233,7 +233,7 @@ func get_day_of_year() -> int:
 	days_passed += day
 	return days_passed
 
-func equals(other_date: O_Date) -> bool:
+func equals(other_date: ODate) -> bool:
 	if not year == other_date.year:
 		return false
 	
@@ -251,7 +251,7 @@ static func is_valid_date(year: int, month: int, day: int) -> bool:
 	
 	var monthdays: Array[int]
 	
-	if O_Date.is_year_leap_st(year):
+	if ODate.is_year_leap_st(year):
 		monthdays = MONTH_DAYS_LEAP
 	else:
 		monthdays = MONTH_DAYS
@@ -261,7 +261,7 @@ static func is_valid_date(year: int, month: int, day: int) -> bool:
 	
 	return true
 
-func get_difference(other: O_Date) -> int:
+func get_difference(other: ODate) -> int:
 	var jd1: float = self.to_julian()
 	var jd2: float = other.to_julian()
 	return jd1 - jd2
@@ -309,10 +309,10 @@ func days_in_year() -> int:
 	return 366 if is_leap_year() else 365
 
 func to_julian() -> float:
-	return O_TimeUtil.calc_jd(year, month, day, 0, 0, 0)
+	return OTimeUtil.calc_jd(year, month, day, 0, 0, 0)
 
 static func to_julian_st(day: int = 1, month: int = 1, year: int = 1, _t: int = 0, _2t: int = 0, _t3: int = 0) -> float:
-	return O_TimeUtil.calc_jd(year, month, day, 0, 0, 0)
+	return OTimeUtil.calc_jd(year, month, day, 0, 0, 0)
 #-----------------------------------------Private methods------------------------------------------#
 
 

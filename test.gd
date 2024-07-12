@@ -1,7 +1,7 @@
 extends Control
 
 @onready
-var table2: O_TableNode = %"Table2"
+var table2: OTableNode = %"Table2"
 
 @onready
 var input: LineEdit = %debug_LE
@@ -32,7 +32,7 @@ func _ready():
 		button.text = "press me " + str(randi())
 		arr.append([label,button,line_edit,label2])
 	
-	var date1 = O_Date.new(2024,7,10)
+	var date1 = ODate.new(2024,7,10)
 	#print(date1)
 	#print(date1.get_week())
 	

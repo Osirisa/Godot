@@ -2,12 +2,19 @@
 extends EditorPlugin
 
 func _enter_tree():
-	add_custom_type("O Table Node", "Control",
+	add_custom_type("OTableNode", "Control",
 					preload("res://addons/osirisas_ui_extension/table_node/o_table_node.gd"),
 					preload("res://addons/osirisas_ui_extension/table_node/Icon_tableNode.png"))
-	add_custom_type("O Date Line Edit", "LineEdit",
-					preload("res://addons/osirisas_ui_extension/date_node/o_date_le_node.gd"),
+					
+	add_custom_type("ORegexLineEdit", "LineEdit",
+					preload("res://addons/osirisas_ui_extension/regex_line_edit_node/o_regex_line_edit.gd"),
 					preload("res://icon.svg"))
+					
+	add_custom_type("ODateLineEdit", "ORegexLineEdit",
+				preload("res://addons/osirisas_ui_extension/regex_line_edit_node/date_line_edit/o_date_le_node.gd"),
+				preload("res://icon.svg"))
+
 func _exit_tree():
-	remove_custom_type("O Table Node")
-	remove_custom_type("O Date Line Edit")
+	remove_custom_type("OTableNode")
+	remove_custom_type("ODateLineEdit")
+	remove_custom_type("ORegexLineEdit")

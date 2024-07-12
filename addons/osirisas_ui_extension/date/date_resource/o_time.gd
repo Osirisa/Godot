@@ -1,5 +1,5 @@
 extends Resource
-class_name O_Time
+class_name OTime
 
 var hour: int:
 	set(value):
@@ -90,7 +90,7 @@ func to_string_formated(format: String) -> String:
 	
 	return format
 
-static func from_string(time_str: String, format: String) -> O_Time:
+static func from_string(time_str: String, format: String) -> OTime:
 	var regex_pattern := format
 	
 	regex_pattern = regex_pattern.replace("hh", "(?<hour>[0-9]+)")
@@ -114,31 +114,31 @@ static func from_string(time_str: String, format: String) -> O_Time:
 	var minute_s := int(matches.get_string("minute"))
 	var second_s := int(matches.get_string("second"))
 	
-	return O_Time.new(hour_s, minute_s, second_s)
+	return OTime.new(hour_s, minute_s, second_s)
 
-static func from_julian(julian_date: float) -> O_Time:
-	var date_arr = O_TimeUtil.calc_from_jd(julian_date)
-	return O_Time.new(date_arr[3], date_arr[4], date_arr[5])
+static func from_julian(julian_date: float) -> OTime:
+	var date_arr = OTimeUtil.calc_from_jd(julian_date)
+	return OTime.new(date_arr[3], date_arr[4], date_arr[5])
 
 
-static func current_time() -> O_Time:
+static func current_time() -> OTime:
 	var curr_date_dict := Time.get_datetime_dict_from_system()
-	return O_Time.new(curr_date_dict.hour, curr_date_dict.minute, curr_date_dict.second)
+	return OTime.new(curr_date_dict.hour, curr_date_dict.minute, curr_date_dict.second)
 
 func set_time(i_hour: int, i_minute: int, i_second: int) -> void:
 	hour = i_hour
 	minute = i_minute 
 	second = i_second
 
-func get_difference(other_time: O_Time) -> O_Time:
-	var difference := O_Time.new()
+func get_difference(other_time: OTime) -> OTime:
+	var difference := OTime.new()
 	difference.hour = hour - other_time.hour
 	difference.minute = minute - other_time.minute
 	difference.second = second - other_time.second
 	
 	return difference
 
-func equals(other_date: O_Time) -> bool:
+func equals(other_date: OTime) -> bool:
 	if not hour == other_date.hour:
 		return false
 	

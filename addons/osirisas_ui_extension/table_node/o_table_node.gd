@@ -1,5 +1,5 @@
 @tool
-class_name O_TableNode
+class_name OTableNode
 extends Control
 
 ## This Class provides you with a Table where you can add | remove | hide rows and columns
@@ -329,7 +329,7 @@ func add_column(title: String, cell_width := standard_cell_dimension.x, column_v
 	_update_visible_rows.call_deferred()
 
 func insert_column(title, column_pos, cell_width := standard_cell_dimension.x, column_visiblity := true):
-	if not O_TableUtility.check_column_input(column_pos, _column_count - 1):
+	if not OTableUtility.check_column_input(column_pos, _column_count - 1):
 		return
 	
 	column_widths.insert(column_pos, cell_width)
@@ -344,7 +344,7 @@ func insert_column(title, column_pos, cell_width := standard_cell_dimension.x, c
 	for i in _row_count:
 		var row = _rows[i]
 		
-		var std_label = O_TableUtility.create_standard_label()
+		var std_label = OTableUtility.create_standard_label()
 		
 		row.nodes.insert(column_pos, std_label)
 		row.editable.insert(column_pos, true)
@@ -358,7 +358,7 @@ func insert_column(title, column_pos, cell_width := standard_cell_dimension.x, c
 	_update_visible_rows.call_deferred()
 
 func remove_column(column_pos):
-	if not O_TableUtility.check_column_input(column_pos, _column_count-1):
+	if not OTableUtility.check_column_input(column_pos, _column_count-1):
 		return
 	
 	column_widths.remove_at(column_pos)
@@ -427,7 +427,7 @@ func add_row(data: Array[Control] = [], height: float = standard_cell_dimension.
 
 
 func insert_row(data: Array[Control], row_pos: int, height: float = standard_cell_dimension.y):
-	if not O_TableUtility.check_row_input(row_pos, _row_count - 1):
+	if not OTableUtility.check_row_input(row_pos, _row_count - 1):
 		return
 	
 	var new_row := RowContent.new()
@@ -481,7 +481,7 @@ func add_rows_batch(data :Array, height: float = standard_cell_dimension.y) -> v
 
 ## Overrides the row from the Table 
 func set_row(data: Array[Control], row: int, clip_text: bool = true, height: float = standard_cell_dimension.y) -> void:
-	if not O_TableUtility.check_row_input(row, _row_count - 1):
+	if not OTableUtility.check_row_input(row, _row_count - 1):
 		return
 	
 	if data.size() > _column_count:
@@ -502,7 +502,7 @@ func set_row(data: Array[Control], row: int, clip_text: bool = true, height: flo
 
 ## Removes the row from the Table
 func remove_row(row: int) -> void:
-	if not O_TableUtility.check_row_input(row, _row_count - 1):
+	if not OTableUtility.check_row_input(row, _row_count - 1):
 		return
 	
 	var row_object = _rows[row]
@@ -609,7 +609,7 @@ func update_table() -> void:
 #region Cell edit ---------------
 
 func get_row(row: int) -> Array:
-	if not O_TableUtility.check_row_input(row, _row_count- 1):
+	if not OTableUtility.check_row_input(row, _row_count- 1):
 		return []
 	var row_contens: Array = []
 	row_contens = _rows[row].nodes.duplicate()
@@ -618,19 +618,19 @@ func get_row(row: int) -> Array:
 
 func get_cell(row: int, column: int) -> Control:
 	#--check if row and column matches size of the arrays--
-	if not O_TableUtility.check_row_input(row, _row_count- 1):
+	if not OTableUtility.check_row_input(row, _row_count- 1):
 		return null
 	
-	if not O_TableUtility.check_column_input(column, _column_count - 1):
+	if not OTableUtility.check_column_input(column, _column_count - 1):
 		return null
 	
 	return _rows[row].nodes[column]
 
 func set_cell(node: Control,row: int, column: int) -> void:
-	if not O_TableUtility.check_row_input(row, _row_count- 1):
+	if not OTableUtility.check_row_input(row, _row_count- 1):
 		return
 	
-	if not O_TableUtility.check_column_input(column, _column_count - 1):
+	if not OTableUtility.check_column_input(column, _column_count - 1):
 		return
 	
 	_rows[row].nodes[column] = node
@@ -640,7 +640,7 @@ func set_cell(node: Control,row: int, column: int) -> void:
 	_update_visible_rows.call_deferred()
 
 func set_row_height(row: int, height: float) -> void:
-	if not O_TableUtility.check_row_input(row, _row_count- 1):
+	if not OTableUtility.check_row_input(row, _row_count- 1):
 		return
 	
 	_rows[row].row_height_temp = height
@@ -650,7 +650,7 @@ func set_row_height(row: int, height: float) -> void:
 	
 
 func set_column_width(column: int, width: float) -> void:
-	if not O_TableUtility.check_column_input(column, _column_count - 1):
+	if not OTableUtility.check_column_input(column, _column_count - 1):
 		return
 	
 	_column_widths_temp[column] = width
@@ -664,7 +664,7 @@ func set_column_width(column: int, width: float) -> void:
 #region Visibility --------------
 
 func set_visibility_row(row: int, visible: bool) -> void:
-	if not O_TableUtility.check_row_input(row, _row_count- 1):
+	if not OTableUtility.check_row_input(row, _row_count- 1):
 		return
 	
 	var row_object = _rows[row]
@@ -701,13 +701,13 @@ func set_visibility_row(row: int, visible: bool) -> void:
 	_update_body_size()
 
 func get_visibility_row(row: int) -> bool:
-	if not O_TableUtility.check_row_input(row, _row_count- 1):
+	if not OTableUtility.check_row_input(row, _row_count- 1):
 		return false
 	
 	return _rows[row].row_visible
 
 func set_visibility_column(column: int, visible: bool) -> void:
-	if not O_TableUtility.check_column_input(column, _column_count - 1):
+	if not OTableUtility.check_column_input(column, _column_count - 1):
 		return
 	
 	_column_visiblity[column] = visible
@@ -721,7 +721,7 @@ func set_visibility_column(column: int, visible: bool) -> void:
 	_update_headers.call_deferred()
 
 func get_visibility_column(column: int) -> bool:
-	if not O_TableUtility.check_column_input(column, _column_count - 1):
+	if not OTableUtility.check_column_input(column, _column_count - 1):
 		return false
 	
 	return _column_visiblity[column]
@@ -750,19 +750,19 @@ func get_invisible_columns() -> Array[int]:
 #region Editablity --------------
 
 func set_editable_status_cell(row: int, column: int, edit_status: bool) -> void:
-	if not O_TableUtility.check_row_input(row, _row_count- 1):
+	if not OTableUtility.check_row_input(row, _row_count- 1):
 		return
 
-	if not O_TableUtility.check_column_input(column, _column_count - 1):
+	if not OTableUtility.check_column_input(column, _column_count - 1):
 		return
 
 	_rows[row].editable[column] = edit_status
 
 func get_editable_status_cell(row: int, column: int) -> bool:
-	if not O_TableUtility.check_row_input(row, _row_count- 1):
+	if not OTableUtility.check_row_input(row, _row_count- 1):
 		return false
 
-	if not O_TableUtility.check_column_input(column, _column_count - 1):
+	if not OTableUtility.check_column_input(column, _column_count - 1):
 		return false
 
 	return _rows[row].editable[column]
@@ -772,7 +772,7 @@ func get_editable_status_cell(row: int, column: int) -> bool:
 #region Sorting -----------------
 
 func sort_rows_by_column(column: int, sort: E_Sorting) -> void:
-	if not O_TableUtility.check_column_input(column, _column_count - 1):
+	if not OTableUtility.check_column_input(column, _column_count - 1):
 		return
 	
 	_sort_thread = Thread.new()
@@ -784,16 +784,16 @@ func sort_rows_by_column(column: int, sort: E_Sorting) -> void:
 #region Selection ---------------
 
 func select_row(row: int) -> void:
-	if not O_TableUtility.check_row_input(row, _row_count- 1):
+	if not OTableUtility.check_row_input(row, _row_count- 1):
 		return
 
 	_select_single_row(row)
 
 func select_rows(start_row: int, end_row: int) -> void:
-	if not O_TableUtility.check_row_input(start_row, _row_count- 1):
+	if not OTableUtility.check_row_input(start_row, _row_count- 1):
 		return
 
-	if not O_TableUtility.check_row_input(end_row, _row_count- 1):
+	if not OTableUtility.check_row_input(end_row, _row_count- 1):
 		return
 
 	_select_single_row(start_row)
@@ -1125,7 +1125,7 @@ func _fill_rows_arr() -> void:
 		
 		for col_idx in range(_column_count):
 			if !(nodes.size() > col_idx):
-				var std_label = O_TableUtility.create_standard_label()
+				var std_label = OTableUtility.create_standard_label()
 				
 				nodes.append(std_label)
 				row.editable.append(true)
