@@ -40,7 +40,7 @@ const MONTH_DAYS_LEAP: Array[int] = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30,
 #-----------------------------------------Export Var-----------------------------------------------#
 #-----------------------------------------Public Var-----------------------------------------------#
 
-var year := 1:
+@export var year := 1:
 	set(value):
 		year = value
 		if month == 2:
@@ -59,7 +59,7 @@ var year := 1:
 ## The Month | NOTE: Calculations with adding and subtracting months could be values you not expect
 ## Rather use Days!!
 ## Example: 2012.12.31 - 1 month is 2012.12.01
-var month := 1:
+@export var month := 1:
 	set(value):
 		month = value % 12
 		
@@ -77,7 +77,7 @@ var month := 1:
 			
 			_block_set = false
 
-var day := 1: 
+@export var day := 1: 
 	set(value):
 		day = value
 		

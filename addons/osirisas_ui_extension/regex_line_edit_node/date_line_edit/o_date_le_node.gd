@@ -2,61 +2,128 @@
 class_name ODateLineEdit
 extends ORegexLineEdit
 
-@export var format: String = "DD-MM-YYYY"
+@export var format: String = "DD.MM.YYYY":
+	set(value):
+		format = value
+		_analyze_format()
+		text = text
+		placeholder_text = format
+
+@export var min_date: ODate = ODate.new(1,1,1)
+@export var max_date: ODate = ODate.new(2199,12,31)
+
+@export var change_color := true
+@export_color_no_alpha var color_not_valid
+
+var is_valid := true
 
 var _separators: Array[String]
-var _positions: Array[int] = [0, 0, 0]
-var _year_short := false
+var _max_digits: int = 0
+var _date_regex: String
+
+func get_date() -> ODate:
+	return ODate.from_string(text,format)
+
+func set_date(date: ODate) -> void:
+	text = date.to_string_formatted(format)
 
 func _ready():
+	super._ready()
 	var callable = Callable(self, "_on_text_changed")
 	connect("text_changed", callable)
 	
-	placeholder_text = format
-	
-	super._ready()
+	_analyze_format()
 
 func _analyze_format() -> void:
-	_positions[0] = format.find("DD")
+	_separators.clear()
 	
-	_positions[1] = format.find("MM")
+	_date_regex = format
 	
-	_positions[2] = format.find("YYYY")
-	if _positions[2] == -1:
-		_positions[2] = format.find("YY")
-		_year_short == true
+	_date_regex = _date_regex.replace("YYYY", "(?<year>[0-9]+)")
+	_date_regex = _date_regex.replace("MM", "(?<month>[0-9]{2})")
+	_date_regex = _date_regex.replace("DD", "(?<day>[0-9]{2})")
+	
+	var separators = format
+	separators = separators.replace("DD","")
+	separators = separators.replace("MM","")
+	separators = separators.replace("YYYY","")
+	separators = separators.replace("YY","")
+	
+	for char in separators:
+		_separators.append(char)
+	
+	_max_digits = format.length() - _separators.size()
 
 
 func _on_text_changed(new_text: String) -> void:
-	var sanitized_text = new_text.strip_edges()
-	_defer.call_deferred(sanitized_text)
+	var pos := caret_column
+	
+	new_text = text
+	new_text = new_text.strip_edges()
+	
+	for separator in _separators:
+		new_text.replace(separator,"")
+	var digits_only := new_text
+	
+	if digits_only.length() > _max_digits:
+		digits_only = digits_only.substr(0,8)
+	
+	var formatted_text := ""
+	var digit_idx: int = 0
+	
+	for i in range(format.length()):
+		if digit_idx >= digits_only.length():
+			break
+		var cur_char = format[i]
+		if cur_char in _separators:
+			formatted_text += cur_char
+			pos += 1
+		else:
+			formatted_text += digits_only[digit_idx]
+			digit_idx += 1
+	
+	set_block_signals(true)
+	text = formatted_text
+	set_block_signals(false)
+	caret_column = pos
+	
+	_validate_date()
 
-func _defer(input_text: String) -> void:
-	var formatted_text = _format_date(input_text)
-	if formatted_text != text:
-		text = formatted_text
-		caret_column = text.length()
-
-func _format_date(input_text: String) -> String:
-	var day = ""
-	var month = ""
-	var year = ""
+func _validate_date() -> void:
+	is_valid = false
 	
-	if input_text.length() > 0:
-		day = input_text.substr(0, 2)
-	#else:
-		#day = input_text.substr(0, 1)
-	if input_text.length() >= 2:
-		month = input_text.substr(2, 2)
-	if input_text.length() > 4:
-		year = input_text.substr(4, input_text.length() - 4)
+	var regex = RegEx.new()
+	var error = regex.compile(_date_regex)
 	
-	var formatted_date = day
-	if month != "":
-		var pos = format.find("DD")
-		formatted_date += format[pos + 2] + month
-	if year != "":
-		var pos = format.find("MM")
-		formatted_date += format[pos + 2] + year
+	if error != OK:
+		push_error("Invalid regex pattern")
+		return 
 	
-	return formatted_date
+	var matches = regex.search(text)
+	
+	if not matches:
+		remove_theme_color_override("font_color")
+		return 
+	
+	var year_s := int(matches.get_string("year"))
+	var month_s := int(matches.get_string("month"))
+	var day_s := int(matches.get_string("day"))
+	
+	if ODate.is_valid_date(year_s, month_s, day_s):
+		is_valid = true
+	
+	var date := ODate.new(year_s, month_s, day_s)
+	if date.get_difference(min_date) >= 0 and is_valid == true:
+		is_valid = true
+	else:
+		is_valid = false
+	
+	if date.get_difference(max_date) < 0 and is_valid == true:
+		is_valid = true
+	else:
+		is_valid = false
+	
+	if is_valid:
+		remove_theme_color_override("font_color")
+	else:
+		add_theme_color_override("font_color", color_not_valid)

@@ -6,6 +6,9 @@ var table2: OTableNode = %"Table2"
 @onready
 var input: LineEdit = %debug_LE
 
+@onready
+var date_le: ODateLineEdit = %date_edit
+
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	
@@ -38,6 +41,8 @@ func _ready():
 	
 	date1.set_date(2024,1,1)
 	print(date1.get_week())
+	date_le.set_date(date1)
+	
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta):

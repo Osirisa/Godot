@@ -1,7 +1,7 @@
 extends Resource
 class_name OTime
 
-var hour: int:
+@export var hour: int:
 	set(value):
 		hour = value
 		
@@ -21,7 +21,7 @@ var hour: int:
 				
 				_block_set = false
 
-var minute: int:
+@export var minute: int:
 	set(value):
 		minute = value
 		
@@ -41,7 +41,7 @@ var minute: int:
 				
 				_block_set = false
 
-var second: int:
+@export var second: int:
 	set(value):
 		second = value
 		

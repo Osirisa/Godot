@@ -26,8 +26,8 @@ func __on_text_changed(new_text: String) -> void:
 		text = valid_text
 		caret_column = valid_text.length()
 
-func _filter_text(new_text: String) -> String:
-	var matches := _regex_pattern.search_all(new_text)
+func _filter_text(string_to_filter: String) -> String:
+	var matches := _regex_pattern.search_all(string_to_filter)
 	var valid_text := ""
 	for char_match in matches:
 		valid_text += char_match.get_string()

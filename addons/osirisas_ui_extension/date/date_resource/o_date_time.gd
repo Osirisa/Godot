@@ -1,7 +1,7 @@
 extends ODate
 class_name ODateTime
 
-var hour: int:
+@export var hour: int:
 	set(value):
 		hour = value
 		
@@ -20,7 +20,7 @@ var hour: int:
 				second = new_g_date[5]
 				_block_set = false
 
-var minute: int:
+@export var minute: int:
 	set(value):
 		minute = value
 		if value > 59 or value < 0:
@@ -38,7 +38,7 @@ var minute: int:
 				second = new_g_date[5]
 				_block_set = false
 
-var second: int:
+@export var second: int:
 	set(value):
 		second = value
 		
