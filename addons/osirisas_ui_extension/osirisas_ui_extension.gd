@@ -11,7 +11,7 @@ func _enter_tree():
 					preload("res://icon.svg"))
 					
 	add_custom_type("ODateLineEdit", "ORegexLineEdit",
-				preload("res://addons/osirisas_ui_extension/regex_line_edit_node/date_line_edit/o_date_le_node.gd"),
+				preload("res://addons/osirisas_ui_extension/regex_line_edit_node/date_time_nodes/o_date_le_node.gd"),
 				preload("res://icon.svg"))
 
 func _exit_tree():

@@ -2,9 +2,9 @@
 
 [ext_resource type="Script" path="res://test.gd" id="1_ipyfc"]
 [ext_resource type="Script" path="res://addons/osirisas_ui_extension/table_node/o_table_node.gd" id="3_eoo3w"]
-[ext_resource type="Script" path="res://addons/osirisas_ui_extension/regex_line_edit_node/date_line_edit/o_date_le_node.gd" id="3_mi6px"]
+[ext_resource type="Script" path="res://addons/osirisas_ui_extension/regex_line_edit_node/date_time_nodes/o_date_le_node.gd" id="3_mi6px"]
+[ext_resource type="Script" path="res://addons/osirisas_ui_extension/date/date_resource/o_date.gd" id="4_pfhxr"]
 [ext_resource type="Script" path="res://addons/osirisas_ui_extension/regex_line_edit_node/o_regex_line_edit.gd" id="4_qwqnv"]
-[ext_resource type="Script" path="res://addons/osirisas_ui_extension/date/date_resource/o_date_time.gd" id="5_6cxh7"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_f7wrf"]
 bg_color = Color(0.53422, 0.702955, 0.528986, 1)
@@ -12,23 +12,17 @@ bg_color = Color(0.53422, 0.702955, 0.528986, 1)
 [sub_resource type="Theme" id="Theme_eh8fq"]
 Label/styles/normal = SubResource("StyleBoxFlat_f7wrf")
 
-[sub_resource type="Resource" id="Resource_hxjwi"]
-script = ExtResource("5_6cxh7")
-hour = 0
-minute = 0
-second = 0
+[sub_resource type="Resource" id="Resource_v208s"]
+script = ExtResource("4_pfhxr")
 year = 1
 month = 1
 day = 1
 
-[sub_resource type="Resource" id="Resource_r3ged"]
-script = ExtResource("5_6cxh7")
-hour = 0
-minute = 0
-second = 0
-year = 1
-month = 1
-day = 1
+[sub_resource type="Resource" id="Resource_ismat"]
+script = ExtResource("4_pfhxr")
+year = 2199
+month = 12
+day = 31
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -132,22 +126,14 @@ placeholder_text = "DD.MM.YYYY"
 clear_button_enabled = true
 select_all_on_focus = true
 script = ExtResource("3_mi6px")
-change_color = null
-color_not_valid = Color(0.751652, 0.293322, 0.199127, 1)
+min_date = SubResource("Resource_v208s")
+max_date = SubResource("Resource_ismat")
 regex_validator = "\\d"
 
 [node name="ORegexLineEdit" type="LineEdit" parent="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
 layout_mode = 2
 script = ExtResource("4_qwqnv")
 regex_validator = "\\d"
-
-[node name="ODateLineEdit" type="LineEdit" parent="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
-layout_mode = 2
-placeholder_text = "DD.MM.YYYY"
-script = ExtResource("3_mi6px")
-min_date = SubResource("Resource_hxjwi")
-max_date = SubResource("Resource_r3ged")
-change_color = null
 
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_next_page" to="." method="_on_debug_next_page_pressed"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_previous_page" to="." method="_on_debug_previous_page_pressed"]

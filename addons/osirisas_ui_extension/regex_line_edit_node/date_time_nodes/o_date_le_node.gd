@@ -2,6 +2,7 @@
 class_name ODateLineEdit
 extends ORegexLineEdit
 
+## The format in which the date will be displayed and accepted
 @export var format: String = "DD.MM.YYYY":
 	set(value):
 		format = value
@@ -9,21 +10,28 @@ extends ORegexLineEdit
 		text = text
 		placeholder_text = format
 
+## The minimum date in which the entered date can be
 @export var min_date: ODate = ODate.new(1,1,1)
+## The maximum date in which the entered date can be
 @export var max_date: ODate = ODate.new(2199,12,31)
 
+## If the font should change if the date is not valid
 @export var change_color := true
-@export_color_no_alpha var color_not_valid
+## The color the font changes to, if the date is not valid
+@export_color_no_alpha var color_not_valid := Color(1, 0, 0)
 
-var is_valid := true
+## Is the date valid
+var is_valid := false
 
 var _separators: Array[String]
 var _max_digits: int = 0
 var _date_regex: String
 
+## Gets the date and returns the ODate object (See ODate Class for more info)
 func get_date() -> ODate:
 	return ODate.from_string(text,format)
 
+## Sets the date from a ODate object (See ODate Class for more info)
 func set_date(date: ODate) -> void:
 	text = date.to_string_formatted(format)
 
@@ -53,7 +61,6 @@ func _analyze_format() -> void:
 		_separators.append(char)
 	
 	_max_digits = format.length() - _separators.size()
-
 
 func _on_text_changed(new_text: String) -> void:
 	var pos := caret_column
@@ -102,7 +109,8 @@ func _validate_date() -> void:
 	var matches = regex.search(text)
 	
 	if not matches:
-		remove_theme_color_override("font_color")
+		if change_color:
+			remove_theme_color_override("font_color")
 		return 
 	
 	var year_s := int(matches.get_string("year"))
@@ -111,19 +119,19 @@ func _validate_date() -> void:
 	
 	if ODate.is_valid_date(year_s, month_s, day_s):
 		is_valid = true
-	
-	var date := ODate.new(year_s, month_s, day_s)
-	if date.get_difference(min_date) >= 0 and is_valid == true:
-		is_valid = true
+		
+		var date := ODate.new(year_s, month_s, day_s)
+		if not date.get_difference(min_date) >= 0:
+			tooltip_text = "date can't be lower then " + str(min_date)
+			is_valid = false
+		elif not date.get_difference(max_date) < 0:
+			tooltip_text = "date can't be higher then " + str(max_date)
+			is_valid = false
 	else:
 		is_valid = false
 	
-	if date.get_difference(max_date) < 0 and is_valid == true:
-		is_valid = true
-	else:
-		is_valid = false
-	
-	if is_valid:
-		remove_theme_color_override("font_color")
-	else:
-		add_theme_color_override("font_color", color_not_valid)
+	if change_color:
+		if not is_valid:
+			add_theme_color_override("font_color", color_not_valid)
+		else:
+			remove_theme_color_override("font_color")
