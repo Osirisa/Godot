@@ -812,7 +812,6 @@ func select_all_rows() -> void:
 
 ## Deselectes all rows
 func deselect_all_rows() -> void:
-
 	if _selected_rows.is_empty():
 		return
 	
