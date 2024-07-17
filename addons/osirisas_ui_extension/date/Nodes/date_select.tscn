@@ -1,0 +1,512 @@
+[gd_scene load_steps=4 format=3 uid="uid://ogp11vxd8av7"]
+
+[ext_resource type="Theme" uid="uid://hob8ae2wqri4" path="res://addons/osirisas_ui_extension/date/Nodes/date_select_theme.tres" id="1_u2b7h"]
+[ext_resource type="Script" path="res://addons/osirisas_ui_extension/date/Nodes/date_select.gd" id="2_li0ej"]
+[ext_resource type="Script" path="res://addons/osirisas_ui_extension/regex_line_edit_node/o_regex_line_edit.gd" id="2_ljqqh"]
+
+[node name="DateSelect" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -912.0
+offset_bottom = -408.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_u2b7h")
+script = ExtResource("2_li0ej")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="Panel" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 0.15
+
+[node name="HB_Year_Month_Selector" type="HBoxContainer" parent="VBoxContainer/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 0.2
+
+[node name="MarginContainer5" type="MarginContainer" parent="VBoxContainer/Panel/HB_Year_Month_Selector"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.5
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="B_Previous_Year" type="Button" parent="VBoxContainer/Panel/HB_Year_Month_Selector/MarginContainer5"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "<<"
+
+[node name="MarginContainer4" type="MarginContainer" parent="VBoxContainer/Panel/HB_Year_Month_Selector"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.5
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="B_Previous_Month" type="Button" parent="VBoxContainer/Panel/HB_Year_Month_Selector/MarginContainer4"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "<"
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/Panel/HB_Year_Month_Selector"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="LE_Year_Select" type="LineEdit" parent="VBoxContainer/Panel/HB_Year_Month_Selector/MarginContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "YYYY"
+alignment = 2
+max_length = 4
+script = ExtResource("2_ljqqh")
+regex_validator = "\\d"
+
+[node name="MarginContainer2" type="MarginContainer" parent="VBoxContainer/Panel/HB_Year_Month_Selector"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="OB_Month_Select" type="OptionButton" parent="VBoxContainer/Panel/HB_Year_Month_Selector/MarginContainer2"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 1
+text_overrun_behavior = 1
+clip_text = true
+item_count = 12
+selected = 0
+allow_reselect = true
+popup/item_0/text = "January"
+popup/item_0/id = 0
+popup/item_1/text = "Feburary"
+popup/item_1/id = 1
+popup/item_2/text = "March"
+popup/item_2/id = 2
+popup/item_3/text = "April"
+popup/item_3/id = 3
+popup/item_4/text = "May"
+popup/item_4/id = 4
+popup/item_5/text = "June"
+popup/item_5/id = 5
+popup/item_6/text = "July"
+popup/item_6/id = 6
+popup/item_7/text = "August"
+popup/item_7/id = 7
+popup/item_8/text = "September"
+popup/item_8/id = 8
+popup/item_9/text = "October"
+popup/item_9/id = 9
+popup/item_10/text = "November"
+popup/item_10/id = 10
+popup/item_11/text = "December"
+popup/item_11/id = 11
+
+[node name="MarginContainer3" type="MarginContainer" parent="VBoxContainer/Panel/HB_Year_Month_Selector"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.5
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="B_Next_Month" type="Button" parent="VBoxContainer/Panel/HB_Year_Month_Selector/MarginContainer3"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = ">"
+
+[node name="MarginContainer6" type="MarginContainer" parent="VBoxContainer/Panel/HB_Year_Month_Selector"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.5
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="B_Next_Year" type="Button" parent="VBoxContainer/Panel/HB_Year_Month_Selector/MarginContainer6"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = ">>"
+
+[node name="HB_Date" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="VBoxContainer2" type="VBoxContainer" parent="VBoxContainer/HB_Date"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/HB_Date/VBoxContainer2"]
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 0.6
+text = "KW"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Label2" type="Label" parent="VBoxContainer/HB_Date/VBoxContainer2"]
+layout_mode = 2
+size_flags_vertical = 3
+text = "52"
+horizontal_alignment = 1
+
+[node name="Label3" type="Label" parent="VBoxContainer/HB_Date/VBoxContainer2"]
+layout_mode = 2
+size_flags_vertical = 3
+text = "52"
+horizontal_alignment = 1
+
+[node name="Label4" type="Label" parent="VBoxContainer/HB_Date/VBoxContainer2"]
+layout_mode = 2
+size_flags_vertical = 3
+text = "52"
+horizontal_alignment = 1
+
+[node name="Label5" type="Label" parent="VBoxContainer/HB_Date/VBoxContainer2"]
+layout_mode = 2
+size_flags_vertical = 3
+text = "52"
+horizontal_alignment = 1
+
+[node name="Label6" type="Label" parent="VBoxContainer/HB_Date/VBoxContainer2"]
+layout_mode = 2
+size_flags_vertical = 3
+text = "52"
+horizontal_alignment = 1
+
+[node name="Label7" type="Label" parent="VBoxContainer/HB_Date/VBoxContainer2"]
+layout_mode = 2
+size_flags_vertical = 3
+text = "52"
+horizontal_alignment = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/HB_Date"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/HB_Date/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 0.6
+
+[node name="Label" type="Label" parent="VBoxContainer/HB_Date/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+text = "Mo"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Label2" type="Label" parent="VBoxContainer/HB_Date/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+text = "Tu"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Label3" type="Label" parent="VBoxContainer/HB_Date/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+text = "We"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Label4" type="Label" parent="VBoxContainer/HB_Date/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+text = "Th"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Label5" type="Label" parent="VBoxContainer/HB_Date/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+text = "Fr"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Label6" type="Label" parent="VBoxContainer/HB_Date/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+text = "Sa"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Label7" type="Label" parent="VBoxContainer/HB_Date/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+text = "Su"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VB_Dates" type="VBoxContainer" parent="VBoxContainer/HB_Date/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 6.0
+
+[node name="HB_WeeK_1" type="HBoxContainer" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="B_Monday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_1"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="B_Tuesday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_1"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="B_Wednesday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_1"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="B_Thursday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_1"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="B_Friday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_1"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="B_Saturday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_1"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="B_Sunday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_1"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="HB_WeeK_2" type="HBoxContainer" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="B_Monday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_2"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="B_Tuesday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_2"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="B_Wednesday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_2"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="B_Thursday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_2"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="B_Friday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_2"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="B_Saturday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_2"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="B_Sunday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_2"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="HB_WeeK_3" type="HBoxContainer" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="B_Monday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_3"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="B_Tuesday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_3"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="B_Wednesday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_3"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="B_Thursday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_3"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="B_Friday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_3"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="B_Saturday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_3"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="B_Sunday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_3"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="HB_WeeK_4" type="HBoxContainer" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="B_Monday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_4"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="B_Tuesday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_4"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="B_Wednesday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_4"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="B_Thursday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_4"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="B_Friday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_4"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="B_Saturday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_4"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="B_Sunday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_4"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="HB_WeeK_5" type="HBoxContainer" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="B_Monday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_5"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="B_Tuesday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_5"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="B_Wednesday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_5"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="B_Thursday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_5"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="B_Friday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_5"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="B_Saturday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_5"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="B_Sunday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_5"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="HB_WeeK_6" type="HBoxContainer" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="B_Monday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_6"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="B_Tuesday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_6"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="B_Wednesday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_6"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="B_Thursday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_6"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="B_Friday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_6"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="B_Saturday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_6"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"
+
+[node name="B_Sunday" type="Button" parent="VBoxContainer/HB_Date/VBoxContainer/VB_Dates/HB_WeeK_6"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "31"

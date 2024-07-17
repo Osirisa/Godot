@@ -11,10 +11,15 @@ func _enter_tree():
 					preload("res://icon.svg"))
 					
 	add_custom_type("ODateLineEdit", "ORegexLineEdit",
-				preload("res://addons/osirisas_ui_extension/regex_line_edit_node/date_time_nodes/o_date_le_node.gd"),
-				preload("res://icon.svg"))
+					preload("res://addons/osirisas_ui_extension/regex_line_edit_node/date_time_nodes/o_date_le_node.gd"),
+					preload("res://icon.svg"))
+	
+	add_custom_type("ODateSelect", "Control",
+					preload("res://addons/osirisas_ui_extension/date/Nodes/o_date_select.gd"),
+					preload("res://icon.svg"))
 
 func _exit_tree():
 	remove_custom_type("OTableNode")
 	remove_custom_type("ODateLineEdit")
 	remove_custom_type("ORegexLineEdit")
+	remove_custom_type("ODateSelect")
