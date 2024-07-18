@@ -17,13 +17,14 @@ var _vb_calender_week_labels: VBoxContainer = %VB_Calender_Week
 
 var selected_month: int = 1:
 	set(value):
-		selected_month = value % 13
+		selected_month = (value - 1) % 12
+		selected_month += 1
 		
-		if value < 1:
-			selected_month = 13 - selected_month
-			selected_year += (value / 13) - 1
-		
-		selected_month = clampi(selected_month, 1, 12)
+		if selected_month <= 0:
+			selected_month = 12 - selected_month
+			selected_year += ((value - 1) / 12) - 1
+		else:
+			selected_year += (value - 1) / 12
 		
 		_ob_month_select.set_block_signals(true)
 		_ob_month_select.select(selected_month - 1)

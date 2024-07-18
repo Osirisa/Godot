@@ -24,11 +24,14 @@ var _date_select_instance = date_select_scene.instantiate()
 
 var selected_month: int = 1:
 	set(value):
+		print(value)
 		selected_month = value % 13
 		
 		if value < 1:
 			selected_month = 13 - selected_month
-			selected_year += (value / 13) - 1
+			selected_year += ((value - 1) / 12) - 1
+		else:
+			selected_year += (value - 1) / 12
 		
 		selected_month = clampi(selected_month, 1, 12)
 		_date_select_instance.selected_month = selected_month
