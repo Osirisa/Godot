@@ -139,3 +139,7 @@ func _on_debug_insert_row_pressed():
 		button.text = "press me " + str(randi())
 
 		table2.insert_row([label,button,label2,line_edit], input.text.to_int())
+
+
+func _on_o_date_select_date_selected(date):
+	print(date)

@@ -61,12 +61,12 @@ const MONTH_DAYS_LEAP: Array[int] = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30,
 ## Example: 2012.12.31 - 1 month is 2012.12.01
 @export var month := 1:
 	set(value):
-		month = value % 12
+		month = value % 13
 		
 		if not _block_set:
 			_block_set = true
 			
-			year += value / 12
+			year += value / 13
 			
 			var julian_date := to_julian()
 			var new_g_date := OTimeUtil.calc_from_jd(julian_date)
@@ -81,7 +81,7 @@ const MONTH_DAYS_LEAP: Array[int] = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30,
 	set(value):
 		day = value
 		
-		if day > MONTH_DAYS[month - 1] or value < 1:
+		if day > MONTH_DAYS[month - 1] or day < 1:
 			if not _block_set:
 				_block_set = true
 				

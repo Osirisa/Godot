@@ -15,7 +15,7 @@ func _enter_tree():
 					preload("res://icon.svg"))
 	
 	add_custom_type("ODateSelect", "Control",
-					preload("res://addons/osirisas_ui_extension/date/Nodes/o_date_select.gd"),
+					preload("res://addons/osirisas_ui_extension/date/Nodes/date_select/o_date_select.gd"),
 					preload("res://icon.svg"))
 
 func _exit_tree():
