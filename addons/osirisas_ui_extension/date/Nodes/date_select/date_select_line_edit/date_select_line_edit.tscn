@@ -1,0 +1,59 @@
+[gd_scene load_steps=6 format=3 uid="uid://blygr817tefy"]
+
+[ext_resource type="Script" path="res://addons/osirisas_ui_extension/regex_line_edit_node/date_time_nodes/o_date_le_node.gd" id="1_2rfh1"]
+[ext_resource type="Script" path="res://addons/osirisas_ui_extension/date/Nodes/date_select/date_select_line_edit/date_select_line_edit.gd" id="1_gxadc"]
+[ext_resource type="Script" path="res://addons/osirisas_ui_extension/date/date_resource/o_date.gd" id="2_6l4kw"]
+
+[sub_resource type="Resource" id="Resource_u7g4b"]
+script = ExtResource("2_6l4kw")
+year = 1
+month = 1
+day = 1
+
+[sub_resource type="Resource" id="Resource_new70"]
+script = ExtResource("2_6l4kw")
+year = 2199
+month = 12
+day = 31
+
+[node name="DateSelectLineEdit" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_gxadc")
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ODateLineEdit" type="LineEdit" parent="HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+script = ExtResource("1_2rfh1")
+min_date = SubResource("Resource_u7g4b")
+max_date = SubResource("Resource_new70")
+regex_validator = "\\d"
+
+[node name="Date_select_Button" type="Button" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.05
+text = "^"
+
+[connection signal="pressed" from="HBoxContainer/Date_select_Button" to="." method="_on_date_select_button_pressed"]

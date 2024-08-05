@@ -6,9 +6,6 @@ var table2: OTableNode = %"Table2"
 @onready
 var input: LineEdit = %debug_LE
 
-@onready
-var date_le: ODateLineEdit = %date_edit
-
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	
@@ -34,14 +31,6 @@ func _ready():
 		
 		button.text = "press me " + str(randi())
 		arr.append([label,button,line_edit,label2])
-	
-	var date1 = ODate.new(2024,7,10)
-	#print(date1)
-	#print(date1.get_week())
-	
-	date1.set_date(2024,1,1)
-	date_le.set_date(date1)
-
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta):
@@ -110,11 +99,9 @@ func _on_debug_hide_row_pressed():
 		else:
 			table2.set_visibility_row(row, true)
 
-
 func _on_debug_insert_col_pressed():
 	if input:
 		table2.insert_column("test_column", input.text.to_int())
-
 
 func _on_debug_insert_row_pressed():
 	if input:

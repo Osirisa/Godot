@@ -42,6 +42,9 @@ func _ready():
 	
 	_analyze_format()
 
+func _enter_tree():
+	regex_validator = "\\d"
+
 func _analyze_format() -> void:
 	_separators.clear()
 	

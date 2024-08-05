@@ -1,11 +1,10 @@
-[gd_scene load_steps=14 format=3 uid="uid://bwwfei0xtaahp"]
+[gd_scene load_steps=13 format=3 uid="uid://bwwfei0xtaahp"]
 
 [ext_resource type="Script" path="res://test.gd" id="1_ipyfc"]
 [ext_resource type="Script" path="res://addons/osirisas_ui_extension/table_node/o_table_node.gd" id="3_eoo3w"]
 [ext_resource type="Script" path="res://addons/osirisas_ui_extension/regex_line_edit_node/date_time_nodes/o_date_le_node.gd" id="3_mi6px"]
 [ext_resource type="Script" path="res://addons/osirisas_ui_extension/date/date_resource/o_date.gd" id="4_pfhxr"]
-[ext_resource type="Script" path="res://addons/osirisas_ui_extension/regex_line_edit_node/o_regex_line_edit.gd" id="4_qwqnv"]
-[ext_resource type="Script" path="res://addons/osirisas_ui_extension/date/Nodes/date_select/o_date_select.gd" id="6_w5e0n"]
+[ext_resource type="Script" path="res://addons/osirisas_ui_extension/date/Nodes/date_select/date_select_line_edit/o_date_select_line_edit.gd" id="7_h6amr"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_f7wrf"]
 bg_color = Color(0.53422, 0.702955, 0.528986, 1)
@@ -13,35 +12,35 @@ bg_color = Color(0.53422, 0.702955, 0.528986, 1)
 [sub_resource type="Theme" id="Theme_eh8fq"]
 Label/styles/normal = SubResource("StyleBoxFlat_f7wrf")
 
-[sub_resource type="Resource" id="Resource_v208s"]
-script = ExtResource("4_pfhxr")
-year = 1
-month = 1
-day = 1
-
-[sub_resource type="Resource" id="Resource_ismat"]
-script = ExtResource("4_pfhxr")
-year = 2199
-month = 12
-day = 31
-
-[sub_resource type="Resource" id="Resource_v7ysk"]
+[sub_resource type="Resource" id="Resource_3vogt"]
 script = ExtResource("4_pfhxr")
 year = 2024
-month = 7
-day = 18
+month = 8
+day = 5
 
-[sub_resource type="Resource" id="Resource_ftblt"]
+[sub_resource type="Resource" id="Resource_edug8"]
 script = ExtResource("4_pfhxr")
 year = 2099
 month = 12
 day = 1
 
-[sub_resource type="Resource" id="Resource_j2lgo"]
+[sub_resource type="Resource" id="Resource_kl2hs"]
 script = ExtResource("4_pfhxr")
 year = 2000
 month = 1
 day = 1
+
+[sub_resource type="Resource" id="Resource_utd1o"]
+script = ExtResource("4_pfhxr")
+year = 1
+month = 1
+day = 1
+
+[sub_resource type="Resource" id="Resource_y4nsg"]
+script = ExtResource("4_pfhxr")
+year = 2199
+month = 12
+day = 31
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -138,29 +137,20 @@ text = "insert row"
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="date_edit" type="LineEdit" parent="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
-unique_name_in_owner = true
+[node name="ODateSelectLineEdit" type="Control" parent="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
+custom_minimum_size = Vector2(190, 31)
 layout_mode = 2
-placeholder_text = "DD.MM.YYYY"
-clear_button_enabled = true
-select_all_on_focus = true
+script = ExtResource("7_h6amr")
+starting_date = SubResource("Resource_3vogt")
+max_date = SubResource("Resource_edug8")
+min_date = SubResource("Resource_kl2hs")
+
+[node name="ODateLineEdit" type="LineEdit" parent="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
+layout_mode = 2
 script = ExtResource("3_mi6px")
-min_date = SubResource("Resource_v208s")
-max_date = SubResource("Resource_ismat")
+min_date = SubResource("Resource_utd1o")
+max_date = SubResource("Resource_y4nsg")
 regex_validator = "\\d"
-
-[node name="ORegexLineEdit" type="LineEdit" parent="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
-layout_mode = 2
-script = ExtResource("4_qwqnv")
-regex_validator = "\\d"
-
-[node name="ODateSelect" type="Control" parent="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
-custom_minimum_size = Vector2(190, 150)
-layout_mode = 2
-script = ExtResource("6_w5e0n")
-starting_date = SubResource("Resource_v7ysk")
-max_date = SubResource("Resource_ftblt")
-min_date = SubResource("Resource_j2lgo")
 
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_next_page" to="." method="_on_debug_next_page_pressed"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_previous_page" to="." method="_on_debug_previous_page_pressed"]
@@ -173,4 +163,3 @@ min_date = SubResource("Resource_j2lgo")
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_remove_col" to="." method="_on_debug_remove_col_pressed"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_insert_col" to="." method="_on_debug_insert_col_pressed"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_insert_row" to="." method="_on_debug_insert_row_pressed"]
-[connection signal="date_selected" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/ODateSelect" to="." method="_on_o_date_select_date_selected"]

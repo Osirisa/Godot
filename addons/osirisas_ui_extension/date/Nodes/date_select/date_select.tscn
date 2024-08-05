@@ -5,6 +5,7 @@
 [ext_resource type="Script" path="res://addons/osirisas_ui_extension/regex_line_edit_node/o_regex_line_edit.gd" id="2_ljqqh"]
 
 [node name="DateSelect" type="Control"]
+custom_minimum_size = Vector2(180, 180)
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
