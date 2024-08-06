@@ -43,8 +43,10 @@ grow_vertical = 2
 
 [node name="ODateLineEdit" type="LineEdit" parent="HBoxContainer"]
 unique_name_in_owner = true
+clip_contents = true
 layout_mode = 2
 size_flags_horizontal = 3
+placeholder_text = "DD.MM.YYYY"
 script = ExtResource("1_2rfh1")
 min_date = SubResource("Resource_u7g4b")
 max_date = SubResource("Resource_new70")
