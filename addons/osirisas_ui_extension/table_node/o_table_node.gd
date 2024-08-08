@@ -268,18 +268,20 @@ func _ready():
 
 	_init_v_scroll()
 	_scroll_container.get_h_scroll_bar().connect("value_changed", Callable(self,"_scroll_header_horizontally"))
+	
 	_body_group.add_child(_panel_body)
 	if body_theme:
 		_panel_body.theme = body_theme
+	
 	_body_group.add_child(_body_cell_group)
 	_body_group.add_child(_separator_group)
-
-		
+	
 	_body_group.set_anchors_preset(Control.PRESET_FULL_RECT)
 	
 	_scroll_container.add_child(_body_group)
 	
 	_header_group.custom_minimum_size = Vector2i(_x_offsets.back(),header_cell_height)
+	
 	_header_group.add_child(_panel_header)
 	if header_theme:
 		_panel_header.theme = header_theme
@@ -1081,6 +1083,8 @@ func _update_visible_rows(value: int = 0) -> void:
 				
 				row.horizontal_seperator.name = "HSep%d" % row_idx
 				row.horizontal_seperator.mouse_default_cursor_shape = Control.CURSOR_VSIZE
+				if body_theme:
+					row.horizontal_seperator.theme = body_theme
 				
 				var callable = Callable(self, "_on_hori_separator_input").bind(row)
 				if not row.horizontal_seperator.is_connected("gui_input", callable):
@@ -1179,7 +1183,7 @@ func _update_body_size() -> void:
 	_body_group.custom_minimum_size = table_size
 	
 	_panel_header.size = Vector2i(table_size.x, header_cell_height)
-	_panel_body.size = Vector2i(table_size.x, table_size.y - 2)
+	_panel_body.size = Vector2i(table_size.x, table_size.y - 8)
 	
 	minimum_size_changed.emit()
 
@@ -1215,10 +1219,14 @@ func _create_v_separators() -> void:
 		
 		sep.name = "VSep%d" % i
 		sep.mouse_default_cursor_shape = Control.CURSOR_HSIZE
+		if body_theme:
+			sep.theme = body_theme
 		
 		sep_header.name = "VSep%d" % i
 		sep_header.mouse_default_cursor_shape = Control.CURSOR_HSIZE
 		sep_header.set_size(Vector2i(1, header_cell_height))
+		if header_theme:
+			sep_header.theme = header_theme
 		
 		if is_instance_valid(_header_separator_group):
 			_header_separator_group.add_child(sep_header)
@@ -1268,7 +1276,6 @@ func _update_v_separators() -> void:
 				
 				_vertical_separators[i].position = Vector2(pos, 0)
 				_vertical_separators[i].visible = true
-				
 				_header_separators[i].position = Vector2(pos, 0)
 				_header_separators[i].visible = true
 				

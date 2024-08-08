@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=3 uid="uid://bwwfei0xtaahp"]
+[gd_scene load_steps=21 format=3 uid="uid://bwwfei0xtaahp"]
 
 [ext_resource type="Script" path="res://test.gd" id="1_ipyfc"]
 [ext_resource type="Script" path="res://addons/osirisas_ui_extension/table_node/o_table_node.gd" id="3_eoo3w"]
@@ -17,13 +17,25 @@ Button/styles/normal = SubResource("StyleBoxFlat_5gbcg")
 Panel/styles/panel = SubResource("StyleBoxFlat_6owou")
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ts2wr"]
-bg_color = Color(0.6, 0.6, 0.6, 0)
+bg_color = Color(0.615686, 0.584314, 0.65098, 0)
+
+[sub_resource type="StyleBoxLine" id="StyleBoxLine_1sb0l"]
+color = Color(0, 1, 0, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_o0ump"]
+bg_color = Color(0.6, 0.6, 0.6, 0.105882)
+
+[sub_resource type="StyleBoxLine" id="StyleBoxLine_y6a7h"]
+color = Color(1, 0, 0, 1)
+grow_begin = 0.0
+grow_end = 0.0
+vertical = true
 
 [sub_resource type="Theme" id="Theme_6m3vu"]
 Button/styles/normal = SubResource("StyleBoxFlat_ts2wr")
+HSeparator/styles/separator = SubResource("StyleBoxLine_1sb0l")
 Panel/styles/panel = SubResource("StyleBoxFlat_o0ump")
+VSeparator/styles/separator = SubResource("StyleBoxLine_y6a7h")
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_f7wrf"]
 bg_color = Color(0.53422, 0.702955, 0.528986, 1)
