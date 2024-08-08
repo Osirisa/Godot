@@ -222,6 +222,7 @@ var _panel_header := Panel.new()
 var _panel_body := Panel.new()
 
 var _scroll_container := ScrollContainer.new()
+var _scroll_container_header := ScrollContainer.new()
 
 # Selections
 var _selected_rows: Array[RowContent] = []
@@ -261,13 +262,17 @@ func _ready():
 	_scroll_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_scroll_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	
-	_scroll_container.clip_contents = true
-	_scroll_container.custom_minimum_size = Vector2(0,0)
-
+	_scroll_container_header.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
+	_scroll_container_header.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
+	
+	_scroll_container_header.custom_minimum_size = Vector2i(10, header_cell_height)
+	
 	_refresh_last_visible_column()
-
 	_init_v_scroll()
-	_scroll_container.get_h_scroll_bar().connect("value_changed", Callable(self,"_scroll_header_horizontally"))
+	var scroll_callable_body := Callable(self,"on_scroll_horizontal").bind(true)
+	_scroll_container.get_h_scroll_bar().connect("value_changed", scroll_callable_body)
+	var scroll_callable_heady := Callable(self,"on_scroll_horizontal").bind(false)
+	_scroll_container_header.get_h_scroll_bar().connect("value_changed", scroll_callable_heady)
 	
 	_body_group.add_child(_panel_body)
 	if body_theme:
@@ -278,8 +283,7 @@ func _ready():
 	
 	_body_group.set_anchors_preset(Control.PRESET_FULL_RECT)
 	
-	_scroll_container.add_child(_body_group)
-	
+
 	_header_group.custom_minimum_size = Vector2i(_x_offsets.back(),header_cell_height)
 	
 	_header_group.add_child(_panel_header)
@@ -287,12 +291,14 @@ func _ready():
 		_panel_header.theme = header_theme
 	_header_group.add_child(_header_cell_group)
 	_header_group.add_child(_header_separator_group)
-
+	
+	_scroll_container.add_child(_body_group)
+	_scroll_container_header.add_child(_header_group)
 	
 	_refresh_x_offsets_arr()
 	_refresh_y_offsets_arr()
 	
-	v_cont.add_child(_header_group)
+	v_cont.add_child(_scroll_container_header)
 	v_cont.add_child(_scroll_container)
 	
 	add_child(v_cont)
@@ -301,7 +307,7 @@ func _ready():
 	_create_v_separators.call_deferred()
 	_update_v_separators.call_deferred()
 	
-	clip_contents = true
+	#clip_contents = true
 
 #-----------------------------------------Virtual methods------------------------------------------#
 
@@ -931,9 +937,17 @@ func _update_headers() -> void:
 		else:
 			children[idx].hide()
 
-func _scroll_header_horizontally(value):
+func on_scroll_horizontal(value, body: bool):
 	#print(value)
-	_header_group.position.x = -value
+	_scroll_container.set_block_signals(true)
+	_scroll_container_header.set_block_signals(true)
+	if body:
+		_scroll_container_header.get_h_scroll_bar().value = value
+	else:
+		_scroll_container.get_h_scroll_bar().value = value
+	
+	_scroll_container.set_block_signals(false)
+	_scroll_container_header.set_block_signals(false)
 
 func _refresh_max_pages() -> void:
 	_max_pages = int((_row_count - 1 - _invisible_rows.size()) / max_row_count_per_page)
@@ -1181,11 +1195,11 @@ func _update_body_size() -> void:
 	var table_size = _table_size()
 	
 	_body_group.custom_minimum_size = table_size
-	
+	_header_group.custom_minimum_size = Vector2i(table_size.x, header_cell_height)
 	_panel_header.size = Vector2i(table_size.x, header_cell_height)
 	_panel_body.size = Vector2i(table_size.x, table_size.y - 8)
 	
-	minimum_size_changed.emit()
+	#minimum_size_changed.emit()
 
 func _create_margin_container(node: Control, row_index: int, col_index:int) -> MarginContainer:
 	var margin_parent = MarginContainer.new()
