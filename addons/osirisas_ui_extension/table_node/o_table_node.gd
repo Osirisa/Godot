@@ -268,16 +268,24 @@ func _ready():
 
 	_init_v_scroll()
 	_scroll_container.get_h_scroll_bar().connect("value_changed", Callable(self,"_scroll_header_horizontally"))
-	
+	_body_group.add_child(_panel_body)
+	if body_theme:
+		_panel_body.theme = body_theme
 	_body_group.add_child(_body_cell_group)
 	_body_group.add_child(_separator_group)
+
+		
 	_body_group.set_anchors_preset(Control.PRESET_FULL_RECT)
 	
 	_scroll_container.add_child(_body_group)
 	
 	_header_group.custom_minimum_size = Vector2i(_x_offsets.back(),header_cell_height)
+	_header_group.add_child(_panel_header)
+	if header_theme:
+		_panel_header.theme = header_theme
 	_header_group.add_child(_header_cell_group)
 	_header_group.add_child(_header_separator_group)
+
 	
 	_refresh_x_offsets_arr()
 	_refresh_y_offsets_arr()
@@ -287,13 +295,11 @@ func _ready():
 	
 	add_child(v_cont)
 	
-	
 	_create_headers.call_deferred()
 	_create_v_separators.call_deferred()
 	_update_v_separators.call_deferred()
 	
 	clip_contents = true
-
 
 #-----------------------------------------Virtual methods------------------------------------------#
 
@@ -425,7 +431,6 @@ func add_row(data: Array[Control] = [], height: float = standard_cell_dimension.
 	_update_v_separators.call_deferred()
 	_update_visible_rows.call_deferred()
 
-
 func insert_row(data: Array[Control], row_pos: int, height: float = standard_cell_dimension.y):
 	if not OTableUtility.check_row_input(row_pos, _row_count - 1):
 		return
@@ -450,7 +455,6 @@ func insert_row(data: Array[Control], row_pos: int, height: float = standard_cel
 	
 	_update_v_separators.call_deferred()
 	_update_visible_rows.call_deferred()
-
 
 ## Takes in following template: [ [node:Control, node2:Control],[nod...,...]...] as data use this
 ## for populating the table with data
@@ -523,6 +527,7 @@ func remove_row(row: int) -> void:
 		row_object.horizontal_seperator.queue_free()
 
 	_rows.remove_at(row)
+	_culling_active_rows_old.clear()
 	
 	_row_count = _row_count - 1 if _row_count > 0 else 0
 	
@@ -554,6 +559,7 @@ func remove_rows_batch(rows_to_remove: Array[int]) -> void:
 		_rows.remove_at(rows_to_remove[index])
 		_row_count = _row_count - 1 if _row_count > 0 else 0
 	
+	_culling_active_rows_old.clear()
 	_refresh_max_pages()
 	_refresh_last_visible_row()
 	
@@ -908,13 +914,18 @@ func _create_headers() -> void:
 
 func _update_headers() -> void:
 	var children = _header_cell_group.get_children()
-
+	
 	for idx in children.size():
 		if _column_visiblity[idx]:
-			children[idx].show()
-			children[idx].position = Vector2i(_x_offsets[idx], 0)
-			children[idx].size = Vector2i(_column_widths_temp[idx], header_cell_height)
-			children[idx].custom_minimum_size = Vector2i(_column_widths_temp[idx], header_cell_height)
+			var child: Control = children[idx]
+			
+			child.show()
+			child.position = Vector2i(_x_offsets[idx], 0)
+			child.size = Vector2i(_column_widths_temp[idx], header_cell_height)
+			child.custom_minimum_size = Vector2i(_column_widths_temp[idx], header_cell_height)
+			
+			if header_theme:
+				child.theme = header_theme
 		else:
 			children[idx].hide()
 
@@ -1163,7 +1174,13 @@ func _table_size() -> Vector2i:
 	return table_size
 
 func _update_body_size() -> void:
-	_body_group.custom_minimum_size = _table_size()
+	var table_size = _table_size()
+	
+	_body_group.custom_minimum_size = table_size
+	
+	_panel_header.size = Vector2i(table_size.x, header_cell_height)
+	_panel_body.size = Vector2i(table_size.x, table_size.y - 2)
+	
 	minimum_size_changed.emit()
 
 func _create_margin_container(node: Control, row_index: int, col_index:int) -> MarginContainer:

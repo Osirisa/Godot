@@ -1,10 +1,29 @@
-[gd_scene load_steps=13 format=3 uid="uid://bwwfei0xtaahp"]
+[gd_scene load_steps=19 format=3 uid="uid://bwwfei0xtaahp"]
 
 [ext_resource type="Script" path="res://test.gd" id="1_ipyfc"]
 [ext_resource type="Script" path="res://addons/osirisas_ui_extension/table_node/o_table_node.gd" id="3_eoo3w"]
 [ext_resource type="Script" path="res://addons/osirisas_ui_extension/regex_line_edit_node/date_time_nodes/o_date_le_node.gd" id="3_mi6px"]
 [ext_resource type="Script" path="res://addons/osirisas_ui_extension/date/date_resource/o_date.gd" id="4_pfhxr"]
 [ext_resource type="Script" path="res://addons/osirisas_ui_extension/date/Nodes/date_select/date_select_line_edit/o_date_select_line_edit.gd" id="7_h6amr"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5gbcg"]
+bg_color = Color(0.462745, 0.670588, 0.278431, 0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6owou"]
+bg_color = Color(0.63552, 0.60745, 0.410225, 1)
+
+[sub_resource type="Theme" id="Theme_jrfp2"]
+Button/styles/normal = SubResource("StyleBoxFlat_5gbcg")
+Panel/styles/panel = SubResource("StyleBoxFlat_6owou")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ts2wr"]
+bg_color = Color(0.6, 0.6, 0.6, 0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_o0ump"]
+
+[sub_resource type="Theme" id="Theme_6m3vu"]
+Button/styles/normal = SubResource("StyleBoxFlat_ts2wr")
+Panel/styles/panel = SubResource("StyleBoxFlat_o0ump")
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_f7wrf"]
 bg_color = Color(0.53422, 0.702955, 0.528986, 1)
@@ -83,6 +102,8 @@ min_size = Vector2i(50, 25)
 max_row_count_active_culling = 20
 pagination = true
 max_row_count_per_page = 40
+header_theme = SubResource("Theme_jrfp2")
+body_theme = SubResource("Theme_6m3vu")
 selection_theme = SubResource("Theme_eh8fq")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer/VBoxContainer/HBoxContainer"]
@@ -144,8 +165,6 @@ script = ExtResource("7_h6amr")
 starting_date = SubResource("Resource_3vogt")
 max_date = SubResource("Resource_edug8")
 min_date = SubResource("Resource_kl2hs")
-change_color = null
-close_on_select = null
 
 [node name="ODateLineEdit" type="LineEdit" parent="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
 layout_mode = 2
