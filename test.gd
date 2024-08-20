@@ -121,9 +121,7 @@ func _on_debug_insert_row_pressed():
 		label.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		
 		label2.text = "going strong"
-		
 		button.text = "press me " + str(randi())
-
 		table2.insert_row([label,button,label2,line_edit], input.text.to_int())
 
 

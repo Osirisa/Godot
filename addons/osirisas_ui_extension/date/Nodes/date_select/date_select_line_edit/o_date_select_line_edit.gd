@@ -5,12 +5,17 @@ extends Control
 signal date_selected(date: ODate)
 signal date_entered(date: ODate)
 
-@export var date_select_height: int = 240:
+@export var date_select_size := Vector2i(size.x, 240):
 	set(value):
-		date_select_height = value
+		date_select_size = value
 		if _date_select_active:
-			_date_select_instance.position = Vector2i(0, date_select_height)
-			_date_select_instance.set_size(Vector2i(size.x, date_select_height))
+			_date_select_instance.set_size(date_select_size)
+
+@export var date_select_pos := Vector2i(0, 0):
+	set(value):
+		date_select_pos = value
+		if _date_select_active:
+			_date_select_instance.set_position(date_select_pos)
 
 @export var starting_date: ODate = ODate.current_date():
 	set(value):
@@ -49,8 +54,10 @@ signal date_entered(date: ODate)
 		color_not_valid = value
 		_date_select_line_edit_instance.color_not_valid = color_not_valid
 
-
 @export var close_on_select := true
+
+@export var different_parent: Control
+@export var z_idx: int = 0
 
 var _date_select_scene: PackedScene = preload("res://addons/osirisas_ui_extension/date/Nodes/date_select/date_select.tscn")
 var _date_select_line_edit_scene: PackedScene = preload("res://addons/osirisas_ui_extension/date/Nodes/date_select/date_select_line_edit/date_select_line_edit.tscn")
@@ -73,22 +80,38 @@ func _ready():
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		if _date_select_active:
-			remove_child(_date_select_instance)
+			if different_parent:
+				different_parent.remove_child(_date_select_instance)
+			else:
+				remove_child(_date_select_instance)
 			_date_select_active = false
 
 func _on_date_select_btn_pressed()-> void:
 	if _date_select_active:
-		remove_child(_date_select_instance)
+		if different_parent:
+			different_parent.remove_child(_date_select_instance)
+		else:
+			remove_child(_date_select_instance)
 		_date_select_active = false
+		
 	else:
-		add_child(_date_select_instance)
-		_date_select_instance.position = Vector2i(0, -date_select_height)
-		_date_select_instance.set_size(Vector2i(size.x, date_select_height))
+		if different_parent:
+			different_parent.add_child(_date_select_instance)
+		else:
+			add_child(_date_select_instance)
+		
+		_date_select_instance.position = date_select_pos
+		_date_select_instance.set_size(date_select_size)
+		
+		_date_select_instance.z_index = z_idx
 		_date_select_active = true
 
 func _on_date_selected(date: ODate) -> void:
 	_date_select_line_edit_instance.set_date_le_text(date.to_string_formatted(format))
 	
 	if close_on_select:
-		remove_child(_date_select_instance)
+		if different_parent:
+			different_parent.remove_child(_date_select_instance)
+		else:
+			remove_child(_date_select_instance)
 		_date_select_active = false
