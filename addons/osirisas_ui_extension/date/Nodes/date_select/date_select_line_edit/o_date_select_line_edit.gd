@@ -17,6 +17,19 @@ signal date_entered(date: ODate)
 		if _date_select_active:
 			_date_select_instance.set_position(date_select_pos)
 
+@export var use_custom_pos := false:
+	set(value):
+		use_custom_pos = value
+		if _date_select_active:
+			_date_select_instance.set_position(global_position)
+
+@export var offset_pos := Vector2i(0, 0):
+	set(value):
+		offset_pos = value
+		if _date_select_active:
+			_date_select_instance.set_position(Vector2i(global_position.x + offset_pos.x, 
+														global_position.y + offset_pos.y))
+
 @export var starting_date: ODate = ODate.current_date():
 	set(value):
 		starting_date = value
@@ -100,7 +113,12 @@ func _on_date_select_btn_pressed()-> void:
 		else:
 			add_child(_date_select_instance)
 		
-		_date_select_instance.position = date_select_pos
+		if use_custom_pos:
+			_date_select_instance.position = date_select_pos
+		else:
+			_date_select_instance.position = Vector2i(global_position.x + offset_pos.x, 
+														global_position.y + offset_pos.y)
+		
 		_date_select_instance.set_size(date_select_size)
 		
 		_date_select_instance.z_index = z_idx
