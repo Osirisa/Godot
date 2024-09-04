@@ -1,0 +1,26 @@
+[gd_scene load_steps=3 format=3 uid="uid://cf17idd33fuj7"]
+
+[ext_resource type="Script" path="res://addons/osirisas_ui_extension/container/Draggable_Container/o_drag_grid_container.gd" id="1_fcun3"]
+[ext_resource type="PackedScene" uid="uid://beklw77gaxcvi" path="res://tests/test scenes/test_widged1.tscn" id="2_kn668"]
+
+[node name="Control" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ODragContainer" type="Container" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_fcun3")
+init_items = Array[PackedScene]([ExtResource("2_kn668"), ExtResource("2_kn668")])
+grid = Vector2i(2, 2)
+grid_separation = Vector2(20, 20)
+min_items_size = Vector2(300, 300)
+max_items_size = Vector2(600, 600)

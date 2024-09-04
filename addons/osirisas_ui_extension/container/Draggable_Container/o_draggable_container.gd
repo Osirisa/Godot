@@ -1,5 +1,5 @@
-class_name ODraggableContainer
-extends Container
+class_name ODraggableComponent
+extends Node
 
 
 # Called when the node enters the scene tree for the first time.
