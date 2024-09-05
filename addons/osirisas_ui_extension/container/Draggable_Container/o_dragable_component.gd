@@ -37,13 +37,15 @@ func _input(event):
 			else:
 				_drag_timer.stop()  # Stop the timer if it's running
 				if _dragging:
+					get_parent().top_level = false
 					_dragging = false
 					end_dragging.emit(get_parent())
 		
 		elif event is InputEventMouseMotion and _dragging:
 			# Only move the parent if we are dragging
-			var parent = get_parent()
+			var parent: Control = get_parent()
 			if parent:
+				parent.top_level = true
 				var global_mouse_pos = get_global_mouse_position()
 				var drag_delta = global_mouse_pos - _drag_delta_start_pos
 				parent.position += drag_delta  # Adjust the parent position

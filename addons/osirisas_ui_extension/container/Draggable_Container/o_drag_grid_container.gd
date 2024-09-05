@@ -24,6 +24,8 @@ enum E_FillDirection {
 	VERTICAL,
 }
 
+static var all_drag_containers: Array[ODragContainer] = []
+
 @export_category("Drag Container")
 @export_category("Items")
 
@@ -105,8 +107,12 @@ var _scroll_container := ScrollContainer.new()
 var _body := Control.new()
 var _var_ready := false
 
+var _tween: Tween
+
 # Called when the node enters the scene tree for the first time.
 func _ready():
+	all_drag_containers.append(self)
+	
 	resized.connect(_on_resized)
 	
 	_body.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -115,7 +121,9 @@ func _ready():
 	_scroll_container.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_scroll_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_scroll_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	
 	add_child(_scroll_container)
+	
 	_initialize_cell_positions_array()
 	_calc_grid_positions()
 	
@@ -126,6 +134,10 @@ func _ready():
 	_position_items()
 	
 	_var_ready = true
+
+func _exit_tree():
+	# Unregister this container from the static array when it is removed from the scene
+	all_drag_containers.erase(self)
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
@@ -145,9 +157,6 @@ func _initialize_items() -> void:
 				child.end_dragging.connect(_on_item_dropped)
 				item.get_node("MarginContainer/VBoxContainer/Button").text = str(idx) 
 				
-				#var tween = Tween.new()
-				#item.add_child(tween)
-				
 				_items[idx - 1] = item
 				_body.add_child(item)
 
@@ -157,9 +166,19 @@ func _initialize_cell_positions_array() -> void:
 		for j in range(grid.y):
 			_cell_positions[i].append(Vector2(0,0))
 
+func _restart_tween() -> void:
+	if _tween and _tween.is_running():
+		_tween.stop()
+		_tween.kill()
+	if not _tween or not _tween.is_valid():
+		_tween = create_tween()
+		_tween.set_parallel(true)
+
 func _position_items() -> void:
 	var x: int
 	var y: int
+	
+	_restart_tween()
 	
 	for item_idx in range(grid.x * grid.y):
 		match starting_point:
@@ -194,29 +213,20 @@ func _position_items() -> void:
 				else:  # VERTICAL
 					x = grid.x - 1 - (item_idx / grid.y)
 					y = grid.y - 1 - (item_idx % grid.y)
-
+		
 		# Position items if they exist
 		if _items[item_idx]:
+			var target_position = _cell_positions[x][y]
+			var item: Control = _items[item_idx]
 			
-			#var target_position = _cell_positions[x][y]
-			#var tween = _items[item_idx].get_node("Tween")
-			#
-			## Ensure the tween is ready to start
-			#tween.stop_all()
-			#
-			## Tween to the new position
-			#tween.interpolate_property(
-				#_items[item_idx], 
-				#"position", 
-				#_items[item_idx].position, 
-				#target_position, 
-				#0.5,  # Duration
-				#Tween.TRANS_LINEAR, 
-				#Tween.EASE_IN_OUT
-			#)
-			#tween.start()
-			
-			_items[item_idx].position = _cell_positions[x][y]
+			if _tween:
+			# Tween to the new position using the single Tween instance
+				_tween.tween_property(
+					item, 
+					"position", 
+					target_position, 
+					0.25,  # Duration
+				).set_trans(Tween.TRANS_LINEAR).set_ease(Tween.EASE_IN_OUT)
 
 func _calc_grid_positions() -> void:
 	_cell_dimensions.x = (size.x - (grid.x - 1) * grid_separation.x) / grid.x
@@ -277,6 +287,8 @@ func _calc_arr_pos(pos: Vector2i) -> int:
 			item_idx = x * grid.y + y
 		_:
 			item_idx = y * grid.x + x
+	
+	item_idx = clamp(item_idx, 0, (grid.x * grid.y) - 1)
 	
 	return item_idx
 

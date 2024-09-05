@@ -11,19 +11,52 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="ODragContainer" type="Container" parent="."]
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+
+[node name="Control" type="Control" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ODragContainer" type="Container" parent="HBoxContainer/Control"]
+layout_mode = 2
+offset_left = 4.0
+offset_right = 576.0
+offset_bottom = 648.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
 script = ExtResource("1_fcun3")
-init_items = Array[PackedScene]([ExtResource("2_kn668"), ExtResource("2_kn668"), ExtResource("2_kn668"), ExtResource("2_kn668"), ExtResource("2_kn668")])
+init_items = Array[PackedScene]([ExtResource("2_kn668"), ExtResource("2_kn668"), ExtResource("2_kn668")])
 grid = Vector2i(2, 3)
 grid_separation = Vector2(2, 5)
 min_grid_pos_size = Vector2(300, 200)
 max_grid_pos_size = Vector2(300, 200)
 min_items_size = Vector2(300, 200)
 max_items_size = Vector2(300, 200)
-fill_direction = 1
+
+[node name="Control2" type="Control" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ODragContainer" type="Container" parent="HBoxContainer/Control2"]
+layout_mode = 2
+offset_left = 4.0
+offset_right = 576.0
+offset_bottom = 648.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+script = ExtResource("1_fcun3")
+init_items = Array[PackedScene]([ExtResource("2_kn668")])
+grid = Vector2i(2, 3)
+grid_separation = Vector2(2, 5)
+min_grid_pos_size = Vector2(300, 200)
+max_grid_pos_size = Vector2(300, 200)
+min_items_size = Vector2(300, 200)
+max_items_size = Vector2(300, 200)
