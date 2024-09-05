@@ -144,6 +144,10 @@ func _initialize_items() -> void:
 				child = child as ODragableComponent
 				child.end_dragging.connect(_on_item_dropped)
 				item.get_node("MarginContainer/VBoxContainer/Button").text = str(idx) 
+				
+				#var tween = Tween.new()
+				#item.add_child(tween)
+				
 				_items[idx - 1] = item
 				_body.add_child(item)
 
@@ -158,15 +162,60 @@ func _position_items() -> void:
 	var y: int
 	
 	for item_idx in range(grid.x * grid.y):
-		match fill_direction:
-			E_FillDirection.VERTICAL:
-				x = item_idx / grid.y
-				y = item_idx % grid.y
-			_:
-				x = item_idx % grid.x
-				y = item_idx / grid.x
-		
+		match starting_point:
+			E_StartingPoint.TOP_LEFT:
+				if fill_direction == E_FillDirection.HORIZONTAL:
+					x = item_idx % grid.x
+					y = item_idx / grid.x
+				else:  # VERTICAL
+					x = item_idx / grid.y
+					y = item_idx % grid.y
+			
+			E_StartingPoint.TOP_RIGHT:
+				if fill_direction == E_FillDirection.HORIZONTAL:
+					x = grid.x - 1 - (item_idx % grid.x)
+					y = item_idx / grid.x
+				else:  # VERTICAL
+					x = grid.x - 1 - (item_idx / grid.y)
+					y = item_idx % grid.y
+			
+			E_StartingPoint.BOTTOM_LEFT:
+				if fill_direction == E_FillDirection.HORIZONTAL:
+					x = item_idx % grid.x
+					y = grid.y - 1 - (item_idx / grid.x)
+				else:  # VERTICAL
+					x = item_idx / grid.y
+					y = grid.y - 1 - (item_idx % grid.y)
+			
+			E_StartingPoint.BOTTOM_RIGHT:
+				if fill_direction == E_FillDirection.HORIZONTAL:
+					x = grid.x - 1 - (item_idx % grid.x)
+					y = grid.y - 1 - (item_idx / grid.x)
+				else:  # VERTICAL
+					x = grid.x - 1 - (item_idx / grid.y)
+					y = grid.y - 1 - (item_idx % grid.y)
+
+		# Position items if they exist
 		if _items[item_idx]:
+			
+			#var target_position = _cell_positions[x][y]
+			#var tween = _items[item_idx].get_node("Tween")
+			#
+			## Ensure the tween is ready to start
+			#tween.stop_all()
+			#
+			## Tween to the new position
+			#tween.interpolate_property(
+				#_items[item_idx], 
+				#"position", 
+				#_items[item_idx].position, 
+				#target_position, 
+				#0.5,  # Duration
+				#Tween.TRANS_LINEAR, 
+				#Tween.EASE_IN_OUT
+			#)
+			#tween.start()
+			
 			_items[item_idx].position = _cell_positions[x][y]
 
 func _calc_grid_positions() -> void:
