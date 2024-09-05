@@ -12,14 +12,26 @@ signal item_extruded(item: Control, old_pos: Vector2i)
 
 signal container_full(container: ODragContainer)
 
+enum E_StartingPoint {
+	TOP_LEFT,
+	TOP_RIGHT,
+	BOTTOM_LEFT,
+	BOTTOM_RIGHT,
+}
+
+enum E_FillDirection {
+	HORIZONTAL,
+	VERTICAL,
+}
+
 @export_category("Drag Container")
 @export_category("Items")
 
 @export var init_items: Array[PackedScene]:
 	set(value):
 		var max_items: int = grid.x * grid.y
-		if value.size() >= max_items:
-			init_items = value.slice(0, max_items + 1)
+		if value.size() >= max_items and (_var_ready or Engine.is_editor_hint()) :
+			init_items = value.slice(0, max_items)
 			pass
 		else:
 			init_items = value
@@ -39,8 +51,18 @@ signal container_full(container: ODragContainer)
 ## The spaces around the positions
 @export var grid_separation := Vector2(0,0)
 
+@export var min_grid_pos_size := Vector2(100,100)
+@export var max_grid_pos_size := Vector2(100,100)
+
 @export var min_items_size := Vector2(100, 100)
 @export var max_items_size := Vector2(100, 100)
+
+@export var starting_point := E_StartingPoint.TOP_LEFT
+@export var fill_direction := E_FillDirection.HORIZONTAL:
+	set(value):
+		fill_direction = value
+		_postion_items()
+
 
 @export_group("Animation")
 ## For smooth translations on the other nodes when a sort happens 
@@ -77,6 +99,7 @@ var _cell_positions: Array[Array]
 var _cell_dimensions: Vector2
 var _scroll_container := ScrollContainer.new()
 var _body := Control.new()
+var _var_ready := false
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -95,7 +118,13 @@ func _ready():
 	
 	_initialize_items()
 	_postion_items()
-	_adj_items_size()
+	_adj_items_size.call_deferred()
+	
+	_var_ready = true
+
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _process(delta):
+	pass
 
 func _initialize_items() -> void:
 	var controls: Array[Control]
@@ -104,50 +133,60 @@ func _initialize_items() -> void:
 	
 	for item: Control in controls:
 		for child in item.get_children():
-			if child is ODraggableComponent:
+			if child is ODragableComponent:
 				_items.append(item)
 				_body.add_child(item)
-	
-
 
 func _initialize_cell_positions_array() -> void:
 	_cell_positions.resize(grid.x)
 	for i in range(grid.x):
 		for j in range(grid.y):
 			_cell_positions[i].append(Vector2(0,0))
-			
-	#print(_cell_positions)
 
 func _postion_items() -> void:
 	var x: int
 	var y: int
 	
 	for item_idx in range(_items.size()):
-		x = item_idx % grid.x
-		y = item_idx / grid.x
+		match fill_direction:
+			E_FillDirection.VERTICAL:
+				x = item_idx / grid.y
+				y = item_idx % grid.y
+			_:
+				x = item_idx % grid.x
+				y = item_idx / grid.x
 		
-		#print(str(x) +" " +  str(y))
 		_items[item_idx].position = _cell_positions[x][y]
 
 func _calc_grid_positions() -> void:
 	_cell_dimensions.x = (size.x - (grid.x - 1) * grid_separation.x) / grid.x
 	_cell_dimensions.y = (size.y - (grid.y - 1) * grid_separation.y) / grid.y
 	
+	if max_items_size.x > 0:
+		_cell_dimensions.x = min(_cell_dimensions.x, max_items_size.x)
+	_cell_dimensions.x = max(_cell_dimensions.x, min_items_size.x)
+	
+	if max_items_size.y > 0:
+		_cell_dimensions.y = min(_cell_dimensions.y, max_items_size.y)
+	_cell_dimensions.y = max(_cell_dimensions.y, min_items_size.y)
+	
+	
 	for col in range(grid.x):
 		for row in range(grid.y):
 			
-			var min_x: = col * (min_items_size.x + grid_separation.x)
-			var min_y: = row * (min_items_size.y + grid_separation.y)
+			var min_x: = col * (min_grid_pos_size.x + grid_separation.x)
+			var min_y: = row * (min_grid_pos_size.y + grid_separation.y)
 			
 			var max_x
 			var max_y
-			if max_items_size.x > 0:
-				max_x = col * (max_items_size.x + grid_separation.x)
+			
+			if max_grid_pos_size.x > 0:
+				max_x = col * (max_grid_pos_size.x + grid_separation.x)
 			else:
 				max_x = INF
 			
-			if max_items_size.y > 0:
-				max_y = col * (max_items_size.y + grid_separation.y)
+			if max_grid_pos_size.y > 0:
+				max_y = row * (max_grid_pos_size.y + grid_separation.y)
 			else:
 				max_y = INF
 			
@@ -159,25 +198,15 @@ func _calc_grid_positions() -> void:
 			
 			#print("Position for cell [", col, "][", row, "]: x =", x_pos, " y =", y_pos)
 			_cell_positions[col][row] = Vector2(x_pos, y_pos)
+	
+	_body.custom_minimum_size.x = _cell_positions[grid.x-1][grid.y-1].x + _cell_dimensions.x
+	_body.custom_minimum_size.y = _cell_positions[grid.x-1][grid.y-1].y + _cell_dimensions.y
 
 func _adj_items_size() -> void:
 	for item in _items:
-		if max_items_size.x > 0:
-			item.size.x = min(_cell_dimensions.x, max_items_size.x)
-		else:
-			item.size.x = _cell_dimensions.x
-			
-		if max_items_size.y > 0:
-			item.size.y = min(_cell_dimensions.y, max_items_size.y)
-		else:
-			item.size.y = _cell_dimensions.y
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta):
-	pass
-
+			item.size = _cell_dimensions
 
 func _on_resized() -> void:
 	_calc_grid_positions()
 	_postion_items()
-	_adj_items_size()
+	_adj_items_size.call_deferred()
