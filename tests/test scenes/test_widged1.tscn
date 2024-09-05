@@ -1,6 +1,14 @@
-[gd_scene load_steps=2 format=3 uid="uid://beklw77gaxcvi"]
+[gd_scene load_steps=3 format=3 uid="uid://beklw77gaxcvi"]
 
-[ext_resource type="Script" path="res://addons/osirisas_ui_extension/container/Draggable_Container/o_dragable_container.gd" id="1_iuffb"]
+[ext_resource type="Script" path="res://addons/osirisas_ui_extension/container/Draggable_Container/o_dragable_component.gd" id="1_i313e"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_a57ox"]
+bg_color = Color(0.6, 0.6, 0.6, 0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(6.64204e-06, 0.957831, 0.429398, 1)
 
 [node name="TestWidged1" type="Control"]
 custom_minimum_size = Vector2(300, 200)
@@ -8,14 +16,34 @@ layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_right = -852.0
+offset_bottom = -448.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="ODragableComponent" type="Control" parent="."]
-anchors_preset = 0
-offset_right = 40.0
-offset_bottom = 40.0
-script = ExtResource("1_iuffb")
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -50.0
+offset_top = -50.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 1
+script = ExtResource("1_i313e")
+drag_delay = 0.2
+
+[node name="Panel" type="Panel" parent="ODragableComponent"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_a57ox")
 
 [node name="Panel" type="Panel" parent="."]
 layout_mode = 1
@@ -80,3 +108,11 @@ text = "test"
 layout_mode = 2
 size_flags_horizontal = 3
 text = "test"
+
+[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/HBoxContainer2"]
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 2
+text = "[ : : ]
+"
+horizontal_alignment = 1
+vertical_alignment = 1
