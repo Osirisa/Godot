@@ -155,7 +155,6 @@ func _initialize_items() -> void:
 			if child is ODragableComponent:
 				child = child as ODragableComponent
 				child.end_dragging.connect(_on_item_dropped)
-				item.get_node("MarginContainer/VBoxContainer/Button").text = str(idx) 
 				
 				_items[idx - 1] = item
 				_body.add_child(item)
@@ -289,7 +288,7 @@ func _calc_arr_pos(pos: Vector2i) -> int:
 			item_idx = y * grid.x + x
 	
 	item_idx = clamp(item_idx, 0, (grid.x * grid.y) - 1)
-	
+	print(item_idx)
 	return item_idx
 
 func _magnet_reorder_items() ->void:

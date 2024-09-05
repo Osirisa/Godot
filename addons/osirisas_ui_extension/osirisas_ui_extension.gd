@@ -21,6 +21,14 @@ func _enter_tree():
 	add_custom_type("ODateSelectLineEdit", "Control",
 					preload("res://addons/osirisas_ui_extension/date/Nodes/date_select/date_select_line_edit/o_date_select_line_edit.gd"),
 					preload("res://icon.svg"))
+	
+	add_custom_type("ODragContainer", "Container",
+					preload("res://addons/osirisas_ui_extension/container/Draggable_Container/o_drag_grid_container.gd"),
+					preload("res://icon.svg"))
+	
+	add_custom_type("ODragComponent", "Control",
+					preload("res://addons/osirisas_ui_extension/container/Draggable_Container/o_dragable_component.gd"),
+					preload("res://icon.svg"))
 
 func _exit_tree():
 	remove_custom_type("OTableNode")
@@ -28,3 +36,5 @@ func _exit_tree():
 	remove_custom_type("ORegexLineEdit")
 	remove_custom_type("ODateSelect")
 	remove_custom_type("ODateSelectLineEdit")
+	remove_custom_type("ODragContainer")
+	remove_custom_type("ODragComponent")
