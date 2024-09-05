@@ -36,6 +36,7 @@ enum E_FillDirection {
 		else:
 			init_items = value
 
+
 @export_group("Grid")
 ## The Grid, on which you can position your nodes on
 @export var grid := Vector2i(1,1):
@@ -57,11 +58,14 @@ enum E_FillDirection {
 @export var min_items_size := Vector2(100, 100)
 @export var max_items_size := Vector2(100, 100)
 
+@export var magnet_reorder := true
+
 @export var starting_point := E_StartingPoint.TOP_LEFT
 @export var fill_direction := E_FillDirection.HORIZONTAL:
 	set(value):
 		fill_direction = value
-		_postion_items()
+		if _var_ready:
+			_position_items()
 
 
 @export_group("Animation")
@@ -103,7 +107,6 @@ var _var_ready := false
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	
 	resized.connect(_on_resized)
 	
 	_body.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -116,9 +119,11 @@ func _ready():
 	_initialize_cell_positions_array()
 	_calc_grid_positions()
 	
+	_items.resize(grid.x * grid.y)
 	_initialize_items()
-	_postion_items()
+	
 	_adj_items_size.call_deferred()
+	_position_items()
 	
 	_var_ready = true
 
@@ -131,10 +136,15 @@ func _initialize_items() -> void:
 	for scene in init_items:
 		controls.append(scene.instantiate())
 	
+	var idx = 0
 	for item: Control in controls:
+		idx += 1
 		for child in item.get_children():
 			if child is ODragableComponent:
-				_items.append(item)
+				child = child as ODragableComponent
+				child.end_dragging.connect(_on_item_dropped)
+				item.get_node("MarginContainer/VBoxContainer/Button").text = str(idx) 
+				_items[idx - 1] = item
 				_body.add_child(item)
 
 func _initialize_cell_positions_array() -> void:
@@ -143,11 +153,11 @@ func _initialize_cell_positions_array() -> void:
 		for j in range(grid.y):
 			_cell_positions[i].append(Vector2(0,0))
 
-func _postion_items() -> void:
+func _position_items() -> void:
 	var x: int
 	var y: int
 	
-	for item_idx in range(_items.size()):
+	for item_idx in range(grid.x * grid.y):
 		match fill_direction:
 			E_FillDirection.VERTICAL:
 				x = item_idx / grid.y
@@ -156,7 +166,8 @@ func _postion_items() -> void:
 				x = item_idx % grid.x
 				y = item_idx / grid.x
 		
-		_items[item_idx].position = _cell_positions[x][y]
+		if _items[item_idx]:
+			_items[item_idx].position = _cell_positions[x][y]
 
 func _calc_grid_positions() -> void:
 	_cell_dimensions.x = (size.x - (grid.x - 1) * grid_separation.x) / grid.x
@@ -199,14 +210,53 @@ func _calc_grid_positions() -> void:
 			#print("Position for cell [", col, "][", row, "]: x =", x_pos, " y =", y_pos)
 			_cell_positions[col][row] = Vector2(x_pos, y_pos)
 	
-	_body.custom_minimum_size.x = _cell_positions[grid.x-1][grid.y-1].x + _cell_dimensions.x
-	_body.custom_minimum_size.y = _cell_positions[grid.x-1][grid.y-1].y + _cell_dimensions.y
+	_body.custom_minimum_size.x = int(_cell_positions[grid.x-1][grid.y-1].x + _cell_dimensions.x)
+	_body.custom_minimum_size.y = int(_cell_positions[grid.x-1][grid.y-1].y + _cell_dimensions.y)
 
 func _adj_items_size() -> void:
 	for item in _items:
+		if item:
 			item.size = _cell_dimensions
+
+func _calc_arr_pos(pos: Vector2i) -> int:
+	var x = int((pos.x + _cell_dimensions.x/2) / (_cell_dimensions.x + grid_separation.x))
+	var y = int((pos.y + _cell_dimensions.y/2) / (_cell_dimensions.y + grid_separation.y))
+	
+	var item_idx
+	match fill_direction:
+		E_FillDirection.VERTICAL:
+			item_idx = x * grid.y + y
+		_:
+			item_idx = y * grid.x + x
+	
+	return item_idx
+
+func _magnet_reorder_items() ->void:
+	for idx in range(_items.size()):
+		if !_items[idx]:
+			_items.remove_at(idx)
+			_items.append(null)
 
 func _on_resized() -> void:
 	_calc_grid_positions()
-	_postion_items()
 	_adj_items_size.call_deferred()
+	_position_items.call_deferred()
+
+func _on_item_dropped(item) -> void:
+	var old_index = _items.find(item)
+	
+	var new_pos: Vector2 = item.position
+	var new_index = _calc_arr_pos(new_pos)
+	
+	var item_on_pos: Control = null
+	
+	if _items[new_index]:
+		_items[old_index] = _items[new_index]
+	else:
+		_items[old_index] = null
+	_items[new_index] = item
+	
+	if magnet_reorder:
+		_magnet_reorder_items()
+	
+	_position_items()

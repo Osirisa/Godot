@@ -2,7 +2,7 @@ class_name ODragableComponent
 extends Control
 
 signal start_dragging()
-signal end_dragging()
+signal end_dragging(parent: Control)
 
 @export var enable_dragging := true
 @export var drag_delay := 1.0
@@ -38,7 +38,7 @@ func _input(event):
 				_drag_timer.stop()  # Stop the timer if it's running
 				if _dragging:
 					_dragging = false
-					emit_signal("end_dragging")
+					end_dragging.emit(get_parent())
 		
 		elif event is InputEventMouseMotion and _dragging:
 			# Only move the parent if we are dragging
@@ -52,7 +52,7 @@ func _input(event):
 				accept_event()  # Consume the event
 		elif _dragging:
 				_dragging = false
-				emit_signal("end_dragging")
+				end_dragging.emit(get_parent())
 
 func mouse_on_widget() -> bool:
 	return get_global_rect().has_point(get_global_mouse_position())
