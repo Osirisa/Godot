@@ -105,7 +105,9 @@ var _cell_positions: Array[Array]
 var _cell_dimensions: Vector2
 var _scroll_container := ScrollContainer.new()
 var _body := Control.new()
+
 var _var_ready := false
+var _first_time := true
 
 var _tween: Tween
 
@@ -166,7 +168,7 @@ func _initialize_cell_positions_array() -> void:
 			_cell_positions[i].append(Vector2(0,0))
 
 func _restart_tween() -> void:
-	if _tween and _tween.is_running():
+	if _tween:
 		_tween.stop()
 		_tween.kill()
 	if not _tween or not _tween.is_valid():
@@ -218,14 +220,19 @@ func _position_items() -> void:
 			var target_position = _cell_positions[x][y]
 			var item: Control = _items[item_idx]
 			
-			if _tween:
-			# Tween to the new position using the single Tween instance
-				_tween.tween_property(
-					item, 
-					"position", 
-					target_position, 
-					0.25,  # Duration
-				).set_trans(Tween.TRANS_LINEAR).set_ease(Tween.EASE_IN_OUT)
+			if !_first_time:
+				if _tween:
+				# Tween to the new position using the single Tween instance
+					_tween.tween_property(
+						item, 
+						"position", 
+						target_position, 
+						0.25,  # Duration
+					).set_trans(Tween.TRANS_LINEAR).set_ease(Tween.EASE_IN_OUT)
+			else:
+				item.position = _cell_positions[x][y]
+	
+	_first_time = false
 
 func _calc_grid_positions() -> void:
 	_cell_dimensions.x = (size.x - (grid.x - 1) * grid_separation.x) / grid.x
@@ -288,7 +295,7 @@ func _calc_arr_pos(pos: Vector2i) -> int:
 			item_idx = y * grid.x + x
 	
 	item_idx = clamp(item_idx, 0, (grid.x * grid.y) - 1)
-	print(item_idx)
+	
 	return item_idx
 
 func _magnet_reorder_items() ->void:
