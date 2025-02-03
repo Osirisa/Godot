@@ -41,7 +41,7 @@ signal item_selected(index: int)
 		if _o_popup:
 			_o_popup.item_height = item_height
 
-@export var column_widths: Array[int] = [0, 30, 100]:
+@export var column_widths: Array[int] = [30, 30, 100]:
 	set(value):
 		for i in range (3):
 			if value.size() <= i:
@@ -56,7 +56,7 @@ signal item_selected(index: int)
 		custom_minimum_size.x = total_length
 		#notify_property_list_changed()
 		if _o_popup:
-			_o_popup.column_widths = column_widths
+			_o_popup.column_widths = column_widths.duplicate(true)
 			
 
 
@@ -73,18 +73,30 @@ signal item_selected(index: int)
 
 
 @export_group("Items")
-@export var items: Array[OPopUpListItem]:
+@export var items: Array[OComboBoxItem]:
 	set(value):
-		for i in range(items.size(), value.size(), 1):
-			if not value[i]:
-				value[i] = OPopUpListItem.new()
-			value[i].id = i
+		var old_size = items.size()
 		items = value
-		if _o_popup:
-			print("synced")
-			_o_popup.items = items
+		for i in range(old_size, items.size()):
+			if not items[i]:
+				items[i] = OComboBoxItem.new()
+			items[i].id = i
 		
-		notify_property_list_changed()
+		if _o_popup:
+			_o_popup.items.clear()
+			print("cleard")
+			for item in items:
+				var new_pop_item := OPopUpListItem.new()
+				
+				new_pop_item.checkable = OPopUpListItem.CHECKABLE_SELECT.AS_RADIO_BUTTON
+				new_pop_item.disabled = item.disabled
+				new_pop_item.text = item.text
+				new_pop_item.icon = item.icon
+				new_pop_item.id = item.id
+				new_pop_item.separator = item.separator
+				print("append")
+				_o_popup.items.append(new_pop_item)
+			_o_popup.build_body()
 
 #Controls
 var _p_background: Panel = Panel.new()
@@ -95,7 +107,7 @@ var _pb_popup: Button = Button.new()
 var _is_ready: bool = false
 
 #private vars
-var _o_popup: OPopUpListMenu
+var _o_popup: OPopUpList
 var _longest_item: int = column_widths[2]:
 	set(value):
 		_longest_item = max(value, min_length)
@@ -106,8 +118,9 @@ var _longest_item: int = column_widths[2]:
 var _column_sizes_old: Array[int]
 
 func _init() -> void:
-	_o_popup = OPopUpListMenu.new()
-	_o_popup.popup_hide.connect(_on_popup_hide)
+	_o_popup = OPopUpList.new()
+	_o_popup.set_unparent_when_invisible(true)
+
 
 func _enter_tree() -> void:
 	self.custom_minimum_size = Vector2(102, 32)
@@ -181,7 +194,7 @@ func get_item_tooltip(idx: int) -> String:
 	# TODO:
 	return ""
 
-func get_popup() -> OPopUpListMenu:
+func get_popup() -> OPopUpList:
 	return _o_popup
 
 func get_selectable_item(from_last: bool = false) -> int:
@@ -245,39 +258,23 @@ func set_item_tooltip(idx: int, tooltip: String)-> void:
 	return
 
 func show_popup() -> void:
-	#if _o_popup.get_parent():
-		#_o_popup.popup()
-	#else:
-	if not _o_popup:
-		print("new")
-		_create_popup()
-	
-	_o_popup.popup_exclusive(self, Rect2i(
-								#Position
-								Vector2i(self.global_position.x, self.global_position.y + self.size.y + 1), 
-								#Size
-								Vector2i(self.size.x, _o_popup.size.y)
-							)
-						)
-	
- 
-func _create_popup() -> void:
-	if not _o_popup:
-		print("newnw")
-		_o_popup = OPopUpListMenu.new()
-	_o_popup.set_unparent_when_invisible(true)
-	_o_popup.largest_size.connect(_on_size_changed)
-	_o_popup.popup_hide.connect(_on_popup_hide)
-	item_height = item_height
-	column_widths = column_widths
-	items = items
-	
-	print(items)
-	print(_o_popup.items)
+	if _o_popup.get_parent():
+		_o_popup.notify_property_list_changed()
+		_o_popup.popup()
+	else:
+		_o_popup.popup_exclusive(self, Rect2i(Vector2i(self.global_position.x, self.global_position.y + self.size.y + 1),Vector2i(self.size.x, _o_popup.size.y)))
 
-func _on_popup_hide() -> void:
-	_o_popup.close_requested.emit()
-	_o_popup.queue_free()
+#func _create_popup() -> void:
+	#if not _o_popup:
+		#print("newnw")
+		#_o_popup = OPopUpListMenu.new()
+	#_o_popup.largest_size.connect(_on_size_changed)
+	#item_height = item_height
+	#column_widths = column_widths
+	#items = items
+	#
+	#print(items)
+	#print(_o_popup.items)
 
 func _on_size_changed(new_size: float) -> void:
 	if fit_longest_item:

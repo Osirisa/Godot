@@ -1,5 +1,4 @@
-@tool
-class_name OPopUpListMenu
+class_name OPopUpList
 extends Popup
 
 signal item_selected(index: int)
@@ -11,11 +10,12 @@ signal largest_size(lsize: float)
 
 @export var items: Array[OPopUpListItem]:
 	set(value):
-		for i in range(items.size(), value.size(), 1):
-			if not value[i]:
-				value[i] = OPopUpListItem.new()
-			value[i].id = i
+		var old_size = items.size()
 		items = value
+		for i in range(old_size, items.size()):
+			if not items[i]:
+				items[i] = OPopUpListItem.new()
+			items[i].id = i
 		if _is_ready:
 			build_body.call_deferred()
 
@@ -38,7 +38,7 @@ var _rows: Array[Control]
 # private variables
 var cb_group: ButtonGroup = ButtonGroup.new()
 
-var _visibility: Array[bool] = [false, false, false, false]
+var _visibility: Array[bool] = [false, false, false]
 var _is_ready: bool = false
 
 var _x_offsets: Array[int]
@@ -84,23 +84,27 @@ func _ready() -> void:
 ## Clears and builds the whole body
 func build_body():
 	
-	print("Build Body")
+	#print("Build Body")
 	
 	_clear_body()
 	_change_column_sizes()
 	_refresh_x_offsets_arr()
-	print(_x_offsets)
+	#print(_x_offsets)
 	
-	_visibility = [false, false, false, false] #reset visibility
+	_visibility = [false, false, false] #reset visibility
 	
 	var call_item_changed = Callable(self, "_on_item_changed")
 	
 	_l_text_size = 0
 	for i in range(items.size()):
-		var item = items[i]
+		var item: OPopUpListItem = items[i] as OPopUpListItem
+		
+		if not item:
+			continue
 		
 		for connection: Dictionary in item.otext_changed.get_connections():
 			if connection["callable"] == call_item_changed:
+				print("disconnect")
 				item.otext_changed.disconnect(call_item_changed)
 		
 		item.otext_changed.connect(call_item_changed)
@@ -177,7 +181,7 @@ func _refresh_x_offsets_arr() -> void:
 
 func _refresh_x_positions() -> void:
 	_refresh_x_offsets_arr()
-	print(_x_offsets)
+	#print(_x_offsets)
 	
 	for row: Control in _rows:
 		for i in range(row.get_children().size()):
@@ -275,6 +279,7 @@ func _on_btn_pressed(index: int) -> void:
 	item_selected.emit(index)
 
 func _on_item_changed(item: OPopUpListItem) -> void:
+	print("item changed")
 	var new_size = _get_text_width(item.text)
 	if _largest_item == item:
 		if _l_text_size > new_size:
