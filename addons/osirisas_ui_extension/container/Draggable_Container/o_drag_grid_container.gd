@@ -32,17 +32,21 @@ static var all_drag_containers: Array[ODragContainer] = []
 @export var init_items: Array[PackedScene]:
 	set(value):
 		var max_items: int = grid.x * grid.y
-		if value.size() >= max_items and (_var_ready or Engine.is_editor_hint()) :
+		if (value.size() >= max_items) and (self.is_node_ready() or (Engine.is_editor_hint() and _var_grid_ready)) :
 			init_items = value.slice(0, max_items)
-			pass
 		else:
 			init_items = value
+		
+		if Engine.is_editor_hint() and self.is_node_ready():
+			_initialize_items.call_deferred()
 
 
 @export_group("Grid")
 ## The Grid, on which you can position your nodes on
 @export var grid := Vector2i(1,1):
 	set(value):
+		_var_grid_ready = true
+		
 		var x = maxi(value.x, 1)
 		var y = maxi(value.y, 1)
 		
@@ -66,8 +70,8 @@ static var all_drag_containers: Array[ODragContainer] = []
 @export var fill_direction := E_FillDirection.HORIZONTAL:
 	set(value):
 		fill_direction = value
-		if _var_ready:
-			_position_items()
+		if self.is_node_ready():
+			_position_items.call_deferred()
 
 
 @export_group("Animation")
@@ -90,6 +94,7 @@ static var all_drag_containers: Array[ODragContainer] = []
 
 var dragging := false
 var drag_offset: Vector2
+
 var full := false
 
 var _items: Array[Control] = []:
@@ -105,7 +110,9 @@ var _cell_positions: Array[Array]
 var _cell_dimensions: Vector2
 var _scroll_container := ScrollContainer.new()
 var _body := Control.new()
-var _var_ready := false
+
+var _var_grid_ready := false
+var _first_time := true
 
 var _tween: Tween
 
@@ -128,12 +135,8 @@ func _ready():
 	_calc_grid_positions()
 	
 	_items.resize(grid.x * grid.y)
-	_initialize_items()
 	
-	_adj_items_size.call_deferred()
-	_position_items()
-	
-	_var_ready = true
+	_initialize_items.call_deferred()
 
 func _exit_tree():
 	# Unregister this container from the static array when it is removed from the scene
@@ -142,22 +145,120 @@ func _exit_tree():
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
 	pass
+	
+## Adds a new Item(Widget) to the DragContainer
+## If the set position is occupied, the other Item will be send to the back
+func add_dragable_item(new_item: Control, position = -1) -> void:
+	new_item.size = _cell_dimensions
+	_body.add_child(new_item)
+	
+	var comp: ODragableComponent = _get_dragable_comp(new_item)
+	if comp != null and not Engine.is_editor_hint():
+		comp.end_dragging.connect(_on_item_dropped)
+	
+	if position < 0:
+		for i in range(_items.size()):
+			if _items[i] == null:
+				_items[i] = new_item
+				break
+	else:
+		var old_index = _items.find(new_item)
+		
+		if old_index < 0:
+			old_index = _items.size()
+			
+		var new_index = position
+		
+		var item_on_pos: Control = null
+		
+		if _items[new_index]:
+			_items[old_index] = _items[new_index]
+		else:
+			_items[old_index] = null
+		_items[new_index] = new_item
+	
+	if magnet_reorder:
+		_magnet_reorder_items()
+	
+	_position_items.call_deferred()
+
+## Adds a new Scene(Widget) to the DragContainer
+## If the set position is occupied, the other Item will be send to the back
+func add_dragable_scene(dragable_scene: PackedScene, position: int = -1) -> void:
+	if full:
+		printerr("Container: " + self.name + " is full")
+		return
+	
+	var new_item: Control = dragable_scene.instantiate()
+	_body.add_child(new_item)
+	new_item.set_deferred("size", _cell_dimensions)
+	
+	var comp: ODragableComponent = _get_dragable_comp(new_item)
+	if comp != null and not Engine.is_editor_hint():
+		comp.end_dragging.connect(_on_item_dropped)
+	
+	if position < 0:
+		for i in range(_items.size()):
+			if _items[i] == null:
+				_items[i] = new_item
+				break
+				
+		#_items.append(new_item)
+	else:
+		var old_index = _items.find(new_item)
+		
+		if old_index < 0:
+			old_index = _items.size()
+			
+		var new_index = position
+		
+		var item_on_pos: Control = null
+		
+		if _items[new_index]:
+			_items[old_index] = _items[new_index]
+		else:
+			_items[old_index] = null
+		_items[new_index] = new_item
+	
+	if magnet_reorder:
+		_magnet_reorder_items()
+	
+	_position_items.call_deferred()
 
 func _initialize_items() -> void:
-	var controls: Array[Control]
-	for scene in init_items:
-		controls.append(scene.instantiate())
+	for item in _items:
+		if item:
+			_body.remove_child(item)
 	
-	var idx = 0
-	for item: Control in controls:
-		idx += 1
-		for child in item.get_children():
+	_items.clear()
+	_items.resize(grid.x * grid.y) 
+	
+	for scene in init_items:
+		if scene:
+			add_dragable_scene(scene)
+	_position_items.call_deferred()
+
+#func _initialize_items() -> void:
+	#var controls: Array[Control]
+	#for scene in init_items:
+		#if scene:
+			#controls.append(scene.instantiate())
+	#
+	#var idx = 0
+	#for item: Control in controls:
+		#idx += 1
+		#var comp = _get_dragable_comp(item)
+		#if comp != null:
+			#comp.end_dragging.connect(_on_item_dropped)
+				#
+		#_items[idx - 1] = item
+		#_body.add_child(item)
+
+func _get_dragable_comp(item: Control) -> ODragableComponent:
+	for child in item.get_children():
 			if child is ODragableComponent:
-				child = child as ODragableComponent
-				child.end_dragging.connect(_on_item_dropped)
-				
-				_items[idx - 1] = item
-				_body.add_child(item)
+				return child as ODragableComponent
+	return null
 
 func _initialize_cell_positions_array() -> void:
 	_cell_positions.resize(grid.x)
@@ -166,7 +267,7 @@ func _initialize_cell_positions_array() -> void:
 			_cell_positions[i].append(Vector2(0,0))
 
 func _restart_tween() -> void:
-	if _tween and _tween.is_running():
+	if _tween:
 		_tween.stop()
 		_tween.kill()
 	if not _tween or not _tween.is_valid():
@@ -178,7 +279,6 @@ func _position_items() -> void:
 	var y: int
 	
 	_restart_tween()
-	
 	for item_idx in range(grid.x * grid.y):
 		match starting_point:
 			E_StartingPoint.TOP_LEFT:
@@ -218,14 +318,19 @@ func _position_items() -> void:
 			var target_position = _cell_positions[x][y]
 			var item: Control = _items[item_idx]
 			
-			if _tween:
-			# Tween to the new position using the single Tween instance
-				_tween.tween_property(
-					item, 
-					"position", 
-					target_position, 
-					0.25,  # Duration
-				).set_trans(Tween.TRANS_LINEAR).set_ease(Tween.EASE_IN_OUT)
+			if !_first_time and not Engine.is_editor_hint():
+				if _tween != null:
+				# Tween to the new position using the single Tween instance
+					_tween.tween_property(
+						item, 
+						"position", 
+						target_position, 
+						0.25,  # Duration
+					).set_trans(Tween.TRANS_LINEAR).set_ease(Tween.EASE_IN_OUT)
+			else:
+				item.position = _cell_positions[x][y]
+	
+	_first_time = false
 
 func _calc_grid_positions() -> void:
 	_cell_dimensions.x = (size.x - (grid.x - 1) * grid_separation.x) / grid.x
@@ -288,21 +393,10 @@ func _calc_arr_pos(pos: Vector2i) -> int:
 			item_idx = y * grid.x + x
 	
 	item_idx = clamp(item_idx, 0, (grid.x * grid.y) - 1)
-	print(item_idx)
+	
 	return item_idx
 
-func _magnet_reorder_items() ->void:
-	for idx in range(_items.size()):
-		if !_items[idx]:
-			_items.remove_at(idx)
-			_items.append(null)
-
-func _on_resized() -> void:
-	_calc_grid_positions()
-	_adj_items_size.call_deferred()
-	_position_items.call_deferred()
-
-func _on_item_dropped(item) -> void:
+func _insert_item(item) -> void:
 	var old_index = _items.find(item)
 	
 	var new_pos: Vector2 = item.position
@@ -315,6 +409,20 @@ func _on_item_dropped(item) -> void:
 	else:
 		_items[old_index] = null
 	_items[new_index] = item
+
+func _magnet_reorder_items() ->void:
+	for idx in range(_items.size()-1, -1, -1):
+		if !_items[idx]:
+			_items.remove_at(idx)
+			_items.append(null)
+
+func _on_resized() -> void:
+	_calc_grid_positions()
+	_adj_items_size.call_deferred()
+	_position_items.call_deferred()
+
+func _on_item_dropped(item) -> void:
+	_insert_item(item)
 	
 	if magnet_reorder:
 		_magnet_reorder_items()

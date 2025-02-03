@@ -188,6 +188,22 @@ min_date = SubResource("Resource_utd1o")
 max_date = SubResource("Resource_y4nsg")
 regex_validator = "\\d"
 
+[node name="MenuButton" type="MenuButton" parent="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+item_count = 6
+popup/item_0/text = "test"
+popup/item_1/text = "test"
+popup/item_1/id = 1
+popup/item_2/text = "test"
+popup/item_2/id = 2
+popup/item_3/text = "test"
+popup/item_3/id = 3
+popup/item_4/text = "tessst"
+popup/item_4/id = 4
+popup/item_5/text = "tesssst"
+popup/item_5/id = 5
+
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_next_page" to="." method="_on_debug_next_page_pressed"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_previous_page" to="." method="_on_debug_previous_page_pressed"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_add_column" to="." method="_on_debug_add_column_pressed"]

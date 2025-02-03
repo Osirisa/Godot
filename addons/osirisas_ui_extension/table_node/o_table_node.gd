@@ -62,12 +62,13 @@ enum E_Sorting {
 			_column_visiblity = _column_visiblity.slice(0, header_titles.size())
 		
 		column_widths = column_widths
-		_column_count = header_titles.size()
+		
+		_refresh_last_visible_column()
 		
 		_refresh_x_offsets_arr()
 		_create_v_separators()
 		_create_headers.call_deferred()
-		notify_property_list_changed()
+		#notify_property_list_changed()
 
 ## The cell height of the header
 @export var header_cell_height := 30:
@@ -168,7 +169,7 @@ var current_page: int = 0:
 			_update_body_size.call_deferred()
 			_shortened = false
 		
-		if ((current_page + 1) * max_row_count_per_page) > _row_count:
+		if ((current_page + 1) * max_row_count_per_page) > _rows.size():
 			_update_body_size.call_deferred()
 			_shortened = true
 		
@@ -179,10 +180,6 @@ var current_page: int = 0:
 		_update_v_separators.call_deferred()
 
 #-----------------------------------------Private Var----------------------------------------------#
-
-# counts
-var _column_count: int = 0
-var _row_count: int = 0
 
 # Array for the changed cell widths (due to resizing)
 var _column_widths_temp := []
@@ -197,8 +194,8 @@ var _rows: Array[RowContent] = []
 var _column_visiblity: Array[bool] = []
 var _invisible_rows: Array[RowContent] = []
 
-var _last_visible_row: int = 0
-var _last_visible_column: int = 0
+var _last_visible_row: int = -1
+var _last_visible_column: int = -1
 var _offset_rows_visibility_pages: Array[int] = []
 
 # Seperators
@@ -243,9 +240,6 @@ var _culling_active_rows_old: Array[int] = []
 #-----------------------------------------Onready Var----------------------------------------------#
 
 #-----------------------------------------Init and Ready-------------------------------------------#
-
-func _init():
-	pass
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -322,13 +316,13 @@ func _input(event: InputEvent) -> void:
 
 #region Header Edit -------------
 
+## Adds a column. Can be invisible from the start.
 func add_column(title: String, cell_width := standard_cell_dimension.x, column_visiblity := true) -> void:
 	
 	column_widths.append(cell_width)
 	_column_widths_temp.append(cell_width)
 	_column_visiblity.append(column_visiblity)
 	
-	_column_count += 1
 	
 	header_titles.append(title)
 	
@@ -342,8 +336,9 @@ func add_column(title: String, cell_width := standard_cell_dimension.x, column_v
 	_update_v_separators.call_deferred()
 	_update_visible_rows.call_deferred()
 
-func insert_column(title, column_pos, cell_width := standard_cell_dimension.x, column_visiblity := true):
-	if not OTableUtility.check_column_input(column_pos, _column_count - 1):
+## Inserts a column at the specified position
+func insert_column(title: String, column_pos: int, cell_width := standard_cell_dimension.x, column_visiblity := true) -> void:
+	if not OTableUtility.check_column_input(column_pos, header_titles.size() - 1):
 		return
 	
 	column_widths.insert(column_pos, cell_width)
@@ -351,11 +346,9 @@ func insert_column(title, column_pos, cell_width := standard_cell_dimension.x, c
 	
 	_column_visiblity.insert(column_pos, column_visiblity)
 	
-	_column_count += 1
-	
 	header_titles.insert(column_pos, title)
 
-	for i in _row_count:
+	for i in _rows.size():
 		var row = _rows[i]
 		
 		var std_label = OTableUtility.create_standard_label()
@@ -371,22 +364,22 @@ func insert_column(title, column_pos, cell_width := standard_cell_dimension.x, c
 	_update_v_separators.call_deferred()
 	_update_visible_rows.call_deferred()
 
-func remove_column(column_pos):
-	if not OTableUtility.check_column_input(column_pos, _column_count-1):
+## Removes a column at the specified position
+func remove_column(column_pos: int) -> void:
+	if not OTableUtility.check_column_input(column_pos, header_titles.size()-1):
 		return
+	
 	
 	column_widths.remove_at(column_pos)
 	_column_widths_temp.remove_at(column_pos)
 	
 	_column_visiblity.remove_at(column_pos)
 	
-	_column_count = _column_count - 1 if _column_count > 0 else 0 
-	
 	header_titles.remove_at(column_pos)
-
-	for i in _row_count:
-		var row = _rows[i]
-		
+	if header_titles.size() == 0:
+		_culling_active_rows_old.clear()
+	
+	for row in _rows:
 		var parent = row.nodes[column_pos].get_parent()
 		
 		if parent:
@@ -404,8 +397,9 @@ func remove_column(column_pos):
 	_update_v_separators.call_deferred()
 	_update_visible_rows.call_deferred()
 
+## gets the total (visible + invisible) column count
 func get_column_count() -> int:
-	return _column_count
+	return header_titles.size()
 
 #endregion
 
@@ -414,7 +408,7 @@ func get_column_count() -> int:
 ## Adds a row to the table directly below the previous row can also called with no data, then it fills the row with empty labels
 func add_row(data: Array[Control] = [], height: float = standard_cell_dimension.y) -> void:
 
-	if data.size() > _column_count:
+	if data.size() > header_titles.size():
 		push_warning("data array input bigger then column count, excess nodes wont be shown!")
 	
 	var new_row := RowContent.new()
@@ -424,10 +418,10 @@ func add_row(data: Array[Control] = [], height: float = standard_cell_dimension.
 	new_row.row_height = height
 	new_row.row_height_temp = height
 	
+	for idx in range(data.size()):
+		new_row.editable.append(true)
 	
 	_rows.append(new_row)
-	
-	_row_count += 1
 	
 	_refresh_max_pages()
 	_fill_rows_arr()
@@ -439,8 +433,9 @@ func add_row(data: Array[Control] = [], height: float = standard_cell_dimension.
 	_update_v_separators.call_deferred()
 	_update_visible_rows.call_deferred()
 
-func insert_row(data: Array[Control], row_pos: int, height: float = standard_cell_dimension.y):
-	if not OTableUtility.check_row_input(row_pos, _row_count - 1):
+## Inserts a row at a specified position. Can also called with no data, then it fills the row with empty labels
+func insert_row(data: Array[Control], row_pos: int, height: float = standard_cell_dimension.y) -> void:
+	if not OTableUtility.check_row_input(row_pos, _rows.size() - 1):
 		return
 	
 	var new_row := RowContent.new()
@@ -450,8 +445,6 @@ func insert_row(data: Array[Control], row_pos: int, height: float = standard_cel
 	new_row.row_height = height
 	new_row.row_height_temp = height
 	_rows.insert(row_pos, new_row)
-	
-	_row_count += 1
 	
 	_refresh_max_pages()
 	_fill_rows_arr()
@@ -481,7 +474,6 @@ func add_rows_batch(data :Array, height: float = standard_cell_dimension.y) -> v
 			new_row.row_height_temp = height
 		
 		_rows.append(new_row)
-		_row_count += 1
 	
 	_refresh_max_pages()
 	_fill_rows_arr()
@@ -493,10 +485,10 @@ func add_rows_batch(data :Array, height: float = standard_cell_dimension.y) -> v
 
 ## Overrides the row from the Table 
 func set_row(data: Array[Control], row: int, clip_text: bool = true, height: float = standard_cell_dimension.y) -> void:
-	if not OTableUtility.check_row_input(row, _row_count - 1):
+	if not OTableUtility.check_row_input(row, _rows.size() - 1):
 		return
 	
-	if data.size() > _column_count:
+	if data.size() > header_titles.size():
 		push_warning("data array input bigger then column count, excess nodes wont be shown!")
 	
 	var edited_row := _rows[row]
@@ -514,7 +506,7 @@ func set_row(data: Array[Control], row: int, clip_text: bool = true, height: flo
 
 ## Removes the row from the Table
 func remove_row(row: int) -> void:
-	if not OTableUtility.check_row_input(row, _row_count - 1):
+	if not OTableUtility.check_row_input(row, _rows.size() - 1):
 		return
 	
 	var row_object = _rows[row]
@@ -536,8 +528,6 @@ func remove_row(row: int) -> void:
 
 	_rows.remove_at(row)
 	_culling_active_rows_old.clear()
-	
-	_row_count = _row_count - 1 if _row_count > 0 else 0
 	
 	_refresh_max_pages()
 	_refresh_last_visible_row()
@@ -565,7 +555,6 @@ func remove_rows_batch(rows_to_remove: Array[int]) -> void:
 			_invisible_rows.erase(_rows[rows_to_remove[index]])
 		
 		_rows.remove_at(rows_to_remove[index])
-		_row_count = _row_count - 1 if _row_count > 0 else 0
 	
 	_culling_active_rows_old.clear()
 	_refresh_max_pages()
@@ -583,8 +572,9 @@ func remove_rows_batch(rows_to_remove: Array[int]) -> void:
 	
 	_update_body_size()
 
+## Returns the current row count (visible + invisible)
 func get_row_count() -> int:
-	return _row_count
+	return _rows.size()
 
 #endregion
 
@@ -595,9 +585,6 @@ func clear() -> void:
 	_invisible_rows.clear()
 	_rows.clear()
 	header_titles.clear()
-	
-	_row_count = 0
-	_column_count = 0
 	
 	_max_pages = 0
 	current_page = 0
@@ -611,6 +598,7 @@ func clear() -> void:
 	_update_v_separators.call_deferred()
 	_update_visible_rows.call_deferred()
 
+## Updates the whole table
 func update_table() -> void:
 	_refresh_y_offsets_arr()
 	_refresh_x_offsets_arr()
@@ -622,29 +610,32 @@ func update_table() -> void:
 
 #region Cell edit ---------------
 
+## Returns the specified Row as an Array of Controls
 func get_row(row: int) -> Array:
-	if not OTableUtility.check_row_input(row, _row_count- 1):
+	if not OTableUtility.check_row_input(row, _rows.size()- 1):
 		return []
 	var row_contens: Array = []
 	row_contens = _rows[row].nodes.duplicate()
 	
 	return row_contens
 
+## Returns the Control inside of the specified cell
 func get_cell(row: int, column: int) -> Control:
 	#--check if row and column matches size of the arrays--
-	if not OTableUtility.check_row_input(row, _row_count- 1):
+	if not OTableUtility.check_row_input(row, _rows.size()- 1):
 		return null
 	
-	if not OTableUtility.check_column_input(column, _column_count - 1):
+	if not OTableUtility.check_column_input(column, header_titles.size() - 1):
 		return null
 	
 	return _rows[row].nodes[column]
 
+## Overrides the Control inside of the specified cell
 func set_cell(node: Control,row: int, column: int) -> void:
-	if not OTableUtility.check_row_input(row, _row_count- 1):
+	if not OTableUtility.check_row_input(row, _rows.size()- 1):
 		return
 	
-	if not OTableUtility.check_column_input(column, _column_count - 1):
+	if not OTableUtility.check_column_input(column, header_titles.size() - 1):
 		return
 	
 	_rows[row].nodes[column] = node
@@ -653,8 +644,9 @@ func set_cell(node: Control,row: int, column: int) -> void:
 	
 	_update_visible_rows.call_deferred()
 
+## Changes the height of the specified row
 func set_row_height(row: int, height: float) -> void:
-	if not OTableUtility.check_row_input(row, _row_count- 1):
+	if not OTableUtility.check_row_input(row, _rows.size()- 1):
 		return
 	
 	_rows[row].row_height_temp = height
@@ -662,9 +654,9 @@ func set_row_height(row: int, height: float) -> void:
 	_refresh_y_offsets_arr()
 	_update_visible_rows.call_deferred()
 	
-
+## Changes the width of the specified column
 func set_column_width(column: int, width: float) -> void:
-	if not OTableUtility.check_column_input(column, _column_count - 1):
+	if not OTableUtility.check_column_input(column, header_titles.size() - 1):
 		return
 	
 	_column_widths_temp[column] = width
@@ -678,7 +670,7 @@ func set_column_width(column: int, width: float) -> void:
 #region Visibility --------------
 
 func set_visibility_row(row: int, visible: bool) -> void:
-	if not OTableUtility.check_row_input(row, _row_count- 1):
+	if not OTableUtility.check_row_input(row, _rows.size()- 1):
 		return
 	
 	var row_object = _rows[row]
@@ -715,13 +707,13 @@ func set_visibility_row(row: int, visible: bool) -> void:
 	_update_body_size()
 
 func get_visibility_row(row: int) -> bool:
-	if not OTableUtility.check_row_input(row, _row_count- 1):
+	if not OTableUtility.check_row_input(row, _rows.size()- 1):
 		return false
 	
 	return _rows[row].row_visible
 
 func set_visibility_column(column: int, visible: bool) -> void:
-	if not OTableUtility.check_column_input(column, _column_count - 1):
+	if not OTableUtility.check_column_input(column, header_titles.size() - 1):
 		return
 	
 	_column_visiblity[column] = visible
@@ -735,7 +727,7 @@ func set_visibility_column(column: int, visible: bool) -> void:
 	_update_headers.call_deferred()
 
 func get_visibility_column(column: int) -> bool:
-	if not OTableUtility.check_column_input(column, _column_count - 1):
+	if not OTableUtility.check_column_input(column, header_titles.size() - 1):
 		return false
 	
 	return _column_visiblity[column]
@@ -764,19 +756,19 @@ func get_invisible_columns() -> Array[int]:
 #region Editablity --------------
 
 func set_editable_status_cell(row: int, column: int, edit_status: bool) -> void:
-	if not OTableUtility.check_row_input(row, _row_count- 1):
+	if not OTableUtility.check_row_input(row, _rows.size()- 1):
 		return
 
-	if not OTableUtility.check_column_input(column, _column_count - 1):
+	if not OTableUtility.check_column_input(column, header_titles.size() - 1):
 		return
 
 	_rows[row].editable[column] = edit_status
 
 func get_editable_status_cell(row: int, column: int) -> bool:
-	if not OTableUtility.check_row_input(row, _row_count- 1):
+	if not OTableUtility.check_row_input(row, _rows.size()- 1):
 		return false
 
-	if not OTableUtility.check_column_input(column, _column_count - 1):
+	if not OTableUtility.check_column_input(column, header_titles.size() - 1):
 		return false
 
 	return _rows[row].editable[column]
@@ -786,7 +778,7 @@ func get_editable_status_cell(row: int, column: int) -> bool:
 #region Sorting -----------------
 
 func sort_rows_by_column(column: int, sort: E_Sorting) -> void:
-	if not OTableUtility.check_column_input(column, _column_count - 1):
+	if not OTableUtility.check_column_input(column, header_titles.size() - 1):
 		return
 	
 	_sort_thread = Thread.new()
@@ -798,16 +790,16 @@ func sort_rows_by_column(column: int, sort: E_Sorting) -> void:
 #region Selection ---------------
 
 func select_row(row: int) -> void:
-	if not OTableUtility.check_row_input(row, _row_count- 1):
+	if not OTableUtility.check_row_input(row, _rows.size()- 1):
 		return
 
 	_select_single_row(row)
 
 func select_rows(start_row: int, end_row: int) -> void:
-	if not OTableUtility.check_row_input(start_row, _row_count- 1):
+	if not OTableUtility.check_row_input(start_row, _rows.size()- 1):
 		return
 
-	if not OTableUtility.check_row_input(end_row, _row_count- 1):
+	if not OTableUtility.check_row_input(end_row, _rows.size()- 1):
 		return
 
 	_select_single_row(start_row)
@@ -937,7 +929,7 @@ func _update_headers() -> void:
 		else:
 			children[idx].hide()
 
-func on_scroll_horizontal(value, body: bool):
+func on_scroll_horizontal(value, body: bool) -> void:
 	#print(value)
 	_scroll_container.set_block_signals(true)
 	_scroll_container_header.set_block_signals(true)
@@ -950,24 +942,26 @@ func on_scroll_horizontal(value, body: bool):
 	_scroll_container_header.set_block_signals(false)
 
 func _refresh_max_pages() -> void:
-	_max_pages = int((_row_count - 1 - _invisible_rows.size()) / max_row_count_per_page)
+	_max_pages = int((_rows.size() - 1 - _invisible_rows.size()) / max_row_count_per_page)
 	#print(str(_max_pages) + ", " + str(_invisible_rows.size()))
 
 
 func _refresh_last_visible_row() -> void:
 	if _rows.is_empty():
+		_last_visible_row = -1
 		return
 
-	for idx in range(_row_count - 1, -1, -1):
+	for idx in range(_rows.size() - 1, -1, -1):
 		if _rows[idx].row_visible:
 			_last_visible_row = idx
 			return
 
 func _refresh_last_visible_column() -> void:
 	if _column_visiblity.is_empty():
+		_last_visible_column = -1
 		return
 
-	for idx in range (_column_count - 1, -1, -1):
+	for idx in range (header_titles.size() - 1, -1, -1):
 		if _column_visiblity[idx]:
 			_last_visible_column = idx
 			return
@@ -984,8 +978,8 @@ func _recalc_row_offsets_visibility() -> void:
 		var start_rows = (max_row_count_per_page * i + _offset_rows_visibility_pages[x])
 		var end_rows = start_rows + max_row_count_per_page
 		
-		end_rows = clampi(end_rows, 0, _row_count)
-		start_rows = clampi(start_rows, 0, _row_count)
+		end_rows = clampi(end_rows, 0, _rows.size())
+		start_rows = clampi(start_rows, 0, _rows.size())
 		
 		var offsets = 0
 		var valid_rows = 0
@@ -996,7 +990,7 @@ func _recalc_row_offsets_visibility() -> void:
 				valid_rows += 1
 			else:
 				offsets += 1
-				end_rows = clampi(end_rows + 1, 0, _row_count)
+				end_rows = clampi(end_rows + 1, 0, _rows.size())
 			if valid_rows == max_row_count_per_page:
 				break
 			
@@ -1012,7 +1006,7 @@ func _recalc_row_offsets_visibility() -> void:
 ## Main function for inserting and visualizing the nodes
 func _update_visible_rows(value: int = 0) -> void:
 	var start_index: int = 0
-	var end_index: int = _row_count
+	var end_index: int = _rows.size()
 	
 	if value == 0:
 		value = _scroll_container.get_v_scroll_bar().value
@@ -1041,10 +1035,10 @@ func _update_visible_rows(value: int = 0) -> void:
 			end_index = page_end
 		
 	elif row_culling:
-		end_index = min(start_index + max_row_count_active_culling, _row_count)
+		end_index = min(start_index + max_row_count_active_culling, _rows.size())
 	
-	start_index = clampi(start_index, 0, _row_count)
-	end_index = clampi(end_index, 0, _row_count)
+	start_index = clampi(start_index, 0, _rows.size())
+	end_index = clampi(end_index, 0, _rows.size())
 	
 	if _culling_active_rows_old.is_empty():
 		_clr_body()
@@ -1106,7 +1100,7 @@ func _update_visible_rows(value: int = 0) -> void:
 				
 				_separator_group.add_child(row.horizontal_seperator)
 			
-			for col_idx in range(_column_count):
+			for col_idx in range(header_titles.size()):
 				var nodes = row.nodes
 				var node
 				var change_pos := true
@@ -1129,7 +1123,7 @@ func _update_visible_rows(value: int = 0) -> void:
 				
 				_update_row_selection_visuals(row)
 		else:
-			end_index = clampi(end_index + 1, 0, _row_count)
+			end_index = clampi(end_index + 1, 0, _rows.size())
 			print(end_index)
 		
 		row_idx += 1
@@ -1151,7 +1145,7 @@ func _fill_rows_arr() -> void:
 	for row in _rows:
 		nodes = row.nodes
 		
-		for col_idx in range(_column_count):
+		for col_idx in range(header_titles.size()):
 			if !(nodes.size() > col_idx):
 				var std_label = OTableUtility.create_standard_label()
 				
@@ -1183,7 +1177,7 @@ func _table_size() -> Vector2i:
 		if not _offset_rows_visibility_pages.is_empty():
 			last_pos += _offset_rows_visibility_pages[current_page]
 			
-		last_pos = clampi(last_pos, 0, _row_count - 1)
+		last_pos = clampi(last_pos, 0, _rows.size() - 1)
 		
 		table_size.y = _y_offsets[last_pos] + _rows[last_pos].row_height_temp + 8
 	else:
@@ -1227,7 +1221,7 @@ func _create_v_separators() -> void:
 	_header_separators.clear()
 
 		
-	for i in range(_column_count):
+	for i in range(header_titles.size()):
 		var sep = VSeparator.new()
 		var sep_header = VSeparator.new()
 		
@@ -1271,12 +1265,12 @@ func _update_h_separators() -> void:
 			if separator != null:
 				separator.position = Vector2(0, _y_offsets[idx] + row.row_height_temp - 2)
 				separator.visible = true
-				separator.set_size(Vector2(_x_offsets[_last_visible_column] + _column_widths_temp[_last_visible_column], 1))
+				if _last_visible_column >= 0:
+					separator.set_size(Vector2(_x_offsets[_last_visible_column] + _column_widths_temp[_last_visible_column], 1))
 		else:
 			if separator != null:
 				separator.visible = false
 	
-	#_update_headers.call_deferred()
 	_update_body_size()
 
 func _update_v_separators() -> void:
@@ -1293,16 +1287,16 @@ func _update_v_separators() -> void:
 				_header_separators[i].position = Vector2(pos, 0)
 				_header_separators[i].visible = true
 				
-				if _row_count > 0:
+				if _rows.size() > 0:
 					if pagination:
 						var index: int = max_row_count_per_page * (current_page + 1) - 1
 						var rows_index := index
 						if not _offset_rows_visibility_pages.is_empty():
 							rows_index += _offset_rows_visibility_pages[current_page]
-						rows_index = clampi(rows_index, 0, _row_count - 1)
+						rows_index = clampi(rows_index, 0, _rows.size() - 1)
 						
-						if index > _row_count:
-							rows_index = _row_count - 1
+						if index > _rows.size():
+							rows_index = _rows.size() - 1
 						
 						_vertical_separators[i].set_size(Vector2(1, _y_offsets[rows_index] + _rows[rows_index].row_height_temp))
 					else:
@@ -1320,11 +1314,10 @@ func _update_v_separators() -> void:
 func _refresh_x_offsets_arr() -> void:
 	_x_offsets.clear()
 	
-	var offsets: Array[int] = []
-	offsets.resize(_column_count)
+	var offsets: Array[int] = [] 
+	offsets.resize(header_titles.size())
 	offsets.fill(0)
-	
-	for i in range (_column_count):
+	for i in range(header_titles.size()):
 		if _column_visiblity[i]:
 			for x in range (i):
 				if _column_visiblity[x]:
@@ -1342,11 +1335,11 @@ func _refresh_y_offsets_arr() -> void:
 	var start: int
 	var end: int
 	
-	offsets.resize(_row_count)
+	offsets.resize(_rows.size())
 	offsets.fill(0)
 	
 	if pagination:
-		start = clampi(max_row_count_per_page * current_page, 0, _row_count)
+		start = clampi(max_row_count_per_page * current_page, 0, _rows.size())
 		end = max_row_count_per_page * (current_page + 1)
 		
 		if not _offset_rows_visibility_pages.is_empty():
@@ -1355,10 +1348,10 @@ func _refresh_y_offsets_arr() -> void:
 			
 			end += _offset_rows_visibility_pages[current_page]
 		
-		end = clampi(end, 0, _row_count)
+		end = clampi(end, 0, _rows.size())
 	else:
 		start = 0
-		end = _row_count
+		end = _rows.size()
 	
 	for i in range(start, end):
 		if _rows[i].row_visible:
@@ -1487,13 +1480,13 @@ func _edit_cell(row_idx: int, column_idx: int) -> void:
 		line_edit.grab_focus.call_deferred()
 
 
-func _clear_node_theme(node: Control):
+func _clear_node_theme(node: Control) -> void:
 	node.theme = null
 	var parent = node.get_parent()
 	if parent:
 		parent.theme = null
 
-func _reapply_theme(node: Control, theme: Theme):
+func _reapply_theme(node: Control, theme: Theme) -> void:
 	node.theme = theme
 	var parent = node.get_parent()
 	if parent:

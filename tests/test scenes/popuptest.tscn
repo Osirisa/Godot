@@ -1,0 +1,53 @@
+[gd_scene load_steps=8 format=3 uid="uid://4obi013x7tgq"]
+
+[ext_resource type="Script" path="res://tests/test scenes/popuptest.gd" id="1_pcwg3"]
+[ext_resource type="Texture2D" uid="uid://cdeirupmsxqcj" path="res://addons/osirisas_ui_extension/combo_box/arrow_drop_down_48dp.svg" id="2_dgpkb"]
+[ext_resource type="Script" path="res://addons/osirisas_ui_extension/custom_popupmenu/o_popuplist_item.gd" id="3_xdlb8"]
+[ext_resource type="Script" path="res://addons/osirisas_ui_extension/combo_box/o_combo_box.gd" id="4_mtj1s"]
+
+[sub_resource type="Resource" id="Resource_qs3yg"]
+script = ExtResource("3_xdlb8")
+text = "adawd"
+icon = ExtResource("2_dgpkb")
+checkable = 0
+checked = false
+id = 0
+disabled = false
+separator = false
+
+[sub_resource type="Resource" id="Resource_1e1wn"]
+script = ExtResource("3_xdlb8")
+text = "test"
+checkable = 0
+checked = false
+id = 1
+disabled = false
+separator = false
+
+[sub_resource type="Resource" id="Resource_wxyuc"]
+script = ExtResource("3_xdlb8")
+text = ""
+checkable = 0
+checked = false
+id = 2
+disabled = false
+separator = false
+
+[node name="Popuptest" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_pcwg3")
+
+[node name="OComboBox" type="Control" parent="."]
+custom_minimum_size = Vector2(140, 32)
+anchors_preset = 0
+offset_right = 102.0
+offset_bottom = 40.0
+script = ExtResource("4_mtj1s")
+fit_longest_item = false
+column_widths = Array[int]([0, 40, 100, 0])
+items = Array[ExtResource("3_xdlb8")]([SubResource("Resource_qs3yg"), SubResource("Resource_1e1wn"), SubResource("Resource_wxyuc")])
