@@ -112,6 +112,7 @@ var _scroll_container := ScrollContainer.new()
 var _body := Control.new()
 
 var _var_grid_ready := false
+
 var _first_time := true
 
 var _tween: Tween
