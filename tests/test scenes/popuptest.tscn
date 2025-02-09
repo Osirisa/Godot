@@ -21,10 +21,12 @@ offset_bottom = 51.0
 text = "reaar"
 
 [node name="OComboBox" type="Control" parent="."]
-custom_minimum_size = Vector2(160, 32)
+custom_minimum_size = Vector2(130, 32)
 anchors_preset = 0
 offset_right = 160.0
 offset_bottom = 40.0
 script = ExtResource("2_ukp0h")
+fit_longest_item = false
+column_widths = Array[int]([30, 0, 100])
 
 [connection signal="pressed" from="Button" to="." method="_on_button_pressed"]

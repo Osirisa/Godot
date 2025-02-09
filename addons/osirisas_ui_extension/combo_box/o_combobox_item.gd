@@ -11,3 +11,4 @@ signal otext_changed(new_text: String)
 @export var id: int
 @export var disabled: bool
 @export var separator: bool
+@export var visible: bool = true

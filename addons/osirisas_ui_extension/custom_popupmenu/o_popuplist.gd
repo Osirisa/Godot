@@ -1,5 +1,9 @@
 class_name OPopUpList
-extends Popup
+extends Window
+
+# TODO:
+# Fix Length of items when icons disabled
+# Fix not correctly adjusting size when changed
 
 signal item_selected(index: int)
 signal largest_size(lsize: float)
@@ -28,6 +32,7 @@ signal largest_size(lsize: float)
 		if _is_ready:
 			_change_column_sizes()
 
+
 # Controls
 var _p_background: Panel = Panel.new()
 var _sc_body: ScrollContainer = ScrollContainer.new()
@@ -52,7 +57,10 @@ enum COLUMNS{
 	TEXT,
 }
 
+
 func _init() -> void:
+	_x_offsets.resize(3)
+	_x_offsets.fill(0)
 	_is_ready = true
 
 
@@ -61,6 +69,7 @@ func _enter_tree() -> void:
 	borderless = true
 	always_on_top = true
 	popup_window = true
+
 
 func _ready() -> void:
 	_p_background.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -77,19 +86,12 @@ func _ready() -> void:
 	_sc_body.add_child(_vb_body)
 	
 	build_body.call_deferred()
-	
-	_is_ready = true
 
 
 ## Clears and builds the whole body
 func build_body():
 	
-	#print("Build Body")
-	
 	_clear_body()
-	_change_column_sizes()
-	_refresh_x_offsets_arr()
-	#print(_x_offsets)
 	
 	_visibility = [false, false, false] #reset visibility
 	
@@ -104,7 +106,7 @@ func build_body():
 		
 		for connection: Dictionary in item.otext_changed.get_connections():
 			if connection["callable"] == call_item_changed:
-				print("disconnect")
+				#print("disconnect")
 				item.otext_changed.disconnect(call_item_changed)
 		
 		item.otext_changed.connect(call_item_changed)
@@ -117,17 +119,21 @@ func build_body():
 	largest_size.emit(_l_text_size)
 	_update_visibility()
 
+
 ## Clears all the items and the body
 func clear():
 	_clear_body()
 	items.clear()
 
+
 func add_item(item: OPopUpListItem) -> void:
 	if item:
 		items.append(item)
 
+
 func remove_item(item: OPopUpListItem) -> void:
 	items.erase(item)
+
 
 func remove_index(index: int) -> void:
 	if index < items.size():
@@ -140,12 +146,11 @@ func _update_visibility():
 		# TODO::
 		pass
 
+
 func _change_column_sizes():
-	for i in range(COLUMNS.size()):
-		#var col = _columns[i]
-		#col.custom_minimum_size = Vector2(column_widths[i], col.custom_minimum_size.y)
-		#TODO::
-		pass
+	_refresh_x_offsets_arr()
+	_refresh_x_positions()
+
 
 func _clear_body():
 	for child: Control in _vb_body.get_children():
@@ -156,11 +161,13 @@ func _clear_body():
 			child.queue_free()
 	_rows.clear()
 
+
 func _get_text_width(text: String) -> float:
 	var font: Font = get_theme_font("font", "Button")
 	var textsize: Vector2 = font.get_string_size(text)
 	
 	return textsize.x
+
 
 func _refresh_x_offsets_arr() -> void:
 	_x_offsets.clear()
@@ -176,18 +183,23 @@ func _refresh_x_offsets_arr() -> void:
 		else:
 			if i > 0:
 				offsets[i] = offsets[i-1]
-
+	
 	_x_offsets = offsets.duplicate()
+
 
 func _refresh_x_positions() -> void:
 	_refresh_x_offsets_arr()
 	#print(_x_offsets)
 	
-	for row: Control in _rows:
-		for i in range(row.get_children().size()):
-			var child = row.get_child(i)
-			child.custom_minimum_size.x = column_widths[i]
-			child.position.x = _x_offsets[i]
+	for i in range (_rows.size()):
+		if items[i].separator:
+			_rows[i].custom_minimum_size.x = _x_offsets[2] + column_widths[2]
+			continue
+		for child in _rows[i].get_children():
+			var index = child.get_index()
+			child.custom_minimum_size.x = column_widths[index]
+			child.position.x = _x_offsets[index]
+
 
 func _create_row(item: OPopUpListItem, index: int) -> Control:
 	if item.separator:
@@ -201,6 +213,7 @@ func _create_row(item: OPopUpListItem, index: int) -> Control:
 		match item.checkable:
 			OPopUpListItem.CHECKABLE_SELECT.NO:
 				_visibility[COLUMNS.CHECKABLES] = _visibility[COLUMNS.CHECKABLES] or false
+				parent.add_child(Control.new())
 				
 			OPopUpListItem.CHECKABLE_SELECT.AS_CHECK_BOX:
 				_visibility[COLUMNS.CHECKABLES] = true
@@ -208,6 +221,7 @@ func _create_row(item: OPopUpListItem, index: int) -> Control:
 				var check_box := CheckBox.new()
 				# Size / Position
 				check_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
+				check_box.size.y = item_height
 				check_box.custom_minimum_size.x = column_widths[COLUMNS.CHECKABLES]
 				check_box.position.x = _x_offsets[COLUMNS.CHECKABLES]
 				parent.add_child(check_box)
@@ -219,6 +233,7 @@ func _create_row(item: OPopUpListItem, index: int) -> Control:
 				var check_box := CheckBox.new()
 				# Size / Position
 				check_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
+				check_box.size.y = item_height
 				check_box.custom_minimum_size.x = column_widths[COLUMNS.CHECKABLES]
 				check_box.position.x = _x_offsets[COLUMNS.CHECKABLES]
 				
@@ -228,7 +243,21 @@ func _create_row(item: OPopUpListItem, index: int) -> Control:
 			_:
 				printerr("UNDEFINED")
 	else:
-		_visibility[COLUMNS.CHECKABLES] = false
+		_visibility[COLUMNS.CHECKABLES] = _visibility[COLUMNS.CHECKABLES] or false
+		parent.add_child(Control.new())
+	
+	if item.icon and column_widths[COLUMNS.ICON] > 0:
+		_visibility[COLUMNS.ICON] = true
+		var texture_rect := TextureRect.new()
+		texture_rect.texture = item.icon
+		texture_rect.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		texture_rect.custom_minimum_size.x = column_widths[COLUMNS.ICON]
+		texture_rect.position.x = _x_offsets[COLUMNS.ICON]
+		
+		parent.add_child(texture_rect)
+	else:
+		_visibility[COLUMNS.ICON] = _visibility[COLUMNS.ICON] or false
+		parent.add_child(Control.new())
 	
 	if item.text and column_widths[COLUMNS.TEXT] > 0:
 		_visibility[COLUMNS.TEXT] = true
@@ -256,30 +285,47 @@ func _create_row(item: OPopUpListItem, index: int) -> Control:
 		
 	else:
 		_visibility[COLUMNS.TEXT] = _visibility[COLUMNS.TEXT] or false
+		parent.add_child(Control.new())
 	
-	if item.icon and column_widths[COLUMNS.ICON] > 0:
-		_visibility[COLUMNS.ICON] = true
-		var texture_rect := TextureRect.new()
-		texture_rect.texture = item.icon
-		texture_rect.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		texture_rect.custom_minimum_size.x = column_widths[COLUMNS.ICON]
-		texture_rect.position.x = _x_offsets[COLUMNS.ICON]
-		
-		parent.add_child(texture_rect)
-	else:
-		_visibility[COLUMNS.ICON] = _visibility[COLUMNS.ICON] or false
-	
+	parent.visible = item.visible
 	return parent
 
+
 func _create_separator_row(item: OPopUpListItem) -> HBoxContainer:
-	return HBoxContainer.new()
+	var hbox = HBoxContainer.new()
+	hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	
+	# Linke Trennlinie
+	var left_line = HSeparator.new()
+	left_line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hbox.add_child(left_line)
+	
+	# Optional: Text in der Mitte, falls vorhanden
+	if item.text.strip_edges() != "":
+		var label = Label.new()
+		label.text = item.text
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		hbox.add_child(label)
+	
+	# Rechte Trennlinie
+	var right_line = HSeparator.new()
+	right_line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hbox.add_child(right_line)
+	
+	return hbox
+
 
 func _on_btn_pressed(index: int) -> void:
-	print(index)
+	#print(index)
+	if _rows.size() > index:
+		_rows[index].get_child(0).button_pressed = true
+		
 	item_selected.emit(index)
+	set_input_as_handled()
+
 
 func _on_item_changed(item: OPopUpListItem) -> void:
-	print("item changed")
+	#print("item changed")
 	var new_size = _get_text_width(item.text)
 	if _largest_item == item:
 		if _l_text_size > new_size:

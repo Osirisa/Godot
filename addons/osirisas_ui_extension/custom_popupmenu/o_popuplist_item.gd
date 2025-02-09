@@ -19,3 +19,4 @@ enum CHECKABLE_SELECT{
 @export var id: int
 @export var disabled: bool
 @export var separator: bool
+@export var visible: bool = true
