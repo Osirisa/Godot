@@ -1,6 +1,6 @@
 extends Control
 
-var test_arr := ["test",
+var test_arr :Array[String]= ["test",
 	"damn",
 	"president",
 	"discount",
@@ -94,16 +94,19 @@ var test_arr := ["test",
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
+	#for string in test_arr:
+		#$OComboBox.add_item(string)
 	for string in test_arr:
-		$OComboBox.add_item(string)
+		$OAdvancedOptionButton.add_item(string)
+
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
 	pass
 
 
 func _on_button_pressed() -> void:
-	$OComboBox.add_item(random_string(randi_range(4, 20)))
-	$OComboBox.add_separator("Tesss")
+	$OAdvancedOptionButton.add_item(random_string(randi_range(4, 20)))
+	$OAdvancedOptionButton.add_separator("Tesss")
 
 func random_string(length: int) -> String:
 	var result = ""
@@ -114,3 +117,16 @@ func random_string(length: int) -> String:
 func random_letter_mixed():
 	var is_upper = randi() % 2 == 0
 	return char(randi() % 26 + (65 if is_upper else 97))
+
+
+func _on_button_2_pressed() -> void:
+	get_viewport().gui_embed_subwindows = false
+	var window := Window.new()
+	add_child(window)
+	
+	var adv_opt_btn := OAdvancedOptionButton.new()
+	
+	
+	window.add_child(adv_opt_btn)
+	window.show()
+	adv_opt_btn.set_items(test_arr)

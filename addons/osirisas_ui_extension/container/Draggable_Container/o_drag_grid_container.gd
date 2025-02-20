@@ -380,7 +380,7 @@ func _calc_grid_positions() -> void:
 func _adj_items_size() -> void:
 	for item in _items:
 		if item:
-			item.size = _cell_dimensions
+			item.set_deferred("size", _cell_dimensions)
 
 func _calc_arr_pos(pos: Vector2i) -> int:
 	var x = int((pos.x + _cell_dimensions.x/2) / (_cell_dimensions.x + grid_separation.x))

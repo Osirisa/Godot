@@ -274,24 +274,23 @@ func _ready():
 	
 	_body_group.add_child(_body_cell_group)
 	_body_group.add_child(_separator_group)
-	
 	_body_group.set_anchors_preset(Control.PRESET_FULL_RECT)
 	
-
-	_header_group.custom_minimum_size = Vector2i(_x_offsets.back(),header_cell_height)
-	
 	_header_group.add_child(_panel_header)
+	
 	if header_theme:
 		_panel_header.theme = header_theme
+	
 	_header_group.add_child(_header_cell_group)
 	_header_group.add_child(_header_separator_group)
+	_header_group.custom_minimum_size.y = header_cell_height
 	
 	_scroll_container.add_child(_body_group)
 	_scroll_container_header.add_child(_header_group)
-	
+
 	_refresh_x_offsets_arr()
 	_refresh_y_offsets_arr()
-	
+
 	v_cont.add_child(_scroll_container_header)
 	v_cont.add_child(_scroll_container)
 	
@@ -579,11 +578,31 @@ func get_row_count() -> int:
 #endregion
 
 #region Table Edit --------------
+func clear_rows() -> void:
+	_invisible_rows.clear()
+	
+	for row in _rows:
+		if row.horizontal_seperator:
+			row.horizontal_seperator.queue_free()
+	
+	_rows.clear()
+	
+	_max_pages = 0
+	current_page = 0
+	
+	_refresh_y_offsets_arr()
+	_refresh_x_offsets_arr()
+	_update_body_size()
+	
+	_create_v_separators.call_deferred()
+	_update_v_separators.call_deferred()
+	_update_visible_rows.call_deferred()
 
 ## Clears the whole Table
 func clear() -> void:
 	_invisible_rows.clear()
 	_rows.clear()
+	
 	header_titles.clear()
 	
 	_max_pages = 0

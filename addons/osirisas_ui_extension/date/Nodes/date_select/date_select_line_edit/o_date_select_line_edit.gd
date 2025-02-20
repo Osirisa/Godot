@@ -72,6 +72,8 @@ signal date_entered(date: ODate)
 @export var different_parent: Control
 @export var z_idx: int = 0
 
+var current_date: ODate
+
 var _date_select_scene: PackedScene = preload("res://addons/osirisas_ui_extension/date/Nodes/date_select/date_select.tscn")
 var _date_select_line_edit_scene: PackedScene = preload("res://addons/osirisas_ui_extension/date/Nodes/date_select/date_select_line_edit/date_select_line_edit.tscn")
 
@@ -126,6 +128,7 @@ func _on_date_select_btn_pressed()-> void:
 
 func _on_date_selected(date: ODate) -> void:
 	_date_select_line_edit_instance.set_date_le_text(date.to_string_formatted(format))
+	current_date = date
 	
 	if close_on_select:
 		if different_parent:
