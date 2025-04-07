@@ -314,6 +314,3 @@ func to_julian() -> float:
 static func to_julian_st(day: int = 1, month: int = 1, year: int = 1, _t: int = 0, _2t: int = 0, _t3: int = 0) -> float:
 	return OTimeUtil.calc_jd(year, month, day, 0, 0, 0)
 #-----------------------------------------Private methods------------------------------------------#
-
-
-

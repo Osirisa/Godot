@@ -1,4 +1,4 @@
-extends Control
+extends Popup
 
 signal date_selected(date: ODate)
 

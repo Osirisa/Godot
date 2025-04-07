@@ -39,6 +39,8 @@ signal date_btn_pressed
 
 @onready
 var date_le := %ODateLineEdit
+@onready
+var date_select_btn := %Date_select_Button
 
 # Called when the node enters the scene tree for the first time.
 func _ready():

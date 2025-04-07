@@ -29,7 +29,7 @@ var _date_regex: String
 
 ## Gets the date and returns the ODate object (See ODate Class for more info)
 func get_date() -> ODate:
-	return ODate.from_string(text,format)
+	return ODate.from_string(text, format)
 
 ## Sets the date from a ODate object (See ODate Class for more info)
 func set_date(date: ODate) -> void:
@@ -43,7 +43,7 @@ func _ready():
 	_analyze_format()
 
 func _enter_tree():
-	regex_validator = "\\d+"
+	#regex_validator = "\\d+"
 	placeholder_text = format
 
 func _analyze_format() -> void:
@@ -66,9 +66,9 @@ func _analyze_format() -> void:
 			_date_regex = _date_regex.replace(separator, "\\" + separator + "?")
 	
 	_date_regex = _date_regex.replace("YYYY", "(?<year>[0-9]+)?")
-	_date_regex = _date_regex.replace("MM", "(?<month>[0-9]{2})?")
-	_date_regex = _date_regex.replace("DD", "(?<day>[0-9]{2})?")
-	print(_date_regex)
+	_date_regex = _date_regex.replace("MM", "(?<month>0[1-9]|1[0-2])?")
+	_date_regex = _date_regex.replace("DD", "(?<day>0[1-9]|[12][0-9]|3[01])?")
+	
 	regex_validator = _date_regex
 	
 	_max_digits = format.length() - _separators.size()
