@@ -38,22 +38,16 @@ func set_date(date: ODate) -> void:
 func _ready():
 	super._ready()
 	var callable = Callable(self, "_on_text_changed")
-	connect("text_changed", callable)
+	connect("valid_text_changed", callable)
 	
 	_analyze_format()
 
 func _enter_tree():
-	regex_validator = "\\d"
+	regex_validator = "\\d+"
 	placeholder_text = format
 
 func _analyze_format() -> void:
 	_separators.clear()
-	
-	_date_regex = format
-	
-	_date_regex = _date_regex.replace("YYYY", "(?<year>[0-9]+)")
-	_date_regex = _date_regex.replace("MM", "(?<month>[0-9]{2})")
-	_date_regex = _date_regex.replace("DD", "(?<day>[0-9]{2})")
 	
 	var separators = format
 	separators = separators.replace("DD","")
@@ -64,21 +58,33 @@ func _analyze_format() -> void:
 	for char in separators:
 		_separators.append(char)
 	
+	_date_regex = format
+	if separators[0] == separators[1]:
+		_date_regex = _date_regex.replace(separators[0], "\\" + separators[0] + "?")
+	else:
+		for separator in separators:
+			_date_regex = _date_regex.replace(separator, "\\" + separator + "?")
+	
+	_date_regex = _date_regex.replace("YYYY", "(?<year>[0-9]+)?")
+	_date_regex = _date_regex.replace("MM", "(?<month>[0-9]{2})?")
+	_date_regex = _date_regex.replace("DD", "(?<day>[0-9]{2})?")
+	print(_date_regex)
+	regex_validator = _date_regex
+	
 	_max_digits = format.length() - _separators.size()
 
 func _on_text_changed(new_text: String) -> void:
 	var pos := caret_column
 	
-	new_text = text
 	new_text = new_text.strip_edges()
 	
 	for separator in _separators:
-		new_text.replace(separator,"")
+		new_text = new_text.replace(separator, "")
+	
 	var digits_only := new_text
 	
 	if digits_only.length() > _max_digits:
-		digits_only = digits_only.substr(0,8)
-	
+		digits_only = digits_only.substr(0, _max_digits)
 	var formatted_text := ""
 	var digit_idx: int = 0
 	
@@ -96,7 +102,7 @@ func _on_text_changed(new_text: String) -> void:
 	set_block_signals(true)
 	text = formatted_text
 	set_block_signals(false)
-	caret_column = pos
+	caret_column = formatted_text.length()
 	
 	_validate_date()
 
