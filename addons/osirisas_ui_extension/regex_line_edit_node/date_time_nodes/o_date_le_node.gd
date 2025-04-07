@@ -59,10 +59,10 @@ func _analyze_format() -> void:
 		_separators.append(char)
 	
 	_date_regex = format
-	if separators[0] == separators[1]:
-		_date_regex = _date_regex.replace(separators[0], "\\" + separators[0] + "?")
+	if _separators.size() > 1 and _separators[0] == _separators[1]:
+		_date_regex = _date_regex.replace(_separators[0], "\\" + _separators[0] + "?")
 	else:
-		for separator in separators:
+		for separator in _separators:
 			_date_regex = _date_regex.replace(separator, "\\" + separator + "?")
 	
 	_date_regex = _date_regex.replace("YYYY", "(?<year>[0-9]+)?")
