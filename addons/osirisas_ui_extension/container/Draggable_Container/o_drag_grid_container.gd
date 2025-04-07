@@ -32,14 +32,15 @@ static var all_drag_containers: Array[ODragContainer] = []
 @export var init_items: Array[PackedScene]:
 	set(value):
 		var max_items: int = grid.x * grid.y
-		if (value.size() >= max_items) and (self.is_node_ready() or (Engine.is_editor_hint() and _var_grid_ready)) :
+
+		if (value.size() >= max_items) and (is_node_ready() or (Engine.is_editor_hint() and _var_grid_ready)) :
+
 			init_items = value.slice(0, max_items)
 		else:
 			init_items = value
 		
 		if Engine.is_editor_hint() and self.is_node_ready():
 			_initialize_items.call_deferred()
-
 
 @export_group("Grid")
 ## The Grid, on which you can position your nodes on
@@ -104,7 +105,7 @@ var _items: Array[Control] = []:
 			printerr("Container is full")
 			_items = value.slice(0,max_items)
 		else:
-			_items = _items
+			_items = value
 
 var _cell_positions: Array[Array]
 var _cell_dimensions: Vector2

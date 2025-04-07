@@ -1,8 +1,8 @@
 [gd_scene load_steps=6 format=3 uid="uid://blygr817tefy"]
 
-[ext_resource type="Script" path="res://addons/osirisas_ui_extension/regex_line_edit_node/date_time_nodes/o_date_le_node.gd" id="1_2rfh1"]
-[ext_resource type="Script" path="res://addons/osirisas_ui_extension/date/Nodes/date_select/date_select_line_edit/date_select_line_edit.gd" id="1_gxadc"]
-[ext_resource type="Script" path="res://addons/osirisas_ui_extension/date/date_resource/o_date.gd" id="2_6l4kw"]
+[ext_resource type="Script" uid="uid://bej14ggrnsqxj" path="res://addons/osirisas_ui_extension/regex_line_edit_node/date_time_nodes/o_date_le_node.gd" id="1_2rfh1"]
+[ext_resource type="Script" uid="uid://danqs3slrak3f" path="res://addons/osirisas_ui_extension/date/Nodes/date_select/date_select_line_edit/date_select_line_edit.gd" id="1_gxadc"]
+[ext_resource type="Script" uid="uid://b43uahpmquequ" path="res://addons/osirisas_ui_extension/date/date_resource/o_date.gd" id="2_6l4kw"]
 
 [sub_resource type="Resource" id="Resource_u7g4b"]
 script = ExtResource("2_6l4kw")

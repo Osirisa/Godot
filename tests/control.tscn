@@ -1,10 +1,10 @@
 [gd_scene load_steps=21 format=3 uid="uid://bwwfei0xtaahp"]
 
-[ext_resource type="Script" path="res://tests/test.gd" id="1_ipyfc"]
-[ext_resource type="Script" path="res://addons/osirisas_ui_extension/table_node/o_table_node.gd" id="3_eoo3w"]
-[ext_resource type="Script" path="res://addons/osirisas_ui_extension/regex_line_edit_node/date_time_nodes/o_date_le_node.gd" id="3_mi6px"]
-[ext_resource type="Script" path="res://addons/osirisas_ui_extension/date/date_resource/o_date.gd" id="4_pfhxr"]
-[ext_resource type="Script" path="res://addons/osirisas_ui_extension/date/Nodes/date_select/date_select_line_edit/o_date_select_line_edit.gd" id="7_h6amr"]
+[ext_resource type="Script" uid="uid://cehq6pb83g8np" path="res://tests/test.gd" id="1_ipyfc"]
+[ext_resource type="Script" uid="uid://bkvnkwnbjpluy" path="res://addons/osirisas_ui_extension/table_node/o_table_node.gd" id="3_eoo3w"]
+[ext_resource type="Script" uid="uid://b43uahpmquequ" path="res://addons/osirisas_ui_extension/date/date_resource/o_date.gd" id="4_pfhxr"]
+[ext_resource type="Script" uid="uid://bej14ggrnsqxj" path="res://addons/osirisas_ui_extension/regex_line_edit_node/date_time_nodes/o_date_le_node.gd" id="5_dudr4"]
+[ext_resource type="Script" uid="uid://cw8kwpftsvaat" path="res://addons/osirisas_ui_extension/date/Nodes/date_select/date_select_line_edit/o_date_select_line_edit.gd" id="7_h6amr"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5gbcg"]
 bg_color = Color(0.462745, 0.670588, 0.278431, 0)
@@ -61,13 +61,13 @@ year = 2000
 month = 1
 day = 1
 
-[sub_resource type="Resource" id="Resource_utd1o"]
+[sub_resource type="Resource" id="Resource_mg40m"]
 script = ExtResource("4_pfhxr")
 year = 1
 month = 1
 day = 1
 
-[sub_resource type="Resource" id="Resource_y4nsg"]
+[sub_resource type="Resource" id="Resource_vwcur"]
 script = ExtResource("4_pfhxr")
 year = 2199
 month = 12
@@ -183,16 +183,18 @@ z_idx = 100
 [node name="ODateLineEdit" type="LineEdit" parent="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
 layout_mode = 2
 placeholder_text = "DD.MM.YYYY"
-script = ExtResource("3_mi6px")
-min_date = SubResource("Resource_utd1o")
-max_date = SubResource("Resource_y4nsg")
+script = ExtResource("5_dudr4")
+min_date = SubResource("Resource_mg40m")
+max_date = SubResource("Resource_vwcur")
 regex_validator = "\\d"
+metadata/_custom_type_script = "uid://bej14ggrnsqxj"
 
 [node name="MenuButton" type="MenuButton" parent="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 item_count = 6
 popup/item_0/text = "test"
+popup/item_0/id = 0
 popup/item_1/text = "test"
 popup/item_1/id = 1
 popup/item_2/text = "test"

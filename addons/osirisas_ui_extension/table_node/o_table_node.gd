@@ -13,7 +13,7 @@ extends Control
 signal cell_clicked(row: int, column: int)
 
 ## Signal when the user edits a cell (double click)
-signal cell_edit(row: int,column: int)
+signal cell_edit(row: int, column: int)
 
 ## Signal when the user edited
 signal cell_edit_finished(row: int, column: int)
@@ -38,14 +38,14 @@ enum E_Sorting {
 @export_category("Header")
 ## The header titles
 @export var header_titles: Array[String] = []:
-	set(value): 
+	set(value):
 		if Engine.is_editor_hint():
-			if(value.size() > header_titles.size()):
+			if (value.size() > header_titles.size()):
 				for i in range(header_titles.size(), value.size()):
 					var header_text = value[i]
 					
 					if not header_text:
-						value[i] = "header"+ str(i)
+						value[i] = "header" + str(i)
 		
 		header_titles = value
 		
@@ -80,7 +80,7 @@ enum E_Sorting {
 @export_category("Body")
 ## The starting widths for each column
 @export var column_widths: Array[int] = []:
-	set(value): 
+	set(value):
 		column_widths = value
 		
 		_column_widths_temp.clear()
@@ -88,13 +88,13 @@ enum E_Sorting {
 		update_table()
 
 ## The standard cell dimension a row / a column gets created with
-@export var standard_cell_dimension := Vector2i(150,25)
+@export var standard_cell_dimension := Vector2i(150, 25)
 
 @export_category("Resizing")
 ## Enables the resizing (drag on the separator for resizing the cells)
 @export var resizing := true
 ## To stop the resizing below a certain threshhold of the cell
-@export var min_size := Vector2i(50,20)
+@export var min_size := Vector2i(50, 20)
 
 @export_category("Label editable")
 ## Enables the editing via doubleclick on a label
@@ -103,7 +103,7 @@ enum E_Sorting {
 
 @export_category("Special")
 @export_group("Culling")
-## Culling makes it that only so many rows are being inserted to maximize performacne (For Large Tables)
+## Culling makes it that only so many rows are being inserted to maximize performance (For Large Tables)
 @export var row_culling := true:
 	set(value):
 		row_culling = value
@@ -119,7 +119,7 @@ enum E_Sorting {
 
 @export_group("Pagination")
 ## Pagination for very large tables
-@export var pagination := false :
+@export var pagination := false:
 	set(value):
 		pagination = value
 		
@@ -243,8 +243,7 @@ var _culling_active_rows_old: Array[int] = []
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	
-	connect("_c_sort_finished",Callable(self, "_on_sorting_complete"))
+	connect("_c_sort_finished", Callable(self, "_on_sorting_complete"))
 	
 	var v_cont := VBoxContainer.new()
 	v_cont.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -263,9 +262,9 @@ func _ready():
 	
 	_refresh_last_visible_column()
 	_init_v_scroll()
-	var scroll_callable_body := Callable(self,"on_scroll_horizontal").bind(true)
+	var scroll_callable_body := Callable(self, "on_scroll_horizontal").bind(true)
 	_scroll_container.get_h_scroll_bar().connect("value_changed", scroll_callable_body)
-	var scroll_callable_heady := Callable(self,"on_scroll_horizontal").bind(false)
+	var scroll_callable_heady := Callable(self, "on_scroll_horizontal").bind(false)
 	_scroll_container_header.get_h_scroll_bar().connect("value_changed", scroll_callable_heady)
 	
 	_body_group.add_child(_panel_body)
@@ -274,10 +273,11 @@ func _ready():
 	
 	_body_group.add_child(_body_cell_group)
 	_body_group.add_child(_separator_group)
+
 	_body_group.set_anchors_preset(Control.PRESET_FULL_RECT)
 	
 	_header_group.add_child(_panel_header)
-	
+
 	if header_theme:
 		_panel_header.theme = header_theme
 	
@@ -317,11 +317,9 @@ func _input(event: InputEvent) -> void:
 
 ## Adds a column. Can be invisible from the start.
 func add_column(title: String, cell_width := standard_cell_dimension.x, column_visiblity := true) -> void:
-	
 	column_widths.append(cell_width)
 	_column_widths_temp.append(cell_width)
 	_column_visiblity.append(column_visiblity)
-	
 	
 	header_titles.append(title)
 	
@@ -365,7 +363,8 @@ func insert_column(title: String, column_pos: int, cell_width := standard_cell_d
 
 ## Removes a column at the specified position
 func remove_column(column_pos: int) -> void:
-	if not OTableUtility.check_column_input(column_pos, header_titles.size()-1):
+
+	if not OTableUtility.check_column_input(column_pos, header_titles.size() - 1):
 		return
 	
 	
@@ -406,7 +405,6 @@ func get_column_count() -> int:
 
 ## Adds a row to the table directly below the previous row can also called with no data, then it fills the row with empty labels
 func add_row(data: Array[Control] = [], height: float = standard_cell_dimension.y) -> void:
-
 	if data.size() > header_titles.size():
 		push_warning("data array input bigger then column count, excess nodes wont be shown!")
 	
@@ -434,8 +432,8 @@ func add_row(data: Array[Control] = [], height: float = standard_cell_dimension.
 
 ## Inserts a row at a specified position. Can also called with no data, then it fills the row with empty labels
 func insert_row(data: Array[Control], row_pos: int, height: float = standard_cell_dimension.y) -> void:
-	if not OTableUtility.check_row_input(row_pos, _rows.size() - 1):
-		return
+	if row_pos > _rows.size() - 1:
+		row_pos = _rows.size()
 	
 	var new_row := RowContent.new()
 	
@@ -459,8 +457,7 @@ func insert_row(data: Array[Control], row_pos: int, height: float = standard_cel
 ## Takes in following template: [ [node:Control, node2:Control],[nod...,...]...] as data use this
 ## for populating the table with data
 ## Use this for heavy table filling, as it wont update the visible rows until its finished loading the data
-func add_rows_batch(data :Array, height: float = standard_cell_dimension.y) -> void:
-	
+func add_rows_batch(data: Array, height: float = standard_cell_dimension.y) -> void:
 	for d in data:
 		var new_row := RowContent.new()
 		
@@ -535,18 +532,16 @@ func remove_row(row: int) -> void:
 	if (current_page > _max_pages) and pagination:
 		current_page = current_page
 	else:
-
 		_refresh_last_visible_row()
 		_refresh_y_offsets_arr()
 		
 		_update_v_separators.call_deferred()
-		_update_visible_rows.call_deferred()	
+		_update_visible_rows.call_deferred()
 	
 	_update_body_size()
 
 ## Removes the rows from the Table e.g.: remove_row_batch([2,5,1,3,8])
 func remove_rows_batch(rows_to_remove: Array[int]) -> void:
-	
 	rows_to_remove.sort()
 	
 	for index in range(rows_to_remove.size(), 0, -1):
@@ -562,12 +557,11 @@ func remove_rows_batch(rows_to_remove: Array[int]) -> void:
 	if (current_page > _max_pages) and pagination:
 		current_page = current_page
 	else:
-		
 		_refresh_y_offsets_arr()
 		_culling_active_rows_old.clear()
 		
 		_update_v_separators.call_deferred()
-		_update_visible_rows.call_deferred()	
+		_update_visible_rows.call_deferred()
 	
 	_update_body_size()
 
@@ -631,7 +625,7 @@ func update_table() -> void:
 
 ## Returns the specified Row as an Array of Controls
 func get_row(row: int) -> Array:
-	if not OTableUtility.check_row_input(row, _rows.size()- 1):
+	if not OTableUtility.check_row_input(row, _rows.size() - 1):
 		return []
 	var row_contens: Array = []
 	row_contens = _rows[row].nodes.duplicate()
@@ -641,7 +635,7 @@ func get_row(row: int) -> Array:
 ## Returns the Control inside of the specified cell
 func get_cell(row: int, column: int) -> Control:
 	#--check if row and column matches size of the arrays--
-	if not OTableUtility.check_row_input(row, _rows.size()- 1):
+	if not OTableUtility.check_row_input(row, _rows.size() - 1):
 		return null
 	
 	if not OTableUtility.check_column_input(column, header_titles.size() - 1):
@@ -650,8 +644,9 @@ func get_cell(row: int, column: int) -> Control:
 	return _rows[row].nodes[column]
 
 ## Overrides the Control inside of the specified cell
-func set_cell(node: Control,row: int, column: int) -> void:
-	if not OTableUtility.check_row_input(row, _rows.size()- 1):
+
+func set_cell(node: Control, row: int, column: int) -> void:
+	if not OTableUtility.check_row_input(row, _rows.size() - 1):
 		return
 	
 	if not OTableUtility.check_column_input(column, header_titles.size() - 1):
@@ -665,7 +660,7 @@ func set_cell(node: Control,row: int, column: int) -> void:
 
 ## Changes the height of the specified row
 func set_row_height(row: int, height: float) -> void:
-	if not OTableUtility.check_row_input(row, _rows.size()- 1):
+	if not OTableUtility.check_row_input(row, _rows.size() - 1):
 		return
 	
 	_rows[row].row_height_temp = height
@@ -689,7 +684,7 @@ func set_column_width(column: int, width: float) -> void:
 #region Visibility --------------
 
 func set_visibility_row(row: int, visible: bool) -> void:
-	if not OTableUtility.check_row_input(row, _rows.size()- 1):
+	if not OTableUtility.check_row_input(row, _rows.size() - 1):
 		return
 	
 	var row_object = _rows[row]
@@ -716,7 +711,6 @@ func set_visibility_row(row: int, visible: bool) -> void:
 	if (current_page > _max_pages) and pagination:
 		current_page = current_page
 	else:
-		
 		_refresh_y_offsets_arr()
 		_culling_active_rows_old.clear()
 		
@@ -726,7 +720,7 @@ func set_visibility_row(row: int, visible: bool) -> void:
 	_update_body_size()
 
 func get_visibility_row(row: int) -> bool:
-	if not OTableUtility.check_row_input(row, _rows.size()- 1):
+	if not OTableUtility.check_row_input(row, _rows.size() - 1):
 		return false
 	
 	return _rows[row].row_visible
@@ -775,7 +769,7 @@ func get_invisible_columns() -> Array[int]:
 #region Editablity --------------
 
 func set_editable_status_cell(row: int, column: int, edit_status: bool) -> void:
-	if not OTableUtility.check_row_input(row, _rows.size()- 1):
+	if not OTableUtility.check_row_input(row, _rows.size() - 1):
 		return
 
 	if not OTableUtility.check_column_input(column, header_titles.size() - 1):
@@ -784,7 +778,7 @@ func set_editable_status_cell(row: int, column: int, edit_status: bool) -> void:
 	_rows[row].editable[column] = edit_status
 
 func get_editable_status_cell(row: int, column: int) -> bool:
-	if not OTableUtility.check_row_input(row, _rows.size()- 1):
+	if not OTableUtility.check_row_input(row, _rows.size() - 1):
 		return false
 
 	if not OTableUtility.check_column_input(column, header_titles.size() - 1):
@@ -809,16 +803,16 @@ func sort_rows_by_column(column: int, sort: E_Sorting) -> void:
 #region Selection ---------------
 
 func select_row(row: int) -> void:
-	if not OTableUtility.check_row_input(row, _rows.size()- 1):
+	if not OTableUtility.check_row_input(row, _rows.size() - 1):
 		return
 
 	_select_single_row(row)
 
 func select_rows(start_row: int, end_row: int) -> void:
-	if not OTableUtility.check_row_input(start_row, _rows.size()- 1):
+	if not OTableUtility.check_row_input(start_row, _rows.size() - 1):
 		return
 
-	if not OTableUtility.check_row_input(end_row, _rows.size()- 1):
+	if not OTableUtility.check_row_input(end_row, _rows.size() - 1):
 		return
 
 	_select_single_row(start_row)
@@ -828,7 +822,6 @@ func select_rows(start_row: int, end_row: int) -> void:
 ## Selects all rows
 func select_all_rows() -> void:
 	for row in _rows:
-		
 		if row.selected == false:
 			_selected_rows.append(row)
 			row.selected = true
@@ -841,7 +834,6 @@ func deselect_all_rows() -> void:
 		return
 	
 	for row in _selected_rows:
-		
 		row.selected = false
 		row.deselect = true
 		_update_row_selection_visuals(row)
@@ -895,7 +887,7 @@ func get_max_pages() -> int:
 #-----------------------------------------Private methods------------------------------------------#
 
 func _init_v_scroll() -> void:
-	var callable_culling := Callable(self,"_update_visible_rows")
+	var callable_culling := Callable(self, "_update_visible_rows")
 	
 	if row_culling:
 		_scroll_container.get_v_scroll_bar().connect("value_changed", callable_culling)
@@ -905,7 +897,6 @@ func _init_v_scroll() -> void:
 
 
 func _create_headers() -> void:
-	
 	if !_header_cell_group:
 		return
 	
@@ -980,19 +971,17 @@ func _refresh_last_visible_column() -> void:
 		_last_visible_column = -1
 		return
 
-	for idx in range (header_titles.size() - 1, -1, -1):
+	for idx in range(header_titles.size() - 1, -1, -1):
 		if _column_visiblity[idx]:
 			_last_visible_column = idx
 			return
 
 func _recalc_row_offsets_visibility() -> void:
-	
 	_offset_rows_visibility_pages.clear()
 	_offset_rows_visibility_pages.resize(_max_pages + 1)
 	_offset_rows_visibility_pages.fill(0)
 	
 	for i in range(_max_pages + 1):
-		
 		var x = i - 1 if i > 0 else 0
 		var start_rows = (max_row_count_per_page * i + _offset_rows_visibility_pages[x])
 		var end_rows = start_rows + max_row_count_per_page
@@ -1033,7 +1022,7 @@ func _update_visible_rows(value: int = 0) -> void:
 	for i in range(_y_offsets.size()):
 		if _y_offsets[i] >= value:
 			start_index = i - 1 if i > 0 else 0
-			break 
+			break
 	
 	if pagination:
 		var page_start: int = current_page * max_row_count_per_page
@@ -1049,7 +1038,7 @@ func _update_visible_rows(value: int = 0) -> void:
 			start_index = max(start_index, page_start)
 			end_index = min(start_index + max_row_count_active_culling, page_end)
 			
-		else :
+		else:
 			start_index = page_start
 			end_index = page_end
 		
@@ -1135,7 +1124,7 @@ func _update_visible_rows(value: int = 0) -> void:
 					
 				elif parent.size.x != _column_widths_temp[col_idx] or parent.size.y != row.row_height_temp:
 					parent.custom_minimum_size = Vector2(_column_widths_temp[col_idx], row.row_height_temp)
-					parent.size =  Vector2(_column_widths_temp[col_idx], row.row_height_temp)
+					parent.size = Vector2(_column_widths_temp[col_idx], row.row_height_temp)
 					
 				if change_pos:
 					parent.position = Vector2(_x_offsets[col_idx], _y_offsets[row_idx])
@@ -1154,7 +1143,7 @@ func _update_visible_rows(value: int = 0) -> void:
 func _set_properties(node: Control) -> void:
 	if node is LineEdit:
 		node.clip_contents = true
-	elif node is Button or Label:
+	elif node is Button or node is Label:
 		node.clip_text = true
 		node.clip_contents = true
 
@@ -1172,23 +1161,21 @@ func _fill_rows_arr() -> void:
 				row.editable.append(true)
 
 func _clr_body() -> void:
-	
 	for child in _body_cell_group.get_children():
 		child.remove_child(child.get_child(0))
 		_body_cell_group.remove_child(child)
 		child.queue_free()
 
 func _table_size() -> Vector2i:
-	
-	var table_size := Vector2i(0,0)
+	var table_size := Vector2i(0, 0)
 
 	if _x_offsets.is_empty():
-		return table_size 
+		return table_size
 	
 	table_size.x = _x_offsets[_last_visible_column] + _column_widths_temp[_last_visible_column]
 	
 	if _y_offsets.is_empty():
-		return table_size 
+		return table_size
 	
 	if pagination:
 		var last_pos = max_row_count_per_page * (current_page + 1) - 1
@@ -1214,12 +1201,12 @@ func _update_body_size() -> void:
 	
 	#minimum_size_changed.emit()
 
-func _create_margin_container(node: Control, row_index: int, col_index:int) -> MarginContainer:
+func _create_margin_container(node: Control, row_index: int, col_index: int) -> MarginContainer:
 	var margin_parent = MarginContainer.new()
 	
 	margin_parent.add_child(node)
 	margin_parent.custom_minimum_size = Vector2(_column_widths_temp[col_index], _rows[row_index].row_height_temp)
-	margin_parent.size =  Vector2(_column_widths_temp[col_index], _rows[row_index].row_height_temp)
+	margin_parent.size = Vector2(_column_widths_temp[col_index], _rows[row_index].row_height_temp)
 	margin_parent.position = Vector2(_x_offsets[col_index], _y_offsets[row_index])
 	
 	var callable = Callable(self, "_on_cell_gui_input").bind(_rows[row_index], node)
@@ -1275,7 +1262,6 @@ func _update_h_separators() -> void:
 		return
 		
 	for idx in _culling_active_rows_old:
-		
 		var row: RowContent = _rows[idx]
 		var separator: HSeparator = row.horizontal_seperator
 		
@@ -1336,14 +1322,15 @@ func _refresh_x_offsets_arr() -> void:
 	var offsets: Array[int] = [] 
 	offsets.resize(header_titles.size())
 	offsets.fill(0)
+
 	for i in range(header_titles.size()):
 		if _column_visiblity[i]:
-			for x in range (i):
+			for x in range(i):
 				if _column_visiblity[x]:
 					offsets[i] += _column_widths_temp[x]
 		else:
 			if i > 0:
-				offsets[i] = offsets[i-1]
+				offsets[i] = offsets[i - 1]
 
 	_x_offsets = offsets.duplicate()
 
@@ -1375,12 +1362,12 @@ func _refresh_y_offsets_arr() -> void:
 	for i in range(start, end):
 		if _rows[i].row_visible:
 			offsets[i] += 2
-			for x in range (start, i):
+			for x in range(start, i):
 				if _rows[x].row_visible:
-					offsets[i] += _rows[x].row_height_temp 
+					offsets[i] += _rows[x].row_height_temp
 		else:
 			if i > 0:
-				offsets[i] = offsets[i-1]
+				offsets[i] = offsets[i - 1]
 	
 	_y_offsets = offsets.duplicate()
 
@@ -1409,7 +1396,6 @@ func _select_single_row(row: int) -> void:
 	_update_row_selection_visuals(curr_row)
 
 func _toggle_row_selection(row: int) -> void:
-	
 	var curr_row = _rows[row]
 	
 	if not curr_row.selected:
@@ -1426,7 +1412,6 @@ func _toggle_row_selection(row: int) -> void:
 	_update_row_selection_visuals(curr_row)
 
 func _select_multiple_rows(row: int) -> void:
-	
 	if _last_selected_row == -1:
 		_select_single_row(row)
 		return
@@ -1445,7 +1430,6 @@ func _select_multiple_rows(row: int) -> void:
 	_current_row = _rows[row]
 
 func _update_row_selection_visuals(row: RowContent) -> void:
-	
 	if not row.row_culling_rendered:
 		return
 	
@@ -1476,13 +1460,13 @@ func _edit_cell(row_idx: int, column_idx: int) -> void:
 		line_edit.text = cell.text
 		line_edit.select_all()
 		
-		var callable_enter = Callable(self,"_on_edit_text_entered").bind(row_idx, column_idx, line_edit)
+		var callable_enter = Callable(self, "_on_edit_text_entered").bind(row_idx, column_idx, line_edit)
 		line_edit.connect("text_submitted", callable_enter)
 		
-		var callable_cancel = Callable(self,"_on_edit_input_event").bind(row_idx, column_idx, original_text, line_edit)
+		var callable_cancel = Callable(self, "_on_edit_input_event").bind(row_idx, column_idx, original_text, line_edit)
 		line_edit.connect("gui_input", callable_cancel)
 		
-		var callable_move_on = Callable(self,"_on_edit_text_focus_lost").bind(row_idx, column_idx, line_edit)
+		var callable_move_on = Callable(self, "_on_edit_text_focus_lost").bind(row_idx, column_idx, line_edit)
 		line_edit.connect("focus_exited", callable_move_on)
 		
 		if has_meta("old_line_edit"):
@@ -1512,7 +1496,7 @@ func _reapply_theme(node: Control, theme: Theme) -> void:
 		parent.theme = theme
 #<--------------------------|Slots|------------------------------>#
 
-func _on_cell_gui_input(event: InputEvent,row_c: RowContent, node: Control) -> void:
+func _on_cell_gui_input(event: InputEvent, row_c: RowContent, node: Control) -> void:
 	var row = _rows.find(row_c)
 	var column = row_c.nodes.find(node)
 	
@@ -1525,7 +1509,7 @@ func _on_cell_gui_input(event: InputEvent,row_c: RowContent, node: Control) -> v
 			if cell_edit_line_edit.is_inside_tree():
 				cell_edit_line_edit.release_focus()
 			
-		emit_signal("cell_clicked",row,column)
+		emit_signal("cell_clicked", row, column)
 	
 	if event is InputEventMouseButton and event.pressed and event.button_mask & MOUSE_BUTTON_LEFT:
 		if Input.is_key_pressed(KEY_SHIFT):
@@ -1537,24 +1521,24 @@ func _on_cell_gui_input(event: InputEvent,row_c: RowContent, node: Control) -> v
 			#print("select")
 			_select_single_row(row)
 
-func _on_edit_text_entered(new_text:String, row:int, column:int, line_edit:LineEdit) -> void:
+func _on_edit_text_entered(new_text: String, row: int, column: int, line_edit: LineEdit) -> void:
 	line_edit.set_block_signals(true)
-	_commit_text(line_edit,line_edit.text, row, column)
+	_commit_text(line_edit, line_edit.text, row, column)
 
-func _on_edit_text_focus_lost(row:int, column:int, line_edit:LineEdit) -> void:
+func _on_edit_text_focus_lost(row: int, column: int, line_edit: LineEdit) -> void:
 	line_edit.set_block_signals(true)
-	_commit_text(line_edit,line_edit.text, row, column)
+	_commit_text(line_edit, line_edit.text, row, column)
 
-func _on_edit_input_event(event:InputEvent, row:int, column:int, original_text:String, line_edit:LineEdit) -> void:
+func _on_edit_input_event(event: InputEvent, row: int, column: int, original_text: String, line_edit: LineEdit) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		line_edit.set_block_signals(true)
 		_commit_text(line_edit, original_text, row, column)
 
-func _commit_text(line_edit:LineEdit, new_text:String, row:int, column:int) -> void:
+func _commit_text(line_edit: LineEdit, new_text: String, row: int, column: int) -> void:
 	var label: Label
 	
 	if has_meta("old_label"):
-		label= get_meta("old_label")
+		label = get_meta("old_label")
 		set_meta("old_label", null)
 	else:
 		label = Label.new()
@@ -1569,7 +1553,6 @@ func _commit_text(line_edit:LineEdit, new_text:String, row:int, column:int) -> v
 	emit_signal("cell_edit_finished")
 
 func _on_vert_separator_input(event, index: int) -> void:
-	
 	var changed := false
 	
 	if event is InputEventMouseMotion and event.button_mask & MOUSE_BUTTON_LEFT and resizing:
@@ -1586,7 +1569,6 @@ func _on_vert_separator_input(event, index: int) -> void:
 		_update_headers.call_deferred()
 
 func _on_hori_separator_input(event, row: RowContent) -> void:
-	
 	var changed := false
 	
 	if event is InputEventMouseMotion and event.button_mask & MOUSE_BUTTON_LEFT and resizing:
@@ -1618,7 +1600,6 @@ func _on_header_clicked(column: int) -> void:
 	sort_rows_by_column(column, sorting)
 
 func _on_sorting_complete() -> void:
-	
 	_sort_thread.wait_to_finish()
 	_sort_thread = null
 	

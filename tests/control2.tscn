@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://cf17idd33fuj7"]
 
-[ext_resource type="Script" path="res://addons/osirisas_ui_extension/container/Draggable_Container/o_drag_grid_container.gd" id="1_fcun3"]
+[ext_resource type="Script" uid="uid://rm0ow3kmbmeu" path="res://addons/osirisas_ui_extension/container/Draggable_Container/o_drag_grid_container.gd" id="1_fcun3"]
 [ext_resource type="PackedScene" uid="uid://beklw77gaxcvi" path="res://tests/test scenes/test_widged1.tscn" id="2_kn668"]
 
 [node name="Control" type="Control"]

@@ -4,7 +4,8 @@ extends LineEdit
 
 signal valid_text_changed(new_text: String)
 
-@export var regex_validator := r"\d+([.,]\d{0,2})?":
+@export var regex_validator := ".":
+
 	set(value):
 		regex_validator = value
 		_recompile()

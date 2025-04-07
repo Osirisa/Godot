@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://4obi013x7tgq"]
 
-[ext_resource type="Script" path="res://tests/test scenes/popuptest.gd" id="1_pcwg3"]
-[ext_resource type="Script" path="res://addons/osirisas_ui_extension/combo_box/o_advanced_optionbutton.gd" id="3_dbak5"]
+[ext_resource type="Script" uid="uid://hd5strbtknma" path="res://tests/test scenes/popuptest.gd" id="1_pcwg3"]
+[ext_resource type="Script" uid="uid://c3mxe8tu8opqk" path="res://addons/osirisas_ui_extension/combo_box/o_advanced_optionbutton.gd" id="3_dbak5"]
 
 [node name="Popuptest" type="Control"]
 layout_mode = 3
