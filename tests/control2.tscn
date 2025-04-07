@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://cf17idd33fuj7"]
 
 [ext_resource type="Script" uid="uid://rm0ow3kmbmeu" path="res://addons/osirisas_ui_extension/container/Draggable_Container/o_drag_grid_container.gd" id="1_fcun3"]
-[ext_resource type="PackedScene" uid="uid://beklw77gaxcvi" path="res://tests/test scenes/test_widged1.tscn" id="2_kn668"]
+[ext_resource type="PackedScene" uid="uid://biticfukr1yb" path="res://tests/test scenes/test_widged2.tscn" id="2_mp2qj"]
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -32,7 +32,7 @@ grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 3
 script = ExtResource("1_fcun3")
-init_items = Array[PackedScene]([ExtResource("2_kn668")])
+init_items = Array[PackedScene]([ExtResource("2_mp2qj"), ExtResource("2_mp2qj"), ExtResource("2_mp2qj")])
 grid = Vector2i(2, 3)
 grid_separation = Vector2(2, 5)
 min_grid_pos_size = Vector2(300, 200)
@@ -53,7 +53,7 @@ grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 3
 script = ExtResource("1_fcun3")
-init_items = Array[PackedScene]([ExtResource("2_kn668")])
+init_items = Array[PackedScene]([ExtResource("2_mp2qj")])
 grid = Vector2i(2, 3)
 grid_separation = Vector2(2, 5)
 min_grid_pos_size = Vector2(300, 200)

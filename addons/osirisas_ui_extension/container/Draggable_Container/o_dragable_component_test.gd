@@ -1,4 +1,4 @@
-class_name ODragableComponent
+class_name ODragableComponent_test
 extends Control
 
 signal start_dragging()
@@ -9,9 +9,14 @@ signal end_dragging(parent: Control)
 @export var direct_parent: bool = true
 @export var parent_to_drag: Control = null
 
+var popup_window := Popup.new()
+
 var _dragging := false
 var _drag_delta_start_pos: Vector2
 var _drag_timer: Timer
+
+var _original_parents_parent = null
+var _original_size := Vector2i()
 
 func _enter_tree():
 	mouse_filter = Control.MOUSE_FILTER_PASS
@@ -21,6 +26,8 @@ func _enter_tree():
 func _ready():
 	if direct_parent:
 		parent_to_drag = get_parent()
+	
+	get_tree().root.add_child.call_deferred(popup_window)
 	
 	_drag_timer = Timer.new()
 	_drag_timer.one_shot = true  # Only trigger once
@@ -38,27 +45,43 @@ func _input(event):
 		if event is InputEventMouseButton and mouse_on_widget() and event.button_index == MOUSE_BUTTON_LEFT:
 			#print(event)
 			if event.pressed:
-				_drag_delta_start_pos = get_global_mouse_position()
+				_drag_delta_start_pos = DisplayServer.mouse_get_position()
 				_drag_timer.start()  # Start the delay timer
 			else:
 				_drag_timer.stop()  # Stop the timer if it's running
 				if _dragging:
 					#get_parent().top_level = false # -> BUG FOR NOW
 					_dragging = false
+					
+					popup_window.remove_child(parent_to_drag)
+					
+					_original_parents_parent.add_child(parent_to_drag)
+					parent_to_drag.size = _original_size
+					parent_to_drag.global_position = popup_window.position
+					popup_window.hide()
+					
 					end_dragging.emit(parent_to_drag)
 		
 		elif event is InputEventMouseMotion and _dragging:
 			# Only move the parent if we are dragging
 			if parent_to_drag:
 				#parent.top_level = true # -> BUG FOR NOW
-				var global_mouse_pos = get_global_mouse_position()
-				var drag_delta = global_mouse_pos - _drag_delta_start_pos
-				parent_to_drag.position += drag_delta  # Adjust the parent position
+				var global_mouse_pos = DisplayServer.mouse_get_position()
+				var drag_delta = global_mouse_pos - Vector2i(_drag_delta_start_pos)
+				popup_window.position += Vector2i(drag_delta)  # Adjust the parent position
 				_drag_delta_start_pos = global_mouse_pos  # Update drag start position
 				
 				accept_event()  # Consume the event
 		elif _dragging:
 				_dragging = false
+				
+				popup_window.remove_child(parent_to_drag)
+				
+				_original_parents_parent.add_child(parent_to_drag)
+				parent_to_drag.size = _original_size
+				parent_to_drag.global_position = popup_window.position
+				
+				popup_window.hide()
 				end_dragging.emit(parent_to_drag)
 
 func mouse_on_widget() -> bool:
@@ -68,3 +91,16 @@ func mouse_on_widget() -> bool:
 func _on_drag_timer_timeout():
 	_dragging = true
 	start_dragging.emit()
+	
+	_original_parents_parent = parent_to_drag.get_parent()
+	_original_size = parent_to_drag.size
+	
+	var screen_pos = parent_to_drag.get_screen_position()
+	
+	parent_to_drag.get_parent().remove_child(parent_to_drag)
+	parent_to_drag.position = Vector2i.ZERO
+	
+	popup_window.add_child(parent_to_drag)
+	
+	popup_window.popup(Rect2i(screen_pos, _original_size))
+	parent_to_drag.size = _original_size
