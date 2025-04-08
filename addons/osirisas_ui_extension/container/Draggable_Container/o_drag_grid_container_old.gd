@@ -1,5 +1,5 @@
 @tool
-class_name ODragContainer
+class_name ODragContainer_OLD
 extends Container
 
 ## A Container where you can place Nodes which have a draggables Container as a parent into 
@@ -130,7 +130,6 @@ func _ready():
 	_scroll_container.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_scroll_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_scroll_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_scroll_container.clip_contents = true
 	
 	add_child(_scroll_container)
 	
@@ -148,96 +147,85 @@ func _exit_tree():
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
 	pass
-
-
+	
 ## Adds a new Item(Widget) to the DragContainer
 ## If the set position is occupied, the other Item will be send to the back
-func add_dragable_item(new_item: Control, arr_position = -1) -> void:
-	_add_dragable(new_item, arr_position)
-
-
-## Adds a new Scene(Widget) to the DragContainer
-## If the set position is occupied, the other Item will be send to the back
-func add_dragable_scene(dragable_scene: PackedScene, arr_position: int = -1) -> void:
-	var new_item: Control = dragable_scene.instantiate()
-	
-	_body.add_child(new_item)
-	new_item.set_deferred("size", _cell_dimensions)
-	
-	_add_dragable(new_item, arr_position)
-
-
-func _add_dragable(new_item: Control, arr_position: int = -1) -> void:
-	if full:
-		printerr("Container: " + self.name + " is full")
-		return
-	
+func add_dragable_item(new_item: Control, position = -1) -> void:
 	new_item.size = _cell_dimensions
-	if new_item.get_parent():
-		new_item.get_parent().remove_child(new_item)
-	
 	_body.add_child(new_item)
-
-	var comp := _get_dragable_comp(new_item)
+	
+	var comp: ODragableComponent = _get_dragable_comp(new_item)
 	if comp != null and not Engine.is_editor_hint():
-		comp.current_container = self
 		comp.end_dragging.connect(_on_item_dropped)
-
-	if arr_position < 0:
+	
+	if position < 0:
 		for i in range(_items.size()):
 			if _items[i] == null:
 				_items[i] = new_item
 				break
 	else:
 		var old_index = _items.find(new_item)
+		
 		if old_index < 0:
-			old_index = _items.size() - 1
-
-		var new_index = arr_position
-
+			old_index = _items.size()
+			
+		var new_index = position
+		
+		var item_on_pos: Control = null
+		
 		if _items[new_index]:
 			_items[old_index] = _items[new_index]
 		else:
 			_items[old_index] = null
 		_items[new_index] = new_item
-
+	
 	if magnet_reorder:
 		_magnet_reorder_items()
 	
-	var 
-	new_item.position = _cell_positions[]
 	_position_items.call_deferred()
 
-
-func remove_dragable(item: Control) -> void:
-	var index := _items.find(item)
-	if index != -1:
-		_remove_dragable_at(index)
-
-func remove_dragable_at(index: int) -> void:
-	if index >= 0 and index < _items.size():
-		_remove_dragable_at(index)
-
-
-func _remove_dragable_at(index: int) -> void:
-	var item := _items[index]
-	if item:
-		if item.is_inside_tree() and _body.has_node(item.get_path()):
-			_body.remove_child(item)
+## Adds a new Scene(Widget) to the DragContainer
+## If the set position is occupied, the other Item will be send to the back
+func add_dragable_scene(dragable_scene: PackedScene, position: int = -1) -> void:
+	if full:
+		printerr("Container: " + self.name + " is full")
+		return
+	
+	var new_item: Control = dragable_scene.instantiate()
+	_body.add_child(new_item)
+	new_item.set_deferred("size", _cell_dimensions)
+	
+	var comp: ODragableComponent = _get_dragable_comp(new_item)
+	if comp != null and not Engine.is_editor_hint():
+		comp.end_dragging.connect(_on_item_dropped)
+	
+	if position < 0:
+		for i in range(_items.size()):
+			if _items[i] == null:
+				_items[i] = new_item
+				break
+				
+		#_items.append(new_item)
+	else:
+		var old_index = _items.find(new_item)
 		
-		var comp = _get_dragable_comp(item)
-		if comp:
-			comp.end_dragging.disconnect(_on_item_dropped)
-
-		#item.queue_free()
-		_items[index] = null
+		if old_index < 0:
+			old_index = _items.size()
+			
+		var new_index = position
+		
+		var item_on_pos: Control = null
+		
+		if _items[new_index]:
+			_items[old_index] = _items[new_index]
+		else:
+			_items[old_index] = null
+		_items[new_index] = new_item
 	
 	if magnet_reorder:
-		
 		_magnet_reorder_items()
-
+	
 	_position_items.call_deferred()
-
 
 func _initialize_items() -> void:
 	for item in _items:
@@ -287,21 +275,53 @@ func _restart_tween() -> void:
 	if not _tween or not _tween.is_valid():
 		_tween = create_tween()
 		_tween.set_parallel(true)
-		_tween.bind_node(self)
 
 func _position_items() -> void:
-	_restart_tween()
+	var x: int
+	var y: int
 	
+	_restart_tween()
 	for item_idx in range(grid.x * grid.y):
-		var coord: Vector2i = _get_coord_of_index(item_idx)
+		match starting_point:
+			E_StartingPoint.TOP_LEFT:
+				if fill_direction == E_FillDirection.HORIZONTAL:
+					x = item_idx % grid.x
+					y = item_idx / grid.x
+				else:  # VERTICAL
+					x = item_idx / grid.y
+					y = item_idx % grid.y
+			
+			E_StartingPoint.TOP_RIGHT:
+				if fill_direction == E_FillDirection.HORIZONTAL:
+					x = grid.x - 1 - (item_idx % grid.x)
+					y = item_idx / grid.x
+				else:  # VERTICAL
+					x = grid.x - 1 - (item_idx / grid.y)
+					y = item_idx % grid.y
+			
+			E_StartingPoint.BOTTOM_LEFT:
+				if fill_direction == E_FillDirection.HORIZONTAL:
+					x = item_idx % grid.x
+					y = grid.y - 1 - (item_idx / grid.x)
+				else:  # VERTICAL
+					x = item_idx / grid.y
+					y = grid.y - 1 - (item_idx % grid.y)
+			
+			E_StartingPoint.BOTTOM_RIGHT:
+				if fill_direction == E_FillDirection.HORIZONTAL:
+					x = grid.x - 1 - (item_idx % grid.x)
+					y = grid.y - 1 - (item_idx / grid.x)
+				else:  # VERTICAL
+					x = grid.x - 1 - (item_idx / grid.y)
+					y = grid.y - 1 - (item_idx % grid.y)
 		
 		# Position items if they exist
-		if _items[item_idx] and _items[item_idx] != null:
-			var target_position = _cell_positions[coord.x][coord.y]
+		if _items[item_idx]:
+			var target_position = _cell_positions[x][y]
 			var item: Control = _items[item_idx]
 			
 			if !_first_time and not Engine.is_editor_hint():
-				if _tween != null and item.position != target_position:
+				if _tween != null:
 				# Tween to the new position using the single Tween instance
 					_tween.tween_property(
 						item, 
@@ -309,54 +329,10 @@ func _position_items() -> void:
 						target_position, 
 						0.25,  # Duration
 					).set_trans(Tween.TRANS_LINEAR).set_ease(Tween.EASE_IN_OUT)
-
 			else:
-				item.position = _cell_positions[coord.x][coord.y]
-		else:
-			# Dummy Tween to "Satisfy" compiler
-			_tween.tween_interval(0.001)
+				item.position = _cell_positions[x][y]
 	
 	_first_time = false
-
-
-func _get_coord_of_index(index: int) -> Vector2i:
-	var x: int = 0
-	var y: int = 0
-	
-	match starting_point:
-		E_StartingPoint.TOP_LEFT:
-			if fill_direction == E_FillDirection.HORIZONTAL:
-				x = index % grid.x
-				y = index / grid.x
-			else:  # VERTICAL
-				x = index / grid.y
-				y = index % grid.y
-		
-		E_StartingPoint.TOP_RIGHT:
-			if fill_direction == E_FillDirection.HORIZONTAL:
-				x = grid.x - 1 - (index % grid.x)
-				y = index / grid.x
-			else:  # VERTICAL
-				x = grid.x - 1 - (index / grid.y)
-				y = index % grid.y
-		
-		E_StartingPoint.BOTTOM_LEFT:
-			if fill_direction == E_FillDirection.HORIZONTAL:
-				x = index % grid.x
-				y = grid.y - 1 - (index / grid.x)
-			else:  # VERTICAL
-				x = index / grid.y
-				y = grid.y - 1 - (index % grid.y)
-		
-		E_StartingPoint.BOTTOM_RIGHT:
-			if fill_direction == E_FillDirection.HORIZONTAL:
-				x = grid.x - 1 - (index % grid.x)
-				y = grid.y - 1 - (index / grid.x)
-			else:  # VERTICAL
-				x = grid.x - 1 - (index / grid.y)
-				y = grid.y - 1 - (index % grid.y)
-	
-	return Vector2i(x, y)
 
 func _calc_grid_positions() -> void:
 	_cell_dimensions.x = (size.x - (grid.x - 1) * grid_separation.x) / grid.x
@@ -407,24 +383,7 @@ func _adj_items_size() -> void:
 		if item:
 			item.set_deferred("size", _cell_dimensions)
 
-func calc_arr_pos(pos: Vector2i) -> int:
-	var x = int((pos.x + _cell_dimensions.x/2) / (_cell_dimensions.x + grid_separation.x))
-	var y = int((pos.y + _cell_dimensions.y/2) / (_cell_dimensions.y + grid_separation.y))
-	
-	var item_idx
-	match fill_direction:
-		E_FillDirection.VERTICAL:
-			item_idx = x * grid.y + y
-		_:
-			item_idx = y * grid.x + x
-	
-	item_idx = clamp(item_idx, 0, (grid.x * grid.y) - 1)
-	
-	return item_idx
-
-func calc_arr_pos_global(global_pos: Vector2i) -> int:
-	var pos = global_pos - Vector2i(get_global_position())
-	
+func _calc_arr_pos(pos: Vector2i) -> int:
 	var x = int((pos.x + _cell_dimensions.x/2) / (_cell_dimensions.x + grid_separation.x))
 	var y = int((pos.y + _cell_dimensions.y/2) / (_cell_dimensions.y + grid_separation.y))
 	
@@ -443,7 +402,7 @@ func _insert_item(item) -> void:
 	var old_index = _items.find(item)
 	
 	var new_pos: Vector2 = item.position
-	var new_index = calc_arr_pos(new_pos)
+	var new_index = _calc_arr_pos(new_pos)
 	
 	var item_on_pos: Control = null
 	

@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://beklw77gaxcvi"]
 
-[ext_resource type="Script" uid="uid://cmv2d8mudq4vr" path="res://addons/osirisas_ui_extension/container/Draggable_Container/o_dragable_component.gd" id="1_i313e"]
+[ext_resource type="Script" uid="uid://cmv2d8mudq4vr" path="res://addons/osirisas_ui_extension/container/Draggable_Container/o_dragable_component_old.gd" id="1_i313e"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_a57ox"]
 bg_color = Color(0.6, 0.6, 0.6, 0)
