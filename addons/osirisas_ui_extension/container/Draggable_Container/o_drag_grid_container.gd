@@ -204,8 +204,8 @@ func _add_dragable(new_item: Control, arr_position: int = -1) -> void:
 	if magnet_reorder:
 		_magnet_reorder_items()
 	
-	var 
-	new_item.position = _cell_positions[]
+	#var coord = _get_coord_of_index(arr_position)
+	#new_item.position = _cell_positions[coord.x][coord.y]
 	_position_items.call_deferred()
 
 

@@ -111,9 +111,8 @@ func stop_dragging() -> void:
 		if current_container != found_container:
 			container_to_add = found_container
 			current_container.remove_dragable(parent_to_drag)
-			print(found_container.calc_arr_pos_global(pos))
-			print(pos)
 			found_container.add_dragable_item(parent_to_drag, found_container.calc_arr_pos_global(pos))
+			parent_to_drag.global_position = pos - _original_size + Vector2i(size)
 			
 		else:
 			container_to_add._body.add_child(parent_to_drag)
