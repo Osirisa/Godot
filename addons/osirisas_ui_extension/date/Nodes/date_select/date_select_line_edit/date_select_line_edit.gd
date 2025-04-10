@@ -1,6 +1,14 @@
+@tool
 extends Control
 
 signal date_btn_pressed
+
+enum PopupSpawnDirection {
+	TOP,
+	BOTTOM,
+	LEFT,
+	RIGHT,
+}
 
 ## The maximum date in which the entered date can be
 @export var max_date: ODate = ODate.new(2099,12,1):
@@ -37,10 +45,20 @@ signal date_btn_pressed
 		if date_le:
 			date_le.color_not_valid = color_not_valid
 
+@export var button_icon_up: Texture2D = load("res://addons/osirisas_ui_extension/shared_ressources/arrow_drop_up.svg")
+@export var button_icon_down: Texture2D = load("res://addons/osirisas_ui_extension/shared_ressources/arrow_drop_down.svg")
+@export var button_icon_right: Texture2D = load("res://addons/osirisas_ui_extension/shared_ressources/arrow_right.svg")
+@export var button_icon_left: Texture2D = load("res://addons/osirisas_ui_extension/shared_ressources/arrow_left.svg")
+
+
 @onready
 var date_le := %ODateLineEdit
 @onready
 var date_select_btn := %Date_select_Button
+@onready
+var date_select_icon := %TR_date_select
+
+var _direction: PopupSpawnDirection
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -51,3 +69,18 @@ func set_date_le_text(date_text: String) -> void:
 
 func _on_date_select_button_pressed():
 	date_btn_pressed.emit()
+
+func switch_btn_icon_direction(direction: PopupSpawnDirection) -> void:
+	_direction = direction
+	
+	match direction:
+		PopupSpawnDirection.TOP:
+			date_select_icon.texture = button_icon_up
+		PopupSpawnDirection.BOTTOM:
+			date_select_icon.texture = button_icon_down
+		PopupSpawnDirection.RIGHT:
+			date_select_icon.texture = button_icon_right
+		PopupSpawnDirection.LEFT:
+			date_select_icon.texture = button_icon_left
+		_:
+			printerr("unknown direction")

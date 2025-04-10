@@ -39,10 +39,11 @@ enum PopupSpawnDirection {
 		_date_select_instance.set_position(Vector2i(global_position.x + offset_pos.x, 
 														global_position.y + offset_pos.y))
 
-@export var orientation : PopupSpawnDirection = PopupSpawnDirection.BOTTOM:
+@export var popup_direction : PopupSpawnDirection = PopupSpawnDirection.BOTTOM:
 	set(value):
-		orientation = value
-		pass
+		popup_direction = value
+		if is_node_ready():
+			_date_select_line_edit_instance.switch_btn_icon_direction(popup_direction)
 
 @export_group("Date")
 @export var starting_date: ODate = ODate.current_date():
@@ -116,7 +117,7 @@ func _on_date_select_btn_pressed()-> void:
 	if use_custom_pos:
 		date_pos = date_select_pos
 	else:
-		match orientation:
+		match popup_direction:
 			PopupSpawnDirection.TOP:
 				date_pos = Vector2i(global_position.x, global_position.y - date_size.y - 2)
 			PopupSpawnDirection.BOTTOM:

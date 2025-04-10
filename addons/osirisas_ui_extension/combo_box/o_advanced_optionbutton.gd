@@ -4,14 +4,59 @@ extends Control
 
 signal item_selected(index: int, text: String)
 
-@export var max_visible_items: int = 10  # Maximale Anzahl sichtbarer Elemente
-@export var items: Array[String] = []  # Alle möglichen Items
+enum PopupSpawnDirection {
+	TOP,
+	BOTTOM,
+	LEFT,
+	RIGHT,
+}
+
+@export_group("Search")
+@export var enable_search: bool = true:
+	set(value):
+		enable_search = value
+		if is_node_ready():
+			if enable_search:
+				_input_le.editable = true
+				_input_le.placeholder_text = placeholder_text
+			else:
+				_input_le.editable = false
+				_input_le.placeholder_text = "" 
+			
 @export var placeholder_text: String = "Search..."  # Platzhalter für die Suche
 @export var enable_fuzzy_search: bool = false  # Fuzzy-Suche aktivieren
+
+@export_group("Items")
+@export var items: Array[String] = []  # Alle möglichen Items.
+@export var max_visible_items: int = 10  # Maximale Anzahl sichtbarer Elemente
+
+@export_group("Behaviour")
+@export var popup_direction: PopupSpawnDirection = PopupSpawnDirection.BOTTOM:
+	set(value):
+		popup_direction = value
+		if is_node_ready():
+			match popup_direction:
+				PopupSpawnDirection.TOP:
+					_tr_button_icon.texture = button_icon_up
+				PopupSpawnDirection.BOTTOM:
+					_tr_button_icon.texture = button_icon_down
+				PopupSpawnDirection.RIGHT:
+					_tr_button_icon.texture = button_icon_right
+				PopupSpawnDirection.LEFT:
+					_tr_button_icon.texture = button_icon_left
+				_:
+					printerr("unknown direction")
+			
 @export var auto_open_popup: bool = true  # Popup automatisch öffnen, wenn gefiltert wird
 @export var close_on_select: bool = true  # Popup schließen, wenn Item ausgewählt wird
-@export var scroll_sensitivity: int = 1  # Wie viele Elemente beim Scrollen gesprungen wird
 @export var disable_auto_complete: bool = false  # Automatisches Übernehmen der Auswahl verhindern
+@export var scroll_sensitivity: int = 1  # Wie viele Elemente beim Scrollen gesprungen wird
+
+@export_category("Textures")
+@export var button_icon_up: Texture2D = load("res://addons/osirisas_ui_extension/shared_ressources/arrow_drop_up.svg")
+@export var button_icon_down: Texture2D = load("res://addons/osirisas_ui_extension/shared_ressources/arrow_drop_down.svg")
+@export var button_icon_right: Texture2D = load("res://addons/osirisas_ui_extension/shared_ressources/arrow_right.svg")
+@export var button_icon_left: Texture2D = load("res://addons/osirisas_ui_extension/shared_ressources/arrow_left.svg")
 
 var _filtered_items: Array[String] = []
 var _popup: PopupPanel
@@ -19,7 +64,7 @@ var _list: ItemList
 var _input_le := LineEdit.new()
 
 var _hbox := HBoxContainer.new()
-
+var _tr_button_icon := TextureRect.new()
 
 func _init() -> void:
 	connect("resized", Callable(self, "_on_resized"))
@@ -30,23 +75,50 @@ func _ready():
 	_hbox.anchors_preset = Control.PRESET_FULL_RECT
 	_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_hbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_hbox.add_theme_constant_override("separation", 0)
 	_hbox.size = size
 	add_child(_hbox)
 	
 	# Suchfeld (oben)
 	_input_le 
 	_input_le.placeholder_text = placeholder_text
-	_input_le.size_flags_horizontal = Control.SIZE_EXPAND_FILL  # Erlaubt Wachstum
+	_input_le.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_input_le.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_input_le.text_changed.connect(_on_text_changed.bind(_input_le))
+	_input_le.size_flags_stretch_ratio = 1.0
+	_input_le.text_changed.connect(_on_text_changed)
+	
+	if not enable_search:
+		_input_le.editable = false
+		_input_le.placeholder_text = ""
+	
 	_hbox.add_child(_input_le)
 	
 	# Dropdown-Button
 	var button = Button.new()
-	button.text = "▼"
-	button.size_flags_horizontal = Control.SIZE_SHRINK_END  # Bleibt kompakt am Rand
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	button.size_flags_stretch_ratio = 0.15
 	button.pressed.connect(_toggle_popup)
+	
+	_tr_button_icon.layout_mode = 1
+	_tr_button_icon.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_tr_button_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED 
+	_tr_button_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	
+	match popup_direction:
+		PopupSpawnDirection.TOP:
+			_tr_button_icon.texture = button_icon_up
+		PopupSpawnDirection.BOTTOM:
+			_tr_button_icon.texture = button_icon_down
+		PopupSpawnDirection.RIGHT:
+			_tr_button_icon.texture = button_icon_right
+		PopupSpawnDirection.LEFT:
+			_tr_button_icon.texture = button_icon_left
+		_:
+			printerr("unknown direction")
+					
+	button.add_child(_tr_button_icon)
+	
 	_hbox.add_child(button)
 
 	# Popup (Dropdown-Menu)
@@ -63,7 +135,7 @@ func _ready():
 	var scroll = ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.custom_minimum_size.y = max_visible_items * 30  # Größe begrenzen
+	scroll.custom_minimum_size.y = min(max_visible_items, items.size()) * 30  # Größe begrenzen
 	vbox.add_child(scroll)
 
 	# Liste mit Items
@@ -212,16 +284,22 @@ func _toggle_popup():
 		# Falls es noch kein Kind des Fensters ist, hinzufügen
 		if _popup.get_parent() != window:
 			window.add_child(_popup)
-
-		# **Popup-Breite an Control anpassen**
-		_popup.set_size(Vector2(size.x, _popup.size.y))  
-
-		# Position berechnen
-		var button_screen_pos = self.get_screen_position()
-		var popup_pos = button_screen_pos + Vector2(0, self.size.y)
-
-		_popup.set_position(popup_pos)
-		_popup.popup()
+		
+		var pop_size: Vector2i = Vector2i(size.x, _popup.size.y)
+		var pop_pos: Vector2i = Vector2i.ZERO
+		
+		match popup_direction:
+			PopupSpawnDirection.TOP:
+				pop_pos = Vector2i(global_position.x, global_position.y - pop_size.y - 2)
+			PopupSpawnDirection.BOTTOM:
+				pop_pos = Vector2i(global_position.x, global_position.y + size.y + 2)
+			PopupSpawnDirection.RIGHT:
+				pop_pos = Vector2i(global_position.x + size.x + 2, global_position.y)
+			PopupSpawnDirection.LEFT:
+				pop_pos = Vector2i(global_position.x - size.x - 2, global_position.y)
+			_:
+				printerr("unknown direction")
+		_popup.popup(Rect2i(pop_pos, pop_size))
 		_popup.grab_focus()
 
 
