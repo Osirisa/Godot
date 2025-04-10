@@ -172,7 +172,7 @@ func _add_dragable(new_item: Control, arr_position: int = -1) -> void:
 		printerr("Container: " + self.name + " is full")
 		return
 	
-	new_item.size = _cell_dimensions
+	new_item.set_deferred("size", _cell_dimensions)
 	if new_item.get_parent():
 		new_item.get_parent().remove_child(new_item)
 	
