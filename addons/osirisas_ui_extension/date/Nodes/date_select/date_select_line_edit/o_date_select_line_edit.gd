@@ -93,6 +93,9 @@ var _date_select_line_edit_scene: PackedScene = preload("res://addons/osirisas_u
 var _date_select_instance: Popup = _date_select_scene.instantiate()
 var _date_select_line_edit_instance: Control = _date_select_line_edit_scene.instantiate()
 
+func _init() -> void:
+	custom_minimum_size = custom_minimum_size if Vector2i(80, 31) < Vector2i(custom_minimum_size) else Vector2i(92, 31) 
+
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	add_child(_date_select_instance)
@@ -102,10 +105,11 @@ func _ready():
 	starting_date = ODate.current_date()
 	
 	_date_select_line_edit_instance.position = Vector2i(0,0)
-	custom_minimum_size = Vector2i(80,31)
 	
 	_date_select_instance.connect("date_selected", Callable(self, "_on_date_selected"))
 	_date_select_line_edit_instance.connect("date_btn_pressed" ,Callable(self,"_on_date_select_btn_pressed"))
+	_date_select_line_edit_instance.switch_btn_icon_direction(popup_direction)
+
 
 func _on_date_select_btn_pressed()-> void:
 	var date_pos: Vector2i
@@ -119,13 +123,13 @@ func _on_date_select_btn_pressed()-> void:
 	else:
 		match popup_direction:
 			PopupSpawnDirection.TOP:
-				date_pos = Vector2i(global_position.x, global_position.y - date_size.y - 2)
+				date_pos = Vector2i(get_screen_position().x, get_screen_position().y - date_size.y - 2)
 			PopupSpawnDirection.BOTTOM:
-				date_pos = Vector2i(global_position.x, global_position.y + size.y + 2)
+				date_pos = Vector2i(get_screen_position().x, get_screen_position().y + size.y + 2)
 			PopupSpawnDirection.RIGHT:
-				date_pos = Vector2i(global_position.x + size.x + 2, global_position.y)
+				date_pos = Vector2i(get_screen_position().x + size.x + 2, get_screen_position().y)
 			PopupSpawnDirection.LEFT:
-				date_pos = Vector2i(global_position.x - size.x - 2, global_position.y)
+				date_pos = Vector2i(get_screen_position().x - size.x - 2, get_screen_position().y)
 			_:
 				printerr("Unknown orientation")
 	

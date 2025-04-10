@@ -68,7 +68,7 @@ var _tr_button_icon := TextureRect.new()
 
 func _init() -> void:
 	connect("resized", Callable(self, "_on_resized"))
-	custom_minimum_size = Vector2i(92, 31)
+	custom_minimum_size = custom_minimum_size if Vector2i(92, 31) < Vector2i(custom_minimum_size) else Vector2i(92, 31) 
 
 func _ready():
 	# Hauptlayout
@@ -290,13 +290,13 @@ func _toggle_popup():
 		
 		match popup_direction:
 			PopupSpawnDirection.TOP:
-				pop_pos = Vector2i(global_position.x, global_position.y - pop_size.y - 2)
+				pop_pos = Vector2i(get_screen_position().x, get_screen_position().y - pop_size.y - 2)
 			PopupSpawnDirection.BOTTOM:
-				pop_pos = Vector2i(global_position.x, global_position.y + size.y + 2)
+				pop_pos = Vector2i(get_screen_position().x, get_screen_position().y + size.y + 2)
 			PopupSpawnDirection.RIGHT:
-				pop_pos = Vector2i(global_position.x + size.x + 2, global_position.y)
+				pop_pos = Vector2i(get_screen_position().x + size.x + 2, get_screen_position().y)
 			PopupSpawnDirection.LEFT:
-				pop_pos = Vector2i(global_position.x - size.x - 2, global_position.y)
+				pop_pos = Vector2i(get_screen_position().x - size.x - 2, get_screen_position().y)
 			_:
 				printerr("unknown direction")
 		_popup.popup(Rect2i(pop_pos, pop_size))

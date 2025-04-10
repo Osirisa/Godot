@@ -62,7 +62,7 @@ var _direction: PopupSpawnDirection
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	pass # Replace with function body.
+	switch_btn_icon_direction(_direction)
 
 func set_date_le_text(date_text: String) -> void:
 	date_le.text = date_text
