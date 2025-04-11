@@ -1,0 +1,26 @@
+[gd_scene load_steps=4 format=3 uid="uid://ddqm1q63l53as"]
+
+[ext_resource type="Script" uid="uid://dx12ilp5qiaw1" path="res://tests/test scenes/fancy_test.gd" id="1_1jy5l"]
+[ext_resource type="Script" uid="uid://ofy75rl0evt7" path="res://addons/osirisas_ui_extension/fancy_ui/fancy_le/o_fancy_container.gd" id="1_oq7my"]
+
+[sub_resource type="SystemFont" id="SystemFont_1jy5l"]
+
+[node name="FancyTest" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_1jy5l")
+
+[node name="OFancyContainer" type="Container" parent="."]
+layout_mode = 0
+offset_right = 192.0
+offset_bottom = 85.0
+script = ExtResource("1_oq7my")
+font = SubResource("SystemFont_1jy5l")
+label_text = "DWA"
+label_spacing = 0
+label_positioning_x = 10
+metadata/_custom_type_script = "uid://ofy75rl0evt7"

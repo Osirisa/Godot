@@ -187,12 +187,14 @@ func clear():
 	items.clear()
 	_filtered_items.clear()
 
+
 func get_item_icon(idx: int, get_unfiltered: bool = false) -> Texture2D:
 	if get_unfiltered:
 		return items[idx].icon
 	
 	else:
 		return _filtered_items[idx].icon
+
 
 func get_item_id(idx: int, get_unfiltered: bool = false) -> int:
 	if get_unfiltered:
@@ -204,6 +206,7 @@ func get_item_id(idx: int, get_unfiltered: bool = false) -> int:
 			return _filtered_items[idx].id
 	
 	return -1
+
 
 func get_item_index(id: int, get_unfiltered: bool = false):
 	if get_unfiltered:
@@ -218,6 +221,7 @@ func get_item_index(id: int, get_unfiltered: bool = false):
 	
 	return -1
 
+
 func get_item_metadata(idx: int, get_unfiltered: bool = false) -> Variant:
 	if get_unfiltered:
 		if items.size() > idx:
@@ -228,6 +232,7 @@ func get_item_metadata(idx: int, get_unfiltered: bool = false) -> Variant:
 			return _filtered_items[idx].metadata
 	
 	return null
+
 
 func get_item_text(idx: int, get_unfiltered: bool = false) -> String:
 	if get_unfiltered:
@@ -240,8 +245,10 @@ func get_item_text(idx: int, get_unfiltered: bool = false) -> String:
 	
 	return ""
 
+
 func get_popup() -> PopupPanel:
 	return _popup
+
 
 func get_selectable_item(from_last: bool = false, get_unfiltered: bool = false) -> int:
 	if get_unfiltered:
@@ -256,6 +263,7 @@ func get_selectable_item(from_last: bool = false, get_unfiltered: bool = false) 
 	
 	return -1
 
+
 func get_selected_id(get_unfiltered: bool = false) -> int:
 	var selected_indexes: PackedInt32Array = _list.get_selected_items()
 	
@@ -263,6 +271,7 @@ func get_selected_id(get_unfiltered: bool = false) -> int:
 		return _filtered_items[selected_indexes[0]].id
 	
 	return -1
+
 
 func has_selectable_items(get_unfiltered: bool = false) -> bool:
 	if get_unfiltered:
@@ -498,6 +507,7 @@ func _on_item_selected(index: int):
 func _on_resized() -> void:
 	if _hbox:
 		_hbox.size = size
+
 
 func check_not_inside() -> bool:
 	_popup_rect = get_popup_position_and_size()
