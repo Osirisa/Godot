@@ -16,11 +16,18 @@ script = ExtResource("1_1jy5l")
 
 [node name="OFancyContainer" type="Container" parent="."]
 layout_mode = 0
-offset_right = 192.0
+offset_right = 187.0
 offset_bottom = 85.0
 script = ExtResource("1_oq7my")
+padding_top = 8
+padding_bottom = 8
+padding_right = 8
+padding_left = 8
 font = SubResource("SystemFont_1jy5l")
 label_text = "DWA"
 label_spacing = 0
 label_positioning_x = 10
 metadata/_custom_type_script = "uid://ofy75rl0evt7"
+
+[node name="LineEdit" type="LineEdit" parent="OFancyContainer"]
+layout_mode = 2

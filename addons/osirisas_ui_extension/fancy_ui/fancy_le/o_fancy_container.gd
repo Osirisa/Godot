@@ -3,11 +3,23 @@ class_name OFancyContainer
 extends Container
 
 @export_group("Body Settings")
-@export var padding: int = 8:
+@export var padding_top: int = 4:
 	set(value):
-		padding = value
+		padding_top = value
 		queue_redraw()
-		
+@export var padding_bottom: int = 4:
+	set(value):
+		padding_bottom = value
+		queue_redraw()
+@export var padding_right: int = 4:
+	set(value):
+		padding_right = value
+		queue_redraw()
+@export var padding_left: int = 4:
+	set(value):
+		padding_left = value
+		queue_redraw()
+
 @export var background_color: Color = Color(1,1,1,0):
 	set(value):
 		background_color = value
@@ -86,11 +98,16 @@ func get_usable_rect() -> Rect2:
 	if not font:
 		return Rect2(Vector2.ZERO, size)
 
-	var label_height = int(font.get_ascent(label_font_size) / 2)
-	var label_offset_top = label_height + border_radius + border_width
-	var top_padding = label_offset_top + padding
-	var inner_size = Vector2(size.x - padding * 2, size.y - top_padding - padding)
-	return Rect2(Vector2(padding, top_padding), inner_size)
+	var label_height = int(font.get_ascent(label_font_size))
+	var label_offset_top = label_height / 2 + border_radius + border_width
+	var inner_pos = Vector2(padding_left, label_offset_top + padding_top)
+	var inner_size = Vector2(
+		size.x - (padding_left + padding_right),
+		size.y - (label_offset_top + padding_top + padding_bottom)
+	)
+	return Rect2(inner_pos, inner_size)
+
+
 
 
 func _draw() -> void:
