@@ -2,7 +2,7 @@
 class_name OAdvancedOptionButton
 extends Control
 
-signal item_selected(index: int, text: String)
+signal item_selected(index: int, item: OAdvancedOptionBtnItem)
 
 enum PopupSpawnDirection {
 	TOP,
@@ -27,7 +27,7 @@ enum PopupSpawnDirection {
 @export var enable_fuzzy_search: bool = false  # Fuzzy-Suche aktivieren
 
 @export_group("Items")
-@export var items: Array[String] = []  # Alle möglichen Items.
+@export var items: Array[OAdvancedOptionBtnItem] = []  # Alle möglichen Items.
 @export var max_visible_items: int = 10  # Maximale Anzahl sichtbarer Elemente
 
 @export_group("Behaviour")
@@ -35,18 +35,8 @@ enum PopupSpawnDirection {
 	set(value):
 		popup_direction = value
 		if is_node_ready():
-			match popup_direction:
-				PopupSpawnDirection.TOP:
-					_tr_button_icon.texture = button_icon_up
-				PopupSpawnDirection.BOTTOM:
-					_tr_button_icon.texture = button_icon_down
-				PopupSpawnDirection.RIGHT:
-					_tr_button_icon.texture = button_icon_right
-				PopupSpawnDirection.LEFT:
-					_tr_button_icon.texture = button_icon_left
-				_:
-					printerr("unknown direction")
-			
+			_tr_button_icon.texture = get_popup_icon()
+
 @export var auto_open_popup: bool = true  # Popup automatisch öffnen, wenn gefiltert wird
 @export var close_on_select: bool = true  # Popup schließen, wenn Item ausgewählt wird
 @export var disable_auto_complete: bool = false  # Automatisches Übernehmen der Auswahl verhindern
@@ -58,9 +48,12 @@ enum PopupSpawnDirection {
 @export var button_icon_right: Texture2D = load("res://addons/osirisas_ui_extension/shared_ressources/arrow_right.svg")
 @export var button_icon_left: Texture2D = load("res://addons/osirisas_ui_extension/shared_ressources/arrow_left.svg")
 
-var _filtered_items: Array[String] = []
+var _filtered_items: Array[OAdvancedOptionBtnItem] = []
+
 var _popup: PopupPanel
-var _list: ItemList
+var _popup_rect := Rect2i()
+
+var _list := ItemList.new()
 var _input_le := LineEdit.new()
 
 var _hbox := HBoxContainer.new()
@@ -104,26 +97,16 @@ func _ready():
 	_tr_button_icon.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_tr_button_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED 
 	_tr_button_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_tr_button_icon.texture = get_popup_icon()
 	
-	match popup_direction:
-		PopupSpawnDirection.TOP:
-			_tr_button_icon.texture = button_icon_up
-		PopupSpawnDirection.BOTTOM:
-			_tr_button_icon.texture = button_icon_down
-		PopupSpawnDirection.RIGHT:
-			_tr_button_icon.texture = button_icon_right
-		PopupSpawnDirection.LEFT:
-			_tr_button_icon.texture = button_icon_left
-		_:
-			printerr("unknown direction")
-					
 	button.add_child(_tr_button_icon)
-	
 	_hbox.add_child(button)
 
 	# Popup (Dropdown-Menu)
 	_popup = PopupPanel.new()
 	_popup.hide()
+	_popup_rect = get_popup_position_and_size()
+	
 	add_child(_popup)
 	
 	# VBox für Liste
@@ -139,14 +122,13 @@ func _ready():
 	vbox.add_child(scroll)
 
 	# Liste mit Items
-	_list = ItemList.new()
 	_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_list.item_selected.connect(_on_item_selected)
 	scroll.add_child(_list)
-
-	# Initiale Item-Liste laden
-	set_items(items)
+	
+	_filtered_items = items
+	_update_list()
 
 func _gui_input(event):
 	if event is InputEventMouseButton and event.pressed:
@@ -157,101 +139,265 @@ func _gui_input(event):
 			_scroll_select(scroll_sensitivity)
 			accept_event()
 
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed:
+		if event.keycode == KEY_ESCAPE:
+			_popup.hide()
+	if event is InputEventMouseButton and event.pressed:
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			if check_not_inside():
+				_popup.hide()
+
+
 func set_items(new_items: Array[String]) -> void:
-	items = new_items.duplicate()
-	_filtered_items = items
+	for item_text: String in new_items:
+		items.append(OAdvancedOptionBtnItem.new(item_text, items.size()))
+	
+	_filtered_items = items.duplicate(true)
 	_update_list()
 
 
 func add_icon_item(texture: Texture2D, label: String, id: int = -1):
-	_list.add_item(label, texture)
-	if id == -1:
-		id = _list.get_item_count() - 1
-	_list.set_item_metadata(_list.get_item_count() - 1, id)
-	items.append(label)
+	if id < 0:
+		id = items.size()
+	
+	items.append(OAdvancedOptionBtnItem.new(label, id, texture))
+	_filtered_items = items.duplicate(true)
+	_update_list()
+
 
 func add_item(label: String, id: int = -1):
-	_list.add_item(label)
-	if id == -1:
-		id = _list.get_item_count() - 1
-	_list.set_item_metadata(_list.get_item_count() - 1, id)
-	items.append(label)
+	if id < 0:
+		id = items.size()
+	
+	items.append(OAdvancedOptionBtnItem.new(label, id))
+	_filtered_items = items.duplicate(true)
+	_update_list()
+
 
 func add_separator(text: String = ""):
-	_list.add_item("--- " + text + " ---")
-	_list.set_item_disabled(_list.get_item_count() - 1, true)
+	var id = items.size()
+	items.append(OAdvancedOptionBtnItem.new(text, id, null, null, true, true))
+	_update_list()
+
 
 func clear():
 	_list.clear()
 	items.clear()
+	_filtered_items.clear()
 
-func get_item_icon(idx: int) -> Texture2D:
-	return _list.get_item_icon(idx)
+func get_item_icon(idx: int, get_unfiltered: bool = false) -> Texture2D:
+	if get_unfiltered:
+		return items[idx].icon
+	
+	else:
+		return _filtered_items[idx].icon
 
-func get_item_id(idx: int) -> int:
-	return _list.get_item_metadata(idx)
-
-func get_item_index(id: int):
-	for i in range(_list.get_item_count()):
-		if _list.get_item_metadata(i) == id:
-			return i
+func get_item_id(idx: int, get_unfiltered: bool = false) -> int:
+	if get_unfiltered:
+		if items.size() > idx:
+			return items[idx].id
+		
+	else:
+		if _filtered_items.size() > idx:
+			return _filtered_items[idx].id
+	
 	return -1
 
-func get_item_metadata(idx: int) -> Variant:
-	return _list.get_item_metadata(idx)
+func get_item_index(id: int, get_unfiltered: bool = false):
+	if get_unfiltered:
+		for idx in range(items.size()):
+			if items[idx].id == id:
+				return idx
+		
+	else:
+		for idx in range(_filtered_items.size()):
+			if _filtered_items[idx].id == id:
+				return idx
+	
+	return -1
 
-func get_item_text(idx: int) -> String:
-	return _list.get_item_text(idx)
+func get_item_metadata(idx: int, get_unfiltered: bool = false) -> Variant:
+	if get_unfiltered:
+		if items.size() > idx:
+			return items[idx].metadata
+	
+	else:
+		if _filtered_items.size() > idx:
+			return _filtered_items[idx].metadata
+	
+	return null
+
+func get_item_text(idx: int, get_unfiltered: bool = false) -> String:
+	if get_unfiltered:
+		if items.size() > idx:
+			return items[idx].label
+	
+	else:
+		if _filtered_items.size() > idx:
+			return _filtered_items[idx].label
+	
+	return ""
 
 func get_popup() -> PopupPanel:
 	return _popup
 
-func get_selectable_item(from_last: bool = false) -> int:
-	for i in range(_list.get_item_count()):
-		if not _list.is_item_disabled(i):
-			return i
+func get_selectable_item(from_last: bool = false, get_unfiltered: bool = false) -> int:
+	if get_unfiltered:
+		for idx in range(items.size()):
+			if not items[idx].disabled:
+				return idx
+	
+	else:
+		for idx in range(_filtered_items.size()):
+			if not _filtered_items[idx].disabled:
+				return idx
+	
 	return -1
 
-func get_selected_id() -> int:
-	var selected = _list.get_selected_items()
-	if selected.size() > 0:
-		return _list.get_item_metadata(selected[0])
+func get_selected_id(get_unfiltered: bool = false) -> int:
+	var selected_indexes: PackedInt32Array = _list.get_selected_items()
+	
+	if selected_indexes.size() > 0:
+		return _filtered_items[selected_indexes[0]].id
+	
 	return -1
 
-func has_selectable_items() -> bool:
-	return _list.get_item_count() > 0
+func has_selectable_items(get_unfiltered: bool = false) -> bool:
+	if get_unfiltered:
+		for idx in range(items.size()):
+			if not items[idx].disabled:
+				return true
+	
+	else:
+		for idx in range(_filtered_items.size()):
+			if not _filtered_items[idx].disabled:
+				return true
+	
+	return false
 
-func is_item_disabled(idx: int) -> bool:
-	return _list.is_item_disabled(idx)
 
-func is_item_separator(idx: int) -> bool:
-	return _list.get_item_text(idx).begins_with("---")
+func is_item_disabled(idx: int, get_unfiltered: bool = false) -> bool:
+	if get_unfiltered:
+		if items.size() > idx:
+			return items[idx].disabled
+	
+	else:
+		if _filtered_items.size() > idx:
+			return _filtered_items[idx].disabled
+	
+	return false
 
-func remove_item(idx: int):
-	_list.remove_item(idx)
+
+func is_item_separator(idx: int, get_unfiltered: bool = false) -> bool:
+	if get_unfiltered:
+		if items.size() > idx:
+			return items[idx].is_separator
+	
+	else:
+		if _filtered_items.size() > idx:
+			return _filtered_items[idx].is_separator
+	
+	return false
+
+
+func remove_item(idx: int, unfiltered: bool = false):
+	if unfiltered:
+		if items.size() > idx:
+			items.remove_at(idx)
+	
+	else:
+		if _filtered_items.size() > idx:
+			_filtered_items.remove_at(idx)
+	
+	_update_list()
+
 
 func select(idx: int):
-	_list.select(idx)
-	item_selected.emit(idx, _list.get_item_text(idx))
+	if _filtered_items.size() > idx:
+		_list.select(idx)
+		item_selected.emit(idx, _filtered_items[idx])
 
-func set_item_disabled(idx: int, disabled: bool):
-	_list.set_item_disabled(idx, disabled)
 
-func set_item_icon(idx: int, texture: Texture2D):
-	_list.set_item_icon(idx, texture)
+func set_item_disabled(idx: int, disabled: bool, unfiltered: bool = false):
+	if unfiltered:
+		if items.size() > idx:
+			items[idx].disabled = disabled
+	
+	else:
+		if _filtered_items.size() > idx:
+			_filtered_items[idx].disabled = disabled
+	
+	_update_list()
 
-func set_item_id(idx: int, id: int):
-	_list.set_item_metadata(idx, id)
 
-func set_item_metadata(idx: int, metadata: Variant):
-	_list.set_item_metadata(idx, metadata)
+func set_item_icon(idx: int, texture: Texture2D, unfiltered: bool = false):
+	if unfiltered:
+		if items.size() > idx:
+			items[idx].icon = texture
+	
+	else:
+		if _filtered_items.size() > idx:
+			_filtered_items[idx].icon = texture
+	
+	_update_list()
 
-func set_item_text(idx: int, text: String):
-	_list.set_item_text(idx, text)
+
+func set_item_id(idx: int, id: int, unfiltered: bool = false):
+	if unfiltered:
+		if items.size() > idx:
+			items[idx].id = id
+	
+	else:
+		if _filtered_items.size() > idx:
+			_filtered_items[idx].id = id
+
+
+func set_item_metadata(idx: int, metadata: Variant, unfiltered: bool = false):
+	if unfiltered:
+		if items.size() > idx:
+			items[idx].metadata = metadata
+	
+	else:
+		if _filtered_items.size() > idx:
+			_filtered_items[idx].metadata = metadata
+
+
+func set_item_text(idx: int, text: String, unfiltered: bool = false):
+	if unfiltered:
+		if items.size() > idx:
+			items[idx].label = text
+	
+	else:
+		if _filtered_items.size() > idx:
+			_filtered_items[idx].label = text
+	
+	_update_list()
+
 
 func show_popup():
 	_toggle_popup()
 
+
+func get_popup_icon() -> Texture2D:
+	match popup_direction:
+		PopupSpawnDirection.TOP: return button_icon_up
+		PopupSpawnDirection.BOTTOM: return button_icon_down
+		PopupSpawnDirection.RIGHT: return button_icon_right
+		PopupSpawnDirection.LEFT: return button_icon_left
+		_: return null
+
+
+func get_popup_position_and_size() -> Rect2i:
+	var pop_size = Vector2i(size.x, _popup.size.y)
+	var pop_pos = get_screen_position()
+	match popup_direction:
+		PopupSpawnDirection.TOP: pop_pos.y -= pop_size.y + 2
+		PopupSpawnDirection.BOTTOM: pop_pos.y += size.y + 2
+		PopupSpawnDirection.RIGHT: pop_pos.x += size.x + 2
+		PopupSpawnDirection.LEFT: pop_pos.x -= size.x + 2
+	return Rect2i(pop_pos, pop_size)
 
 
 func _scroll_select(direction: int):
@@ -266,42 +412,27 @@ func _scroll_select(direction: int):
 		_list.select(new_index)
 		_on_item_selected(new_index)
 
+
 func _update_list():
 	_list.clear()
-	for item in _filtered_items:
-		_list.add_item(item)
+	for item_idx in range(_filtered_items.size()):
+		var item = _filtered_items[item_idx]
+	
+		if item.is_separator:
+			_list.add_item("---" + item.label + "---", item.icon)
+		else:
+			_list.add_item(item.label, item.icon)
+		
+		_list.set_item_disabled(item_idx, item.disabled)
+
 
 func _toggle_popup():
 	if _popup.visible:
 		_popup.hide()
 	else:
-		var window = get_window()
-
-		# Falls das Popup einen falschen Parent hat, zuerst entfernen
-		if _popup.get_parent() and _popup.get_parent() != window:
-			_popup.get_parent().remove_child(_popup)
-
-		# Falls es noch kein Kind des Fensters ist, hinzufügen
-		if _popup.get_parent() != window:
-			window.add_child(_popup)
-		
-		var pop_size: Vector2i = Vector2i(size.x, _popup.size.y)
-		var pop_pos: Vector2i = Vector2i.ZERO
-		
-		match popup_direction:
-			PopupSpawnDirection.TOP:
-				pop_pos = Vector2i(get_screen_position().x, get_screen_position().y - pop_size.y - 2)
-			PopupSpawnDirection.BOTTOM:
-				pop_pos = Vector2i(get_screen_position().x, get_screen_position().y + size.y + 2)
-			PopupSpawnDirection.RIGHT:
-				pop_pos = Vector2i(get_screen_position().x + size.x + 2, get_screen_position().y)
-			PopupSpawnDirection.LEFT:
-				pop_pos = Vector2i(get_screen_position().x - size.x - 2, get_screen_position().y)
-			_:
-				printerr("unknown direction")
-		_popup.popup(Rect2i(pop_pos, pop_size))
+		_popup_rect = get_popup_position_and_size()
+		_popup.popup(_popup_rect)
 		_popup.grab_focus()
-
 
 
 func _on_text_changed(new_text: String):
@@ -311,21 +442,24 @@ func _on_text_changed(new_text: String):
 	if auto_open_popup:
 		_show_popup_if_needed()
 
+
 func _on_filter_changed(new_text: String):
 	if new_text.is_empty():
 		_filtered_items = items.duplicate()
 	else:
 		_filtered_items = _filter_items(new_text)
-
+	
 	_update_list()
 	if auto_open_popup:
 		_show_popup_if_needed()
 
-func _filter_items(query: String) -> Array[String]:
+
+func _filter_items(query: String) -> Array[OAdvancedOptionBtnItem]:
 	if enable_fuzzy_search:
-		return items.filter(func(item): return _fuzzy_match(query, item))
+		return items.filter(func(item: OAdvancedOptionBtnItem): return _fuzzy_match(query, item.label))
 	else:
-		return items.filter(func(item): return query.to_lower() in item.to_lower())
+		return items.filter(func(item: OAdvancedOptionBtnItem): return query.to_lower() in item.label.to_lower())
+
 
 func _fuzzy_match(query: String, text: String) -> bool:
 	query = query.to_lower()
@@ -338,21 +472,33 @@ func _fuzzy_match(query: String, text: String) -> bool:
 				return true
 	return false
 
+
 func _show_popup_if_needed():
 	if not _popup.visible and _filtered_items.size() > 0:
 		_popup.unfocusable = true
-		_toggle_popup()
+		
+		_popup_rect = get_popup_position_and_size()
+		
+		_popup.position = _popup_rect.position
+		_popup.size = _popup_rect.size
+		_popup.show()
+		
 		_popup.unfocusable = false
 
+
 func _on_item_selected(index: int):
-	var selected_text = _filtered_items[index]
+	var selected_item: OAdvancedOptionBtnItem = _filtered_items[index]
 	if not disable_auto_complete:
-		_input_le.text = selected_text
-	item_selected.emit(index, selected_text)
+		_input_le.text = selected_item.label
+	item_selected.emit(index, selected_item)
 	if close_on_select:
 		_popup.hide()
 
 
-func _on_resized():
+func _on_resized() -> void:
 	if _hbox:
 		_hbox.size = size
+
+func check_not_inside() -> bool:
+	_popup_rect = get_popup_position_and_size()
+	return not (_popup_rect.has_point(get_global_mouse_position()) or self.get_rect().has_point(get_global_mouse_position()))

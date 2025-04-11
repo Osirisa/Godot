@@ -1,4 +1,4 @@
-[gd_scene load_steps=26 format=3 uid="uid://bwwfei0xtaahp"]
+[gd_scene load_steps=31 format=3 uid="uid://bwwfei0xtaahp"]
 
 [ext_resource type="Script" uid="uid://038mbasy8wcu" path="res://tests/test.gd" id="1_ipyfc"]
 [ext_resource type="Script" uid="uid://bkvnkwnbjpluy" path="res://addons/osirisas_ui_extension/table_node/o_table_node.gd" id="3_eoo3w"]
@@ -6,6 +6,7 @@
 [ext_resource type="Script" uid="uid://bej14ggrnsqxj" path="res://addons/osirisas_ui_extension/regex_line_edit_node/date_time_nodes/o_date_le_node.gd" id="5_dudr4"]
 [ext_resource type="Script" uid="uid://c3mxe8tu8opqk" path="res://addons/osirisas_ui_extension/combo_box/o_advanced_optionbutton.gd" id="6_mg40m"]
 [ext_resource type="Texture2D" uid="uid://clw1xvmmrx2os" path="res://addons/osirisas_ui_extension/shared_ressources/arrow_drop_up.svg" id="7_0vvhy"]
+[ext_resource type="Script" uid="uid://cf00ryk5s0v35" path="res://addons/osirisas_ui_extension/combo_box/o_advanced_optionbtn_item.gd" id="7_c535y"]
 [ext_resource type="Script" uid="uid://cw8kwpftsvaat" path="res://addons/osirisas_ui_extension/date/Nodes/date_select/date_select_line_edit/o_date_select_line_edit.gd" id="7_h6amr"]
 [ext_resource type="Texture2D" uid="uid://cnoa0qbbooyk3" path="res://addons/osirisas_ui_extension/shared_ressources/arrow_drop_down.svg" id="8_c535y"]
 [ext_resource type="Texture2D" uid="uid://bcv3d5v1jtpna" path="res://addons/osirisas_ui_extension/shared_ressources/arrow_right.svg" id="9_d1x8j"]
@@ -48,11 +49,11 @@ bg_color = Color(0.53422, 0.702955, 0.528986, 1)
 [sub_resource type="Theme" id="Theme_eh8fq"]
 Label/styles/normal = SubResource("StyleBoxFlat_f7wrf")
 
-[sub_resource type="Resource" id="Resource_0vvhy"]
+[sub_resource type="Resource" id="Resource_d1x8j"]
 script = ExtResource("4_pfhxr")
 year = 2025
 month = 4
-day = 10
+day = 11
 
 [sub_resource type="Resource" id="Resource_edug8"]
 script = ExtResource("4_pfhxr")
@@ -77,6 +78,38 @@ script = ExtResource("4_pfhxr")
 year = 2199
 month = 12
 day = 31
+
+[sub_resource type="Resource" id="Resource_c535y"]
+script = ExtResource("7_c535y")
+label = "Test"
+id = 0
+disabled = false
+is_separator = false
+metadata/_custom_type_script = "uid://cf00ryk5s0v35"
+
+[sub_resource type="Resource" id="Resource_wnsor"]
+script = ExtResource("7_c535y")
+label = "test2"
+id = 1
+disabled = false
+is_separator = false
+metadata/_custom_type_script = "uid://cf00ryk5s0v35"
+
+[sub_resource type="Resource" id="Resource_p4feh"]
+script = ExtResource("7_c535y")
+label = "wda"
+id = 2
+disabled = false
+is_separator = false
+metadata/_custom_type_script = "uid://cf00ryk5s0v35"
+
+[sub_resource type="Resource" id="Resource_05n2r"]
+script = ExtResource("7_c535y")
+label = "eahgsg"
+id = 3
+disabled = false
+is_separator = false
+metadata/_custom_type_script = "uid://cf00ryk5s0v35"
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -179,7 +212,7 @@ custom_minimum_size = Vector2(92, 31)
 layout_mode = 2
 script = ExtResource("7_h6amr")
 date_select_size = Vector2i(240, 220)
-starting_date = SubResource("Resource_0vvhy")
+starting_date = SubResource("Resource_d1x8j")
 max_date = SubResource("Resource_edug8")
 min_date = SubResource("Resource_kl2hs")
 
@@ -196,7 +229,7 @@ metadata/_custom_type_script = "uid://bej14ggrnsqxj"
 custom_minimum_size = Vector2(92, 31)
 layout_mode = 2
 script = ExtResource("6_mg40m")
-items = Array[String](["\"Reast\"", "awd", "awgfawg"])
+items = Array[ExtResource("7_c535y")]([SubResource("Resource_c535y"), SubResource("Resource_wnsor"), SubResource("Resource_p4feh"), SubResource("Resource_05n2r")])
 popup_direction = 2
 button_icon_up = ExtResource("7_0vvhy")
 button_icon_down = ExtResource("8_c535y")

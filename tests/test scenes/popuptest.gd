@@ -98,10 +98,8 @@ func _ready() -> void:
 		#$OComboBox.add_item(string)
 	for string in test_arr:
 		$OAdvancedOptionButton.add_item(string)
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
-	pass
+		$Window/OAdvancedOptionButton2.add_item(string)
+		$Window/OAdvancedOptionButton2.set_item_metadata($Window/OAdvancedOptionButton2.items.size()-1, string)
 
 
 func _on_button_pressed() -> void:
@@ -119,14 +117,7 @@ func random_letter_mixed():
 	return char(randi() % 26 + (65 if is_upper else 97))
 
 
-func _on_button_2_pressed() -> void:
-	get_viewport().gui_embed_subwindows = false
-	var window := Window.new()
-	add_child(window)
-	
-	var adv_opt_btn := OAdvancedOptionButton.new()
-	
-	
-	window.add_child(adv_opt_btn)
-	window.show()
-	adv_opt_btn.set_items(test_arr)
+func _on_o_advanced_option_button_2_item_selected(index: int, item: OAdvancedOptionBtnItem) -> void:
+	print($Window/OAdvancedOptionButton2.get_item_metadata(index))
+	print(index)
+	print(item.label)
