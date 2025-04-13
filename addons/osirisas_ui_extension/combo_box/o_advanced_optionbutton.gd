@@ -11,6 +11,8 @@ enum PopupSpawnDirection {
 	RIGHT,
 }
 
+const ITEM_SIZE_HEIGHT: int = 35
+
 @export_group("Search")
 @export var enable_search: bool = true:
 	set(value):
@@ -48,6 +50,8 @@ enum PopupSpawnDirection {
 @export var button_icon_right: Texture2D = load("res://addons/osirisas_ui_extension/shared_ressources/arrow_right.svg")
 @export var button_icon_left: Texture2D = load("res://addons/osirisas_ui_extension/shared_ressources/arrow_left.svg")
 
+var current_index: int = -1
+
 var _filtered_items: Array[OAdvancedOptionBtnItem] = []
 
 var _popup: OPopup
@@ -59,7 +63,8 @@ var _input_le := LineEdit.new()
 var _hbox := HBoxContainer.new()
 var _tr_button_icon := TextureRect.new()
 
-var window_timer := Timer.new()
+var _window_timer := Timer.new()
+var _window_timer2 := Timer.new()
 
 func _init() -> void:
 	connect("resized", Callable(self, "_on_resized"))
@@ -67,9 +72,14 @@ func _init() -> void:
 
 func _ready() -> void:
 	# Hauptlayout
-	add_child(window_timer)
-	window_timer.wait_time = 0.05
-	window_timer.timeout.connect(after_popup)
+	add_child(_window_timer)
+	_window_timer.wait_time = 0.05
+	_window_timer.timeout.connect(after_popup)
+	
+	add_child(_window_timer2)
+	_window_timer2.wait_time = 1
+	_window_timer2.timeout.connect(after_timer)
+	
 	
 	_hbox.anchors_preset = Control.PRESET_FULL_RECT
 	_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -85,6 +95,7 @@ func _ready() -> void:
 	_input_le.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_input_le.size_flags_stretch_ratio = 1.0
 	_input_le.text_changed.connect(_on_text_changed)
+	_input_le.select_all_on_focus = true
 	
 	if not enable_search:
 		_input_le.editable = false
@@ -127,7 +138,7 @@ func _ready() -> void:
 	var scroll = ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.custom_minimum_size.y = min(max_visible_items, items.size()) * 30  # Größe begrenzen
+	scroll.custom_minimum_size.y = min(max_visible_items, items.size()) * ITEM_SIZE_HEIGHT  # Größe begrenzen
 	vbox.add_child(scroll)
 
 	# Liste mit Items
@@ -153,12 +164,12 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed:
 		if event.keycode == KEY_ESCAPE:
 			_popup.hide()
-			window_timer.stop()
+			_window_timer.stop()
 	if event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if check_not_inside():
 				_popup.hide()
-				window_timer.stop()
+				_window_timer.stop()
 
 
 func set_items(new_items: Array[String]) -> void:
@@ -337,6 +348,7 @@ func remove_item(idx: int, unfiltered: bool = false) -> void:
 func select(idx: int) -> void:
 	if _filtered_items.size() > idx:
 		_list.select(idx)
+		current_index = idx
 		item_selected.emit(idx, _filtered_items[idx])
 		_input_le.text = _filtered_items[idx].label
 
@@ -428,8 +440,15 @@ func _scroll_select(direction: int) -> void:
 		if first_valid != -1:
 			_list.select(first_valid)
 			_on_item_selected(first_valid)
+			
 	else:
-		var new_index = clamp(selected[0] + direction, 0, _list.get_item_count() - 1)
+		var new_index: int = clamp(selected[0] + direction, 0, _list.get_item_count() - 1)
+		var offset: int = 0
+		
+		while is_item_disabled(new_index):
+			offset += 1
+			new_index = clamp(selected[0] + (offset * direction), 0, _list.get_item_count() - 1)
+		
 		_list.select(new_index)
 		_on_item_selected(new_index)
 
@@ -445,16 +464,18 @@ func _update_list() -> void:
 			_list.add_item(item.label, item.icon)
 		
 		_list.set_item_disabled(item_idx, item.disabled)
+	
+		_popup.size.y = min(max_visible_items, _filtered_items.size()) * ITEM_SIZE_HEIGHT - 8 * max (0 ,min(max_visible_items, _filtered_items.size()) - 1)
+
+
 
 
 func _toggle_popup() -> void:
-	print("toggle")
 	if _popup.visible:
 		_popup.hide()
-		print("clos")
 	else:
-		print("open")
 		_popup_rect = get_popup_position_and_size()
+		_popup_rect.size.y = min(max_visible_items, _filtered_items.size()) * ITEM_SIZE_HEIGHT - 8 * max (0 ,min(max_visible_items, _filtered_items.size()) - 1)
 		_popup.open_popup(_popup_rect.position, _popup_rect.size)
 		_popup.grab_focus()
 
@@ -464,6 +485,7 @@ func _on_text_changed(new_text: String) -> void:
 	_input_le.caret_column = _input_le.text.length()
 	_on_filter_changed(new_text)
 	if auto_open_popup:
+		_window_timer2.start()
 		_show_popup_if_needed()
 
 
@@ -507,21 +529,29 @@ func _show_popup_if_needed() -> void:
 		_popup.size = _popup_rect.size
 		_popup.show()
 		_popup.unfocusable = false
-		window_timer.start()
+		_window_timer2.start()
+		_window_timer.start()
+		
 		#after_popup.call_deferred()
+
 
 func after_popup() -> void:
 	_input_le.get_window().grab_focus()
 	_input_le.grab_focus()
 
 
+func after_timer() -> void:
+	_window_timer.stop()
+	_popup.grab_focus()
+
 func _on_item_selected(index: int) -> void:
 	var selected_item: OAdvancedOptionBtnItem = _filtered_items[index]
 	if not disable_auto_complete:
 		_input_le.text = selected_item.label
+	current_index = index
 	item_selected.emit(index, selected_item)
 	if close_on_select:
-		window_timer.stop()
+		_window_timer.stop()
 		_popup.hide()
 
 
