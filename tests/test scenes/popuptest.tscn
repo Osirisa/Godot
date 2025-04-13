@@ -35,21 +35,4 @@ button_icon_down = ExtResource("4_uolbn")
 button_icon_right = ExtResource("5_hm8hp")
 button_icon_left = ExtResource("6_uehtd")
 
-[node name="Window" type="Window" parent="."]
-position = Vector2i(0, 36)
-size = Vector2i(600, 300)
-
-[node name="OAdvancedOptionButton2" type="Control" parent="Window"]
-custom_minimum_size = Vector2(92, 31)
-layout_mode = 3
-anchors_preset = 0
-offset_right = 246.0
-offset_bottom = 39.0
-script = ExtResource("3_dbak5")
-button_icon_up = ExtResource("3_krt54")
-button_icon_down = ExtResource("4_uolbn")
-button_icon_right = ExtResource("5_hm8hp")
-button_icon_left = ExtResource("6_uehtd")
-
 [connection signal="pressed" from="Button" to="." method="_on_button_pressed"]
-[connection signal="item_selected" from="Window/OAdvancedOptionButton2" to="." method="_on_o_advanced_option_button_2_item_selected"]

@@ -50,7 +50,7 @@ enum PopupSpawnDirection {
 
 var _filtered_items: Array[OAdvancedOptionBtnItem] = []
 
-var _popup: PopupPanel
+var _popup: OPopup
 var _popup_rect := Rect2i()
 
 var _list := ItemList.new()
@@ -59,12 +59,18 @@ var _input_le := LineEdit.new()
 var _hbox := HBoxContainer.new()
 var _tr_button_icon := TextureRect.new()
 
+var window_timer := Timer.new()
+
 func _init() -> void:
 	connect("resized", Callable(self, "_on_resized"))
 	custom_minimum_size = custom_minimum_size if Vector2i(92, 31) < Vector2i(custom_minimum_size) else Vector2i(92, 31) 
 
 func _ready():
 	# Hauptlayout
+	add_child(window_timer)
+	window_timer.wait_time = 0.05
+	window_timer.timeout.connect(after_popup)
+	
 	_hbox.anchors_preset = Control.PRESET_FULL_RECT
 	_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_hbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -101,9 +107,10 @@ func _ready():
 	
 	button.add_child(_tr_button_icon)
 	_hbox.add_child(button)
-
+	
 	# Popup (Dropdown-Menu)
-	_popup = PopupPanel.new()
+	_popup = OPopup.new()
+	_popup.borderless = true
 	_popup.hide()
 	_popup_rect = get_popup_position_and_size()
 	
@@ -111,7 +118,9 @@ func _ready():
 	
 	# VBox für Liste
 	var vbox = VBoxContainer.new()
-	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL  # Popup so breit wie Control
+	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_popup.add_child(vbox)
 
 	# ScrollContainer für die Liste
@@ -144,10 +153,12 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed:
 		if event.keycode == KEY_ESCAPE:
 			_popup.hide()
+			window_timer.stop()
 	if event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if check_not_inside():
 				_popup.hide()
+				window_timer.stop()
 
 
 func set_items(new_items: Array[String]) -> void:
@@ -246,7 +257,7 @@ func get_item_text(idx: int, get_unfiltered: bool = false) -> String:
 	return ""
 
 
-func get_popup() -> PopupPanel:
+func get_popup() -> OPopup:
 	return _popup
 
 
@@ -327,6 +338,7 @@ func select(idx: int):
 	if _filtered_items.size() > idx:
 		_list.select(idx)
 		item_selected.emit(idx, _filtered_items[idx])
+		_input_le.text = _filtered_items[idx].label
 
 
 func set_item_disabled(idx: int, disabled: bool, unfiltered: bool = false):
@@ -436,11 +448,14 @@ func _update_list():
 
 
 func _toggle_popup():
+	print("toggle")
 	if _popup.visible:
 		_popup.hide()
+		print("clos")
 	else:
+		print("open")
 		_popup_rect = get_popup_position_and_size()
-		_popup.popup(_popup_rect)
+		_popup.open_popup(_popup_rect.position, _popup_rect.size)
 		_popup.grab_focus()
 
 
@@ -491,8 +506,13 @@ func _show_popup_if_needed():
 		_popup.position = _popup_rect.position
 		_popup.size = _popup_rect.size
 		_popup.show()
-		
 		_popup.unfocusable = false
+		window_timer.start()
+		#after_popup.call_deferred()
+
+func after_popup() -> void:
+	_input_le.get_window().grab_focus()
+	_input_le.grab_focus()
 
 
 func _on_item_selected(index: int):
@@ -501,6 +521,7 @@ func _on_item_selected(index: int):
 		_input_le.text = selected_item.label
 	item_selected.emit(index, selected_item)
 	if close_on_select:
+		window_timer.stop()
 		_popup.hide()
 
 

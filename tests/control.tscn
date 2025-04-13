@@ -49,11 +49,11 @@ bg_color = Color(0.53422, 0.702955, 0.528986, 1)
 [sub_resource type="Theme" id="Theme_eh8fq"]
 Label/styles/normal = SubResource("StyleBoxFlat_f7wrf")
 
-[sub_resource type="Resource" id="Resource_24chr"]
+[sub_resource type="Resource" id="Resource_d1x8j"]
 script = ExtResource("4_pfhxr")
 year = 2025
 month = 4
-day = 11
+day = 13
 
 [sub_resource type="Resource" id="Resource_edug8"]
 script = ExtResource("4_pfhxr")
@@ -212,7 +212,7 @@ custom_minimum_size = Vector2(92, 31)
 layout_mode = 2
 script = ExtResource("7_h6amr")
 date_select_size = Vector2i(240, 220)
-starting_date = SubResource("Resource_24chr")
+starting_date = SubResource("Resource_d1x8j")
 max_date = SubResource("Resource_edug8")
 min_date = SubResource("Resource_kl2hs")
 

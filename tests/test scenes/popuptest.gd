@@ -92,14 +92,25 @@ var test_arr :Array[String]= ["test",
 	"wtawofawfkawüfkaowkfü",
 	]
 
+var window =  Window.new()
+var oa_btn2 = OAdvancedOptionButton.new()
+
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
+
+	get_viewport().gui_embed_subwindows = false
+	window.borderless = false
+	
+	window.add_child(oa_btn2)
+	add_child(window)
+	
+	window.show()
 	#for string in test_arr:
 		#$OComboBox.add_item(string)
 	for string in test_arr:
 		$OAdvancedOptionButton.add_item(string)
-		$Window/OAdvancedOptionButton2.add_item(string)
-		$Window/OAdvancedOptionButton2.set_item_metadata($Window/OAdvancedOptionButton2.items.size()-1, string)
+		oa_btn2.add_item(string)
+		oa_btn2.set_item_metadata(oa_btn2.items.size()-1, string)
 
 
 func _on_button_pressed() -> void:
@@ -118,6 +129,6 @@ func random_letter_mixed():
 
 
 func _on_o_advanced_option_button_2_item_selected(index: int, item: OAdvancedOptionBtnItem) -> void:
-	print($Window/OAdvancedOptionButton2.get_item_metadata(index))
+	print(oa_btn2.get_item_metadata(index))
 	print(index)
 	print(item.label)
