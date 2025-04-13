@@ -65,7 +65,7 @@ func _init() -> void:
 	connect("resized", Callable(self, "_on_resized"))
 	custom_minimum_size = custom_minimum_size if Vector2i(92, 31) < Vector2i(custom_minimum_size) else Vector2i(92, 31) 
 
-func _ready():
+func _ready() -> void:
 	# Hauptlayout
 	add_child(window_timer)
 	window_timer.wait_time = 0.05
@@ -169,7 +169,7 @@ func set_items(new_items: Array[String]) -> void:
 	_update_list()
 
 
-func add_icon_item(texture: Texture2D, label: String, id: int = -1):
+func add_icon_item(texture: Texture2D, label: String, id: int = -1) -> void:
 	if id < 0:
 		id = items.size()
 	
@@ -178,16 +178,16 @@ func add_icon_item(texture: Texture2D, label: String, id: int = -1):
 	_update_list()
 
 
-func add_item(label: String, id: int = -1):
+func add_item(label: String, id: int = -1, meta: Variant = null) -> void:
 	if id < 0:
 		id = items.size()
 	
-	items.append(OAdvancedOptionBtnItem.new(label, id))
+	items.append(OAdvancedOptionBtnItem.new(label, id, null, meta))
 	_filtered_items = items.duplicate(true)
 	_update_list()
 
 
-func add_separator(text: String = ""):
+func add_separator(text: String = "") -> void:
 	var id = items.size()
 	items.append(OAdvancedOptionBtnItem.new(text, id, null, null, true, true))
 	_update_list()
@@ -219,7 +219,7 @@ func get_item_id(idx: int, get_unfiltered: bool = false) -> int:
 	return -1
 
 
-func get_item_index(id: int, get_unfiltered: bool = false):
+func get_item_index(id: int, get_unfiltered: bool = false) -> int:
 	if get_unfiltered:
 		for idx in range(items.size()):
 			if items[idx].id == id:
@@ -322,7 +322,7 @@ func is_item_separator(idx: int, get_unfiltered: bool = false) -> bool:
 	return false
 
 
-func remove_item(idx: int, unfiltered: bool = false):
+func remove_item(idx: int, unfiltered: bool = false) -> void:
 	if unfiltered:
 		if items.size() > idx:
 			items.remove_at(idx)
@@ -334,14 +334,14 @@ func remove_item(idx: int, unfiltered: bool = false):
 	_update_list()
 
 
-func select(idx: int):
+func select(idx: int) -> void:
 	if _filtered_items.size() > idx:
 		_list.select(idx)
 		item_selected.emit(idx, _filtered_items[idx])
 		_input_le.text = _filtered_items[idx].label
 
 
-func set_item_disabled(idx: int, disabled: bool, unfiltered: bool = false):
+func set_item_disabled(idx: int, disabled: bool, unfiltered: bool = false) -> void:
 	if unfiltered:
 		if items.size() > idx:
 			items[idx].disabled = disabled
@@ -353,7 +353,7 @@ func set_item_disabled(idx: int, disabled: bool, unfiltered: bool = false):
 	_update_list()
 
 
-func set_item_icon(idx: int, texture: Texture2D, unfiltered: bool = false):
+func set_item_icon(idx: int, texture: Texture2D, unfiltered: bool = false) -> void:
 	if unfiltered:
 		if items.size() > idx:
 			items[idx].icon = texture
@@ -365,7 +365,7 @@ func set_item_icon(idx: int, texture: Texture2D, unfiltered: bool = false):
 	_update_list()
 
 
-func set_item_id(idx: int, id: int, unfiltered: bool = false):
+func set_item_id(idx: int, id: int, unfiltered: bool = false) -> void:
 	if unfiltered:
 		if items.size() > idx:
 			items[idx].id = id
@@ -375,7 +375,7 @@ func set_item_id(idx: int, id: int, unfiltered: bool = false):
 			_filtered_items[idx].id = id
 
 
-func set_item_metadata(idx: int, metadata: Variant, unfiltered: bool = false):
+func set_item_metadata(idx: int, metadata: Variant, unfiltered: bool = false) -> void:
 	if unfiltered:
 		if items.size() > idx:
 			items[idx].metadata = metadata
@@ -385,7 +385,7 @@ func set_item_metadata(idx: int, metadata: Variant, unfiltered: bool = false):
 			_filtered_items[idx].metadata = metadata
 
 
-func set_item_text(idx: int, text: String, unfiltered: bool = false):
+func set_item_text(idx: int, text: String, unfiltered: bool = false) -> void:
 	if unfiltered:
 		if items.size() > idx:
 			items[idx].label = text
@@ -397,7 +397,7 @@ func set_item_text(idx: int, text: String, unfiltered: bool = false):
 	_update_list()
 
 
-func show_popup():
+func show_popup() -> void:
 	_toggle_popup()
 
 
@@ -421,7 +421,7 @@ func get_popup_position_and_size() -> Rect2i:
 	return Rect2i(pop_pos, pop_size)
 
 
-func _scroll_select(direction: int):
+func _scroll_select(direction: int) -> void:
 	var selected = _list.get_selected_items()
 	if selected.is_empty():  # Falls noch nie etwas ausgewählt wurde
 		var first_valid = get_selectable_item()
@@ -434,7 +434,7 @@ func _scroll_select(direction: int):
 		_on_item_selected(new_index)
 
 
-func _update_list():
+func _update_list() -> void:
 	_list.clear()
 	for item_idx in range(_filtered_items.size()):
 		var item = _filtered_items[item_idx]
@@ -447,7 +447,7 @@ func _update_list():
 		_list.set_item_disabled(item_idx, item.disabled)
 
 
-func _toggle_popup():
+func _toggle_popup() -> void:
 	print("toggle")
 	if _popup.visible:
 		_popup.hide()
@@ -459,7 +459,7 @@ func _toggle_popup():
 		_popup.grab_focus()
 
 
-func _on_text_changed(new_text: String):
+func _on_text_changed(new_text: String) -> void:
 	_input_le.text = new_text
 	_input_le.caret_column = _input_le.text.length()
 	_on_filter_changed(new_text)
@@ -467,7 +467,7 @@ func _on_text_changed(new_text: String):
 		_show_popup_if_needed()
 
 
-func _on_filter_changed(new_text: String):
+func _on_filter_changed(new_text: String) -> void:
 	if new_text.is_empty():
 		_filtered_items = items.duplicate()
 	else:
@@ -497,7 +497,7 @@ func _fuzzy_match(query: String, text: String) -> bool:
 	return false
 
 
-func _show_popup_if_needed():
+func _show_popup_if_needed() -> void:
 	if not _popup.visible and _filtered_items.size() > 0:
 		_popup.unfocusable = true
 		
@@ -515,7 +515,7 @@ func after_popup() -> void:
 	_input_le.grab_focus()
 
 
-func _on_item_selected(index: int):
+func _on_item_selected(index: int) -> void:
 	var selected_item: OAdvancedOptionBtnItem = _filtered_items[index]
 	if not disable_auto_complete:
 		_input_le.text = selected_item.label
