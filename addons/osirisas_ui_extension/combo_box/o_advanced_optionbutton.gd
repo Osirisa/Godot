@@ -165,11 +165,13 @@ func _input(event: InputEvent) -> void:
 		if event.keycode == KEY_ESCAPE:
 			_popup.hide()
 			_window_timer.stop()
+			_window_timer2.stop()
 	if event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if check_not_inside():
 				_popup.hide()
 				_window_timer.stop()
+				_window_timer2.stop()
 
 
 func set_items(new_items: Array[String]) -> void:
@@ -351,6 +353,8 @@ func select(idx: int) -> void:
 		current_index = idx
 		item_selected.emit(idx, _filtered_items[idx])
 		_input_le.text = _filtered_items[idx].label
+		_window_timer.stop()
+		_window_timer2.stop()
 
 
 func set_item_disabled(idx: int, disabled: bool, unfiltered: bool = false) -> void:
@@ -442,12 +446,17 @@ func _scroll_select(direction: int) -> void:
 			_on_item_selected(first_valid)
 			
 	else:
+		var old_index = selected[0]
 		var new_index: int = clamp(selected[0] + direction, 0, _list.get_item_count() - 1)
 		var offset: int = 0
 		
 		while is_item_disabled(new_index):
 			offset += 1
-			new_index = clamp(selected[0] + (offset * direction), 0, _list.get_item_count() - 1)
+			new_index = selected[0] + (offset * direction)
+			
+			if new_index < 0 or new_index > _list.get_item_count() - 1: 
+				new_index = old_index
+				break
 		
 		_list.select(new_index)
 		_on_item_selected(new_index)
@@ -531,8 +540,6 @@ func _show_popup_if_needed() -> void:
 		_popup.unfocusable = false
 		_window_timer2.start()
 		_window_timer.start()
-		
-		#after_popup.call_deferred()
 
 
 func after_popup() -> void:
@@ -545,13 +552,17 @@ func after_timer() -> void:
 	_popup.grab_focus()
 
 func _on_item_selected(index: int) -> void:
+	_window_timer.stop()
+	_window_timer2.stop()
 	var selected_item: OAdvancedOptionBtnItem = _filtered_items[index]
+	
 	if not disable_auto_complete:
 		_input_le.text = selected_item.label
+	
 	current_index = index
 	item_selected.emit(index, selected_item)
+	
 	if close_on_select:
-		_window_timer.stop()
 		_popup.hide()
 
 

@@ -1,8 +1,9 @@
-[gd_scene load_steps=31 format=3 uid="uid://bwwfei0xtaahp"]
+[gd_scene load_steps=32 format=3 uid="uid://bwwfei0xtaahp"]
 
 [ext_resource type="Script" uid="uid://038mbasy8wcu" path="res://tests/test.gd" id="1_ipyfc"]
 [ext_resource type="Script" uid="uid://bkvnkwnbjpluy" path="res://addons/osirisas_ui_extension/table_node/o_table_node.gd" id="3_eoo3w"]
 [ext_resource type="Script" uid="uid://b43uahpmquequ" path="res://addons/osirisas_ui_extension/date/date_resource/o_date.gd" id="4_pfhxr"]
+[ext_resource type="Theme" uid="uid://hob8ae2wqri4" path="res://addons/osirisas_ui_extension/date/Nodes/date_select/date_select_theme.tres" id="5_d1x8j"]
 [ext_resource type="Script" uid="uid://bej14ggrnsqxj" path="res://addons/osirisas_ui_extension/regex_line_edit_node/date_time_nodes/o_date_le_node.gd" id="5_dudr4"]
 [ext_resource type="Script" uid="uid://c3mxe8tu8opqk" path="res://addons/osirisas_ui_extension/combo_box/o_advanced_optionbutton.gd" id="6_mg40m"]
 [ext_resource type="Texture2D" uid="uid://clw1xvmmrx2os" path="res://addons/osirisas_ui_extension/shared_ressources/arrow_drop_up.svg" id="7_0vvhy"]
@@ -49,11 +50,11 @@ bg_color = Color(0.53422, 0.702955, 0.528986, 1)
 [sub_resource type="Theme" id="Theme_eh8fq"]
 Label/styles/normal = SubResource("StyleBoxFlat_f7wrf")
 
-[sub_resource type="Resource" id="Resource_d1x8j"]
+[sub_resource type="Resource" id="Resource_24chr"]
 script = ExtResource("4_pfhxr")
 year = 2025
 month = 4
-day = 13
+day = 15
 
 [sub_resource type="Resource" id="Resource_edug8"]
 script = ExtResource("4_pfhxr")
@@ -212,9 +213,10 @@ custom_minimum_size = Vector2(92, 31)
 layout_mode = 2
 script = ExtResource("7_h6amr")
 date_select_size = Vector2i(240, 220)
-starting_date = SubResource("Resource_d1x8j")
+starting_date = SubResource("Resource_24chr")
 max_date = SubResource("Resource_edug8")
 min_date = SubResource("Resource_kl2hs")
+date_select_theme = ExtResource("5_d1x8j")
 
 [node name="ODateLineEdit" type="LineEdit" parent="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
 layout_mode = 2

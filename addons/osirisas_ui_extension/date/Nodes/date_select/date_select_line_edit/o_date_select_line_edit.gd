@@ -85,6 +85,8 @@ enum PopupSpawnDirection {
 
 @export var close_on_select := true
 
+@export var date_select_theme: Theme = load("res://addons/osirisas_ui_extension/date/Nodes/date_select/date_select_theme.tres")
+
 var current_date: ODate
 
 var _date_select_scene: PackedScene = preload("res://addons/osirisas_ui_extension/date/Nodes/date_select/date_select.tscn")
@@ -105,7 +107,7 @@ func _ready():
 	starting_date = ODate.current_date()
 	
 	_date_select_line_edit_instance.position = Vector2i(0,0)
-	
+	_date_select_instance.theme = date_select_theme
 	_date_select_instance.connect("date_selected", Callable(self, "_on_date_selected"))
 	_date_select_line_edit_instance.connect("date_btn_pressed" ,Callable(self,"_on_date_select_btn_pressed"))
 	_date_select_line_edit_instance.switch_btn_icon_direction(popup_direction)
