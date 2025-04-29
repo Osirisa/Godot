@@ -64,7 +64,7 @@ var _hbox := HBoxContainer.new()
 var _tr_button_icon := TextureRect.new()
 
 var _window_timer := Timer.new()
-var _window_timer2 := Timer.new()
+#var _window_timer2 := Timer.new()
 
 func _init() -> void:
 	connect("resized", Callable(self, "_on_resized"))
@@ -76,9 +76,9 @@ func _ready() -> void:
 	_window_timer.wait_time = 0.05
 	_window_timer.timeout.connect(after_popup)
 	
-	add_child(_window_timer2)
-	_window_timer2.wait_time = 1
-	_window_timer2.timeout.connect(after_timer)
+	#add_child(_window_timer2)
+	#_window_timer2.wait_time = 2
+	#_window_timer2.timeout.connect(after_timer)
 	
 	
 	_hbox.anchors_preset = Control.PRESET_FULL_RECT
@@ -94,7 +94,7 @@ func _ready() -> void:
 	_input_le.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_input_le.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_input_le.size_flags_stretch_ratio = 1.0
-	_input_le.text_changed.connect(_on_text_changed)
+	_input_le.text_changed.connect(_on_filter_changed)
 	_input_le.select_all_on_focus = true
 	
 	if not enable_search:
@@ -161,17 +161,19 @@ func _gui_input(event):
 
 
 func _input(event: InputEvent) -> void:
+	if event is InputEventMouseMotion and (event.relative.x + event.relative.y) > 0 and _popup.visible:
+		after_timer()
 	if event is InputEventKey and event.pressed:
 		if event.keycode == KEY_ESCAPE:
 			_popup.hide()
 			_window_timer.stop()
-			_window_timer2.stop()
+			#_window_timer2.stop()
 	if event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if check_not_inside():
 				_popup.hide()
 				_window_timer.stop()
-				_window_timer2.stop()
+				#_window_timer2.stop()
 
 
 func set_items(new_items: Array[String]) -> void:
@@ -354,7 +356,7 @@ func select(idx: int) -> void:
 		item_selected.emit(idx, _filtered_items[idx])
 		_input_le.text = _filtered_items[idx].label
 		_window_timer.stop()
-		_window_timer2.stop()
+		#_window_timer2.stop()
 
 
 func set_item_disabled(idx: int, disabled: bool, unfiltered: bool = false) -> void:
@@ -477,35 +479,28 @@ func _update_list() -> void:
 		_popup.size.y = min(max_visible_items, _filtered_items.size()) * ITEM_SIZE_HEIGHT - 8 * max (0 ,min(max_visible_items, _filtered_items.size()) - 1)
 
 
-
-
 func _toggle_popup() -> void:
 	if _popup.visible:
 		_popup.hide()
 	else:
+		_popup.unfocusable = false
 		_popup_rect = get_popup_position_and_size()
 		_popup_rect.size.y = min(max_visible_items, _filtered_items.size()) * ITEM_SIZE_HEIGHT - 8 * max (0 ,min(max_visible_items, _filtered_items.size()) - 1)
 		_popup.open_popup(_popup_rect.position, _popup_rect.size)
 		_popup.grab_focus()
 
 
-func _on_text_changed(new_text: String) -> void:
-	_input_le.text = new_text
-	_input_le.caret_column = _input_le.text.length()
-	_on_filter_changed(new_text)
-	if auto_open_popup:
-		_window_timer2.start()
-		_show_popup_if_needed()
-
-
 func _on_filter_changed(new_text: String) -> void:
+	if not _popup.unfocusable:
+		_popup.unfocusable = true
+	
 	if new_text.is_empty():
 		_filtered_items = items.duplicate()
 	else:
 		_filtered_items = _filter_items(new_text)
-	
 	_update_list()
 	if auto_open_popup:
+		#_window_timer2.start()
 		_show_popup_if_needed()
 
 
@@ -530,15 +525,11 @@ func _fuzzy_match(query: String, text: String) -> bool:
 
 func _show_popup_if_needed() -> void:
 	if not _popup.visible and _filtered_items.size() > 0:
-		_popup.unfocusable = true
-		
 		_popup_rect = get_popup_position_and_size()
 		
 		_popup.position = _popup_rect.position
 		_popup.size = _popup_rect.size
 		_popup.show()
-		_popup.unfocusable = false
-		_window_timer2.start()
 		_window_timer.start()
 
 
@@ -549,11 +540,14 @@ func after_popup() -> void:
 
 func after_timer() -> void:
 	_window_timer.stop()
+	#if _popup.unfocusable:
+		#_popup.unfocusable = false
 	_popup.grab_focus()
+
 
 func _on_item_selected(index: int) -> void:
 	_window_timer.stop()
-	_window_timer2.stop()
+	
 	var selected_item: OAdvancedOptionBtnItem = _filtered_items[index]
 	
 	if not disable_auto_complete:

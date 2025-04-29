@@ -30,6 +30,7 @@ anchors_preset = 0
 offset_right = 246.0
 offset_bottom = 39.0
 script = ExtResource("3_dbak5")
+enable_fuzzy_search = true
 button_icon_up = ExtResource("3_krt54")
 button_icon_down = ExtResource("4_uolbn")
 button_icon_right = ExtResource("5_hm8hp")
