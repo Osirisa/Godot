@@ -54,7 +54,7 @@ Label/styles/normal = SubResource("StyleBoxFlat_f7wrf")
 script = ExtResource("4_pfhxr")
 year = 2025
 month = 4
-day = 29
+day = 30
 
 [sub_resource type="Resource" id="Resource_edug8"]
 script = ExtResource("4_pfhxr")
@@ -225,6 +225,7 @@ layout_mode = 2
 script = ExtResource("6_mg40m")
 enable_fuzzy_search = true
 items = Array[ExtResource("7_c535y")]([SubResource("Resource_wnsor"), SubResource("Resource_p4feh"), SubResource("Resource_05n2r")])
+behaviour_type = false
 button_icon_up = ExtResource("7_0vvhy")
 button_icon_down = ExtResource("8_c535y")
 button_icon_right = ExtResource("9_d1x8j")

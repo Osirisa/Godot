@@ -43,6 +43,7 @@ const ITEM_SIZE_HEIGHT: int = 35
 @export var close_on_select: bool = true  # Popup schließen, wenn Item ausgewählt wird
 @export var disable_auto_complete: bool = false  # Automatisches Übernehmen der Auswahl verhindern
 @export var scroll_sensitivity: int = 1  # Wie viele Elemente beim Scrollen gesprungen wird
+@export var behaviour_type: bool = true
 
 @export_category("Textures")
 @export var button_icon_up: Texture2D = load("res://addons/osirisas_ui_extension/shared_ressources/arrow_drop_up.svg")
@@ -483,7 +484,8 @@ func _toggle_popup() -> void:
 	if _popup.visible:
 		_popup.hide()
 	else:
-		_popup.unfocusable = false
+		if not behaviour_type:
+			_popup.unfocusable = false
 		_popup_rect = get_popup_position_and_size()
 		_popup_rect.size.y = min(max_visible_items, _filtered_items.size()) * ITEM_SIZE_HEIGHT - 8 * max (0 ,min(max_visible_items, _filtered_items.size()) - 1)
 		_popup.open_popup(_popup_rect.position, _popup_rect.size)
@@ -491,7 +493,7 @@ func _toggle_popup() -> void:
 
 
 func _on_filter_changed(new_text: String) -> void:
-	if not _popup.unfocusable:
+	if not _popup.unfocusable and behaviour_type:
 		_popup.unfocusable = true
 	
 	if new_text.is_empty():
@@ -525,12 +527,24 @@ func _fuzzy_match(query: String, text: String) -> bool:
 
 func _show_popup_if_needed() -> void:
 	if not _popup.visible and _filtered_items.size() > 0:
-		_popup_rect = get_popup_position_and_size()
-		
-		_popup.position = _popup_rect.position
-		_popup.size = _popup_rect.size
-		_popup.show()
-		_window_timer.start()
+		if behaviour_type:
+			_popup_rect = get_popup_position_and_size()
+			
+			_popup.position = _popup_rect.position
+			_popup.size = _popup_rect.size
+			_popup.show()
+			_window_timer.start()
+		else:
+			_popup.unfocusable = true
+			
+			_popup_rect = get_popup_position_and_size()
+			
+			_popup.position = _popup_rect.position
+			_popup.size = _popup_rect.size
+			_popup.show()
+			_popup.unfocusable = false
+
+			_window_timer.start()
 
 
 func after_popup() -> void:
