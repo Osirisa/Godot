@@ -48,7 +48,7 @@ func _init():
 	_date_select_instance.position = Vector2i(0,0)
 	custom_minimum_size = Vector2i(190,150)
 	_date_select_instance.connect("date_selected", Callable(self,"_on_date_selected"))
-	print(starting_date)
+	#print(starting_date)
 
 func _init_buttons() -> void:
 	pass

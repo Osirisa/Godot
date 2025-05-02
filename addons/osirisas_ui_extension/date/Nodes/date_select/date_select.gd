@@ -6,6 +6,8 @@ signal date_selected(date: ODate)
 @export var max_date: ODate = ODate.new(2099,12,1)
 @export var min_date: ODate = ODate.new(2000,1,1)
 
+@export var today_sb: StyleBoxFlat = null
+
 @onready
 var _ob_month_select: OptionButton = %OB_Month_Select
 @onready
@@ -46,6 +48,7 @@ var selected_year: int = 1:
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
+	%LE_Year_Select.regex_validator = r"\d+"
 	var callable = Callable(self, "_on_month_selected")
 	_ob_month_select.connect("item_selected", callable)
 	
@@ -68,7 +71,7 @@ func refresh() -> void:
 	var week := date.get_week()
 	var starting_weekday := date.get_weekday()
 	
-	var starting_date := date.duplicate()
+	var starting_date: ODate = date.duplicate()
 	starting_date.day -= (starting_weekday - 1)
 	
 	var calender_week_lables = _vb_calender_week_labels.get_children()
@@ -85,10 +88,18 @@ func refresh() -> void:
 			var day: Button = days[day_idx]
 			day.text = str(starting_date.day)
 			
-			if starting_date.month != date.month and not day.disabled:
+			if (starting_date.month != date.month) or starting_date.get_difference(max_date) > 0 or starting_date.get_difference(min_date) < 0 and not day.disabled:
 				day.disabled = true
 			elif starting_date.month == date.month and day.disabled:
 				day.disabled = false
+			
+			# TODO: optimize to clear stylbox_override only when month / year changes
+			if today_sb:
+				var current_date = ODate.current_date()
+				if starting_date.equals(current_date):
+					day.add_theme_stylebox_override("normal", today_sb)
+				elif day.has_theme_stylebox_override("normal"):
+					day.remove_theme_stylebox_override("normal")
 			
 			starting_date.day += 1
 

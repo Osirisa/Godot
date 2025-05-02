@@ -86,6 +86,12 @@ enum PopupSpawnDirection {
 @export var close_on_select := true
 
 @export var date_select_theme: Theme = load("res://addons/osirisas_ui_extension/date/Nodes/date_select/date_select_theme.tres")
+@export var today_sb: StyleBoxFlat = null:
+	set(value):
+		today_sb = value
+		
+		if today_sb:
+			_date_select_instance.today_sb = today_sb
 
 var current_date: ODate
 

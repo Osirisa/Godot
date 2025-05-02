@@ -69,6 +69,7 @@ func _init(i_hour: int = 0, i_minute: int = 0, i_second: int = 0):
 	minute = i_minute 
 	second = i_second
 
+
 func _to_string() -> String:
 	if _negative:
 		return "-" + str(abs(hour)).pad_zeros(2) + ":" + str(abs(minute)).pad_zeros(2) + ":" + str(abs(second)).pad_zeros(2)

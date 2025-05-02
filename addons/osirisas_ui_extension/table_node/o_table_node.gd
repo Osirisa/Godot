@@ -98,7 +98,7 @@ enum E_Sorting {
 
 @export_category("Label editable")
 ## Enables the editing via doubleclick on a label
-@export var lable_edit := true
+@export var label_edit := true
 
 
 @export_category("Special")
@@ -1500,7 +1500,7 @@ func _on_cell_gui_input(event: InputEvent, row_c: RowContent, node: Control) -> 
 	var row = _rows.find(row_c)
 	var column = row_c.nodes.find(node)
 	
-	if event is InputEventMouseButton and event.double_click and lable_edit and row_c.editable[column]:
+	if event is InputEventMouseButton and event.double_click and label_edit and row_c.editable[column]:
 		_edit_cell(row, column)
 	
 	if event is InputEventMouseButton and event.pressed and event.button_mask & MOUSE_BUTTON_LEFT:

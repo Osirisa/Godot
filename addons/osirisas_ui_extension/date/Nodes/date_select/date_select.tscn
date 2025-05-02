@@ -76,7 +76,7 @@ placeholder_text = "YYYY"
 alignment = 2
 max_length = 4
 script = ExtResource("2_ljqqh")
-regex_validator = "\\d"
+regex_validator = "\\d+"
 
 [node name="MarginContainer2" type="MarginContainer" parent="VBoxContainer/Panel/HB_Year_Month_Selector"]
 layout_mode = 2

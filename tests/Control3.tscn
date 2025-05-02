@@ -1,0 +1,24 @@
+[gd_scene load_steps=3 format=3 uid="uid://d3f1ifamgjnj7"]
+
+[ext_resource type="Script" uid="uid://bcnph6sxy7m8u" path="res://addons/osirisas_ui_extension/bread_crumbs/o_bread_crumbs.gd" id="1_2ylja"]
+[ext_resource type="Script" uid="uid://d3mp10b2wioms" path="res://tests/control_3.gd" id="1_l0i2l"]
+
+[node name="Control3" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_l0i2l")
+
+[node name="OBreadCrumbs" type="Control" parent="."]
+unique_name_in_owner = true
+clip_contents = true
+anchors_preset = 0
+offset_right = 308.0
+offset_bottom = 35.0
+script = ExtResource("1_2ylja")
+path = Array[String](["Test", "blala", "aefkj", "fasef"])
+spacing = 1
+metadata/_custom_type_script = "uid://bcnph6sxy7m8u"
