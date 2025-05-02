@@ -1,6 +1,10 @@
+<<<<<<< HEAD
 [gd_scene load_steps=33 format=3 uid="uid://bwwfei0xtaahp"]
+=======
+[gd_scene load_steps=31 format=3 uid="uid://bwwfei0xtaahp"]
+>>>>>>> f83d457b8f7a7f0495dee20f5663e8d82c15a2e5
 
-[ext_resource type="Script" uid="uid://038mbasy8wcu" path="res://tests/test.gd" id="1_ipyfc"]
+[ext_resource type="Script" uid="uid://cehq6pb83g8np" path="res://tests/test.gd" id="1_ipyfc"]
 [ext_resource type="Script" uid="uid://bkvnkwnbjpluy" path="res://addons/osirisas_ui_extension/table_node/o_table_node.gd" id="3_eoo3w"]
 [ext_resource type="Script" uid="uid://b43uahpmquequ" path="res://addons/osirisas_ui_extension/date/date_resource/o_date.gd" id="4_pfhxr"]
 [ext_resource type="Theme" uid="uid://hob8ae2wqri4" path="res://addons/osirisas_ui_extension/date/Nodes/date_select/date_select_theme.tres" id="5_d1x8j"]
@@ -54,7 +58,11 @@ Label/styles/normal = SubResource("StyleBoxFlat_f7wrf")
 script = ExtResource("4_pfhxr")
 year = 2025
 month = 4
+<<<<<<< HEAD
 day = 18
+=======
+day = 30
+>>>>>>> f83d457b8f7a7f0495dee20f5663e8d82c15a2e5
 
 [sub_resource type="Resource" id="Resource_edug8"]
 script = ExtResource("4_pfhxr")
@@ -83,34 +91,26 @@ year = 2199
 month = 12
 day = 31
 
-[sub_resource type="Resource" id="Resource_c535y"]
-script = ExtResource("7_c535y")
-label = "Test"
-id = 0
-disabled = false
-is_separator = false
-metadata/_custom_type_script = "uid://cf00ryk5s0v35"
-
 [sub_resource type="Resource" id="Resource_wnsor"]
 script = ExtResource("7_c535y")
-label = "test2"
-id = 1
+label = "test1"
+id = 0
 disabled = false
 is_separator = false
 metadata/_custom_type_script = "uid://cf00ryk5s0v35"
 
 [sub_resource type="Resource" id="Resource_p4feh"]
 script = ExtResource("7_c535y")
-label = "wda"
-id = 2
+label = "1214h2"
+id = 0
 disabled = false
 is_separator = false
 metadata/_custom_type_script = "uid://cf00ryk5s0v35"
 
 [sub_resource type="Resource" id="Resource_05n2r"]
 script = ExtResource("7_c535y")
-label = "eahgsg"
-id = 3
+label = "klsdh"
+id = 0
 disabled = false
 is_separator = false
 metadata/_custom_type_script = "uid://cf00ryk5s0v35"
@@ -235,8 +235,9 @@ metadata/_custom_type_script = "uid://bej14ggrnsqxj"
 custom_minimum_size = Vector2(92, 31)
 layout_mode = 2
 script = ExtResource("6_mg40m")
-items = Array[ExtResource("7_c535y")]([SubResource("Resource_c535y"), SubResource("Resource_wnsor"), SubResource("Resource_p4feh"), SubResource("Resource_05n2r")])
-popup_direction = 2
+enable_fuzzy_search = true
+items = Array[ExtResource("7_c535y")]([SubResource("Resource_wnsor"), SubResource("Resource_p4feh"), SubResource("Resource_05n2r")])
+behaviour_type = false
 button_icon_up = ExtResource("7_0vvhy")
 button_icon_down = ExtResource("8_c535y")
 button_icon_right = ExtResource("9_d1x8j")
