@@ -1,7 +1,11 @@
 class_name OPopup
 extends Window
 
+signal about_to_hide()
+signal focused()
+
 # Konfiguration
+@export var hide_on_unfocus: bool = true
 @export var close_on_click_outside: bool = true
 
 func _ready():
@@ -24,10 +28,9 @@ func _gui_input(event: InputEvent):
 		event.accept()
 		get_viewport().set_input_as_handled()
 
-func _unhandled_input(event: InputEvent):
-	if close_on_click_outside and event is InputEventMouseButton and event.pressed:
-		# MouseWheel nicht behandeln
-		var global_mouse := get_mouse_position()
-		var rect := Rect2(global_canvas_transform.get_origin(), size)
-		if not rect.has_point(global_mouse):
-			hide()
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_WINDOW_FOCUS_OUT and hide_on_unfocus:
+		print("hide")
+		hide()
+	if what == NOTIFICATION_WM_WINDOW_FOCUS_IN:
+		focused.emit()

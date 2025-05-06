@@ -77,11 +77,6 @@ func _ready() -> void:
 	_window_timer.wait_time = 0.05
 	_window_timer.timeout.connect(after_popup)
 	
-	#add_child(_window_timer2)
-	#_window_timer2.wait_time = 2
-	#_window_timer2.timeout.connect(after_timer)
-	
-	
 	_hbox.anchors_preset = Control.PRESET_FULL_RECT
 	_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_hbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -123,6 +118,7 @@ func _ready() -> void:
 	# Popup (Dropdown-Menu)
 	_popup = OPopup.new()
 	_popup.borderless = true
+	_popup.hide_on_unfocus = false
 	_popup.hide()
 	_popup_rect = get_popup_position_and_size()
 	
@@ -151,6 +147,7 @@ func _ready() -> void:
 	_filtered_items = items
 	_update_list()
 
+
 func _gui_input(event):
 	if event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
@@ -168,13 +165,6 @@ func _input(event: InputEvent) -> void:
 		if event.keycode == KEY_ESCAPE:
 			_popup.hide()
 			_window_timer.stop()
-			#_window_timer2.stop()
-	if event is InputEventMouseButton and event.pressed:
-		if event.button_index == MOUSE_BUTTON_LEFT:
-			if check_not_inside():
-				_popup.hide()
-				_window_timer.stop()
-				#_window_timer2.stop()
 
 
 func set_items(new_items: Array[String]) -> void:
@@ -486,6 +476,7 @@ func _toggle_popup() -> void:
 	else:
 		if not behaviour_type:
 			_popup.unfocusable = false
+		_popup.hide_on_unfocus = false
 		_popup_rect = get_popup_position_and_size()
 		_popup_rect.size.y = min(max_visible_items, _filtered_items.size()) * ITEM_SIZE_HEIGHT - 8 * max (0 ,min(max_visible_items, _filtered_items.size()) - 1)
 		_popup.open_popup(_popup_rect.position, _popup_rect.size)
@@ -528,22 +519,29 @@ func _fuzzy_match(query: String, text: String) -> bool:
 func _show_popup_if_needed() -> void:
 	if not _popup.visible and _filtered_items.size() > 0:
 		if behaviour_type:
-			_popup_rect = get_popup_position_and_size()
+			#_popup_rect = get_popup_position_and_size()
+			#
+			#_popup.position = _popup_rect.position
+			#_popup.size = _popup_rect.size
+			#_popup.show()
+			_toggle_popup()
 			
-			_popup.position = _popup_rect.position
-			_popup.size = _popup_rect.size
-			_popup.show()
 			_window_timer.start()
 		else:
 			_popup.unfocusable = true
-			
-			_popup_rect = get_popup_position_and_size()
-			
-			_popup.position = _popup_rect.position
-			_popup.size = _popup_rect.size
-			_popup.show()
+			#
+			#_popup_rect = get_popup_position_and_size()
+			#
+			#_popup.position = _popup_rect.position
+			#_popup.size = _popup_rect.size
+			#_popup.p
+			_popup.hide_on_unfocus = false
+			_toggle_popup()
+			_popup.hide_on_unfocus = false
 			_popup.unfocusable = false
-
+			
+			
+			#_popup.hide_on_unfocus = true
 			_window_timer.start()
 
 
@@ -556,6 +554,8 @@ func after_timer() -> void:
 	_window_timer.stop()
 	#if _popup.unfocusable:
 		#_popup.unfocusable = false
+	print("timer")
+	_popup.hide_on_unfocus = true
 	_popup.grab_focus()
 
 
