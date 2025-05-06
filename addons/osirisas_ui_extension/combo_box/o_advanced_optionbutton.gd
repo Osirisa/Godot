@@ -64,8 +64,13 @@ var _input_le := LineEdit.new()
 var _hbox := HBoxContainer.new()
 var _tr_button_icon := TextureRect.new()
 
-var _window_timer := Timer.new()
+var _force_le_focus := false
+
+#var _window_timer := Timer.new()
+
+#
 #var _window_timer2 := Timer.new()
+#var tries: int = 3
 
 func _init() -> void:
 	connect("resized", Callable(self, "_on_resized"))
@@ -73,9 +78,13 @@ func _init() -> void:
 
 func _ready() -> void:
 	# Hauptlayout
-	add_child(_window_timer)
-	_window_timer.wait_time = 0.05
-	_window_timer.timeout.connect(after_popup)
+	#add_child(_window_timer)
+	#_window_timer.wait_time = 0.1
+	#_window_timer.timeout.connect(after_popup)
+	#
+	#add_child(_window_timer2)
+	#_window_timer2.wait_time = 0.05
+	#_window_timer2.timeout.connect(after_timer_2)
 	
 	_hbox.anchors_preset = Control.PRESET_FULL_RECT
 	_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -118,8 +127,9 @@ func _ready() -> void:
 	# Popup (Dropdown-Menu)
 	_popup = OPopup.new()
 	_popup.borderless = true
-	_popup.hide_on_unfocus = false
+	_popup.hide_on_unfocus = true
 	_popup.hide()
+	_popup.focused.connect(_on_popup_focused)
 	_popup_rect = get_popup_position_and_size()
 	
 	add_child(_popup)
@@ -159,13 +169,14 @@ func _gui_input(event):
 
 
 func _input(event: InputEvent) -> void:
-	if event is InputEventMouseMotion and (event.relative.x + event.relative.y) > 0 and _popup.visible:
-		after_timer()
+	#if event is InputEventMouseMotion and (event.relative.x + event.relative.y) > 0 and _popup.visible:
+		#after_timer()
 	if event is InputEventKey and event.pressed:
 		if event.keycode == KEY_ESCAPE:
 			_popup.hide()
-			_window_timer.stop()
+			#_window_timer.stop()
 
+#region interface
 
 func set_items(new_items: Array[String]) -> void:
 	for item_text: String in new_items:
@@ -346,7 +357,7 @@ func select(idx: int) -> void:
 		current_index = idx
 		item_selected.emit(idx, _filtered_items[idx])
 		_input_le.text = _filtered_items[idx].label
-		_window_timer.stop()
+		#_window_timer.stop()
 		#_window_timer2.stop()
 
 
@@ -404,10 +415,12 @@ func set_item_text(idx: int, text: String, unfiltered: bool = false) -> void:
 			_filtered_items[idx].label = text
 	
 	_update_list()
+#endregion
 
 
 func show_popup() -> void:
-	_toggle_popup()
+	if not _popup.visible:
+		_toggle_popup()
 
 
 func get_popup_icon() -> Texture2D:
@@ -473,17 +486,22 @@ func _update_list() -> void:
 func _toggle_popup() -> void:
 	if _popup.visible:
 		_popup.hide()
-	else:
-		if not behaviour_type:
-			_popup.unfocusable = false
+	elif _filtered_items.size() > 0:
+		#if not behaviour_type:
+			#_popup.unfocusable = false
+		#_popup.hide_on_unfocus = false
 		_popup.hide_on_unfocus = false
+		_popup.unfocusable = true
 		_popup_rect = get_popup_position_and_size()
 		_popup_rect.size.y = min(max_visible_items, _filtered_items.size()) * ITEM_SIZE_HEIGHT - 8 * max (0 ,min(max_visible_items, _filtered_items.size()) - 1)
 		_popup.open_popup(_popup_rect.position, _popup_rect.size)
-		_popup.grab_focus()
+		_popup.unfocusable = false
+		_popup.hide_on_unfocus = true
+		#_popup.grab_focus()
 
 
 func _on_filter_changed(new_text: String) -> void:
+	_force_le_focus = true
 	if not _popup.unfocusable and behaviour_type:
 		_popup.unfocusable = true
 	
@@ -526,7 +544,8 @@ func _show_popup_if_needed() -> void:
 			#_popup.show()
 			_toggle_popup()
 			
-			_window_timer.start()
+			#_window_timer.start()
+			#_window_timer2.start()
 		else:
 			_popup.unfocusable = true
 			#
@@ -534,15 +553,15 @@ func _show_popup_if_needed() -> void:
 			#
 			#_popup.position = _popup_rect.position
 			#_popup.size = _popup_rect.size
-			#_popup.p
-			_popup.hide_on_unfocus = false
+			#_popup.hide_on_unfocus = false
 			_toggle_popup()
-			_popup.hide_on_unfocus = false
+			#_popup.hide_on_unfocus = false
 			_popup.unfocusable = false
 			
 			
 			#_popup.hide_on_unfocus = true
-			_window_timer.start()
+			#_window_timer.start()
+			#_window_timer2.start()
 
 
 func after_popup() -> void:
@@ -551,7 +570,7 @@ func after_popup() -> void:
 
 
 func after_timer() -> void:
-	_window_timer.stop()
+	#_window_timer.stop()
 	#if _popup.unfocusable:
 		#_popup.unfocusable = false
 	print("timer")
@@ -560,7 +579,7 @@ func after_timer() -> void:
 
 
 func _on_item_selected(index: int) -> void:
-	_window_timer.stop()
+	#_window_timer.stop()
 	
 	var selected_item: OAdvancedOptionBtnItem = _filtered_items[index]
 	
@@ -579,6 +598,24 @@ func _on_resized() -> void:
 		_hbox.size = size
 
 
-func check_not_inside() -> bool:
-	_popup_rect = get_popup_position_and_size()
-	return not (_popup_rect.has_point(get_global_mouse_position()) or self.get_rect().has_point(get_global_mouse_position()))
+#func check_not_inside() -> bool:
+	#_popup_rect = get_popup_position_and_size()
+	#return not (_popup_rect.has_point(get_global_mouse_position()) or self.get_rect().has_point(get_global_mouse_position()))
+
+func _on_popup_focused() -> void:
+	if _force_le_focus:
+		print(_popup.has_focus())
+		_hbox.grab_focus()
+		_input_le.grab_click_focus.call_deferred()
+		print(_popup.has_focus())
+		print(_input_le.has_focus())
+		
+		print(_hbox.has_focus())
+		_force_le_focus = false
+		#_popup.hide_on_unfocus = true
+#
+#func after_timer_2() -> void:
+	#if tries > 0:
+		#_input_le.grab_focus()
+		#_window_timer2.start()
+		#tries -= 1

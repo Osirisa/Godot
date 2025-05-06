@@ -29,6 +29,8 @@ func _gui_input(event: InputEvent):
 		get_viewport().set_input_as_handled()
 
 func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_WINDOW_FOCUS_OUT and not hide_on_unfocus:
+		print("disabled")
 	if what == NOTIFICATION_WM_WINDOW_FOCUS_OUT and hide_on_unfocus:
 		print("hide")
 		hide()

@@ -54,7 +54,7 @@ Label/styles/normal = SubResource("StyleBoxFlat_f7wrf")
 script = ExtResource("4_pfhxr")
 year = 2025
 month = 5
-day = 2
+day = 6
 
 [sub_resource type="Resource" id="Resource_edug8"]
 script = ExtResource("4_pfhxr")
