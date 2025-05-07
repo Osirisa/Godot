@@ -58,34 +58,20 @@ var _filtered_items: Array[OAdvancedOptionBtnItem] = []
 var _popup: OPopup
 var _popup_rect := Rect2i()
 
+var _scroll_container := ScrollContainer.new()
 var _list := ItemList.new()
 var _input_le := LineEdit.new()
 
 var _hbox := HBoxContainer.new()
 var _tr_button_icon := TextureRect.new()
 
-var _force_le_focus := false
-
-#var _window_timer := Timer.new()
-
-#
-#var _window_timer2 := Timer.new()
-#var tries: int = 3
 
 func _init() -> void:
 	connect("resized", Callable(self, "_on_resized"))
 	custom_minimum_size = custom_minimum_size if Vector2i(92, 31) < Vector2i(custom_minimum_size) else Vector2i(92, 31) 
 
+
 func _ready() -> void:
-	# Hauptlayout
-	#add_child(_window_timer)
-	#_window_timer.wait_time = 0.1
-	#_window_timer.timeout.connect(after_popup)
-	#
-	#add_child(_window_timer2)
-	#_window_timer2.wait_time = 0.05
-	#_window_timer2.timeout.connect(after_timer_2)
-	
 	_hbox.anchors_preset = Control.PRESET_FULL_RECT
 	_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_hbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -129,7 +115,7 @@ func _ready() -> void:
 	_popup.borderless = true
 	_popup.hide_on_unfocus = true
 	_popup.hide()
-	_popup.focused.connect(_on_popup_focused)
+	#_popup.focused.connect(_on_popup_focused)
 	_popup_rect = get_popup_position_and_size()
 	
 	add_child(_popup)
@@ -142,17 +128,16 @@ func _ready() -> void:
 	_popup.add_child(vbox)
 
 	# ScrollContainer für die Liste
-	var scroll = ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.custom_minimum_size.y = min(max_visible_items, items.size()) * ITEM_SIZE_HEIGHT  # Größe begrenzen
-	vbox.add_child(scroll)
+	_scroll_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_scroll_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_scroll_container.custom_minimum_size.y = min(max_visible_items, items.size()) * ITEM_SIZE_HEIGHT  # Größe begrenzen
+	vbox.add_child(_scroll_container)
 
 	# Liste mit Items
 	_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_list.item_selected.connect(_on_item_selected)
-	scroll.add_child(_list)
+	_scroll_container.add_child(_list)
 	
 	_filtered_items = items
 	_update_list()
@@ -169,12 +154,24 @@ func _gui_input(event):
 
 
 func _input(event: InputEvent) -> void:
-	#if event is InputEventMouseMotion and (event.relative.x + event.relative.y) > 0 and _popup.visible:
-		#after_timer()
+	if event is InputEventMouseMotion and (event.relative.x + event.relative.y) > 0 and _popup.visible and _popup_rect.has_point(event.global_position):
+		_popup.grab_focus()
 	if event is InputEventKey and event.pressed:
-		if event.keycode == KEY_ESCAPE:
+		if event.key_label == KEY_ESCAPE:
 			_popup.hide()
-			#_window_timer.stop()
+		elif event.key_label == KEY_UP and _input_le.has_focus():
+			close_on_select = false
+			_scroll_select(-1)
+			_list.get_v_scroll_bar().ratio = float(current_index) / max(_filtered_items.size(), 1)
+			close_on_select = true
+		elif event.key_label == KEY_DOWN and _input_le.has_focus():
+			close_on_select = false
+			_scroll_select(1)
+			_list.get_v_scroll_bar().ratio = float(max(current_index - (max_visible_items - 1), 0.0)) / max(_filtered_items.size(), 1)
+			close_on_select = true
+		elif  event.key_label == KEY_ENTER and _popup.visible:
+			_toggle_popup()
+
 
 #region interface
 
@@ -480,28 +477,18 @@ func _update_list() -> void:
 		
 		_list.set_item_disabled(item_idx, item.disabled)
 	
-		_popup.size.y = min(max_visible_items, _filtered_items.size()) * ITEM_SIZE_HEIGHT - 8 * max (0 ,min(max_visible_items, _filtered_items.size()) - 1)
+	_popup.size.y = min(max_visible_items, _filtered_items.size()) * ITEM_SIZE_HEIGHT - 8 * max (0 ,min(max_visible_items, _filtered_items.size()) - 1)
 
 
 func _toggle_popup() -> void:
 	if _popup.visible:
 		_popup.hide()
 	elif _filtered_items.size() > 0:
-		#if not behaviour_type:
-			#_popup.unfocusable = false
-		#_popup.hide_on_unfocus = false
-		_popup.hide_on_unfocus = false
-		_popup.unfocusable = true
 		_popup_rect = get_popup_position_and_size()
 		_popup_rect.size.y = min(max_visible_items, _filtered_items.size()) * ITEM_SIZE_HEIGHT - 8 * max (0 ,min(max_visible_items, _filtered_items.size()) - 1)
 		_popup.open_popup(_popup_rect.position, _popup_rect.size)
-		_popup.unfocusable = false
-		_popup.hide_on_unfocus = true
-		#_popup.grab_focus()
-
 
 func _on_filter_changed(new_text: String) -> void:
-	_force_le_focus = true
 	if not _popup.unfocusable and behaviour_type:
 		_popup.unfocusable = true
 	
@@ -511,7 +498,6 @@ func _on_filter_changed(new_text: String) -> void:
 		_filtered_items = _filter_items(new_text)
 	_update_list()
 	if auto_open_popup:
-		#_window_timer2.start()
 		_show_popup_if_needed()
 
 
@@ -536,51 +522,16 @@ func _fuzzy_match(query: String, text: String) -> bool:
 
 func _show_popup_if_needed() -> void:
 	if not _popup.visible and _filtered_items.size() > 0:
-		if behaviour_type:
-			#_popup_rect = get_popup_position_and_size()
-			#
-			#_popup.position = _popup_rect.position
-			#_popup.size = _popup_rect.size
-			#_popup.show()
-			_toggle_popup()
-			
-			#_window_timer.start()
-			#_window_timer2.start()
-		else:
+		if not behaviour_type:
 			_popup.unfocusable = true
-			#
-			#_popup_rect = get_popup_position_and_size()
-			#
-			#_popup.position = _popup_rect.position
-			#_popup.size = _popup_rect.size
-			#_popup.hide_on_unfocus = false
-			_toggle_popup()
-			#_popup.hide_on_unfocus = false
+		
+		_toggle_popup()
+		
+		if not behaviour_type:
 			_popup.unfocusable = false
-			
-			
-			#_popup.hide_on_unfocus = true
-			#_window_timer.start()
-			#_window_timer2.start()
-
-
-func after_popup() -> void:
-	_input_le.get_window().grab_focus()
-	_input_le.grab_focus()
-
-
-func after_timer() -> void:
-	#_window_timer.stop()
-	#if _popup.unfocusable:
-		#_popup.unfocusable = false
-	print("timer")
-	_popup.hide_on_unfocus = true
-	_popup.grab_focus()
 
 
 func _on_item_selected(index: int) -> void:
-	#_window_timer.stop()
-	
 	var selected_item: OAdvancedOptionBtnItem = _filtered_items[index]
 	
 	if not disable_auto_complete:
@@ -596,26 +547,3 @@ func _on_item_selected(index: int) -> void:
 func _on_resized() -> void:
 	if _hbox:
 		_hbox.size = size
-
-
-#func check_not_inside() -> bool:
-	#_popup_rect = get_popup_position_and_size()
-	#return not (_popup_rect.has_point(get_global_mouse_position()) or self.get_rect().has_point(get_global_mouse_position()))
-
-func _on_popup_focused() -> void:
-	if _force_le_focus:
-		print(_popup.has_focus())
-		_hbox.grab_focus()
-		_input_le.grab_click_focus.call_deferred()
-		print(_popup.has_focus())
-		print(_input_le.has_focus())
-		
-		print(_hbox.has_focus())
-		_force_le_focus = false
-		#_popup.hide_on_unfocus = true
-#
-#func after_timer_2() -> void:
-	#if tries > 0:
-		#_input_le.grab_focus()
-		#_window_timer2.start()
-		#tries -= 1

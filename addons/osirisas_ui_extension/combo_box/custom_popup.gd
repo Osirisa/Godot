@@ -27,6 +27,9 @@ func _gui_input(event: InputEvent):
 		# Scroll-Event abfangen und konsumieren
 		event.accept()
 		get_viewport().set_input_as_handled()
+	#if event is InputEventMouseMotion and event.relative.x + event.relative.y > 0:
+		#print("focus")
+		#grab_focus()
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_WINDOW_FOCUS_OUT and not hide_on_unfocus:
