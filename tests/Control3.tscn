@@ -15,10 +15,11 @@ script = ExtResource("1_l0i2l")
 [node name="OBreadCrumbs" type="Control" parent="."]
 unique_name_in_owner = true
 clip_contents = true
+custom_minimum_size = Vector2(30, 0)
 anchors_preset = 0
-offset_right = 308.0
-offset_bottom = 35.0
+offset_right = 275.0
+offset_bottom = 32.0
 script = ExtResource("1_2ylja")
 path = Array[String](["Test", "blala", "aefkj", "fasef"])
-spacing = 1
+spacing = 6
 metadata/_custom_type_script = "uid://bcnph6sxy7m8u"
