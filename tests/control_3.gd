@@ -1,6 +1,9 @@
 @tool
 extends Control
 
+@export_tool_button("fill") var btn_action = action
+
+
 var strings: Array[String] = [
 	"Test",
 	"blala",
@@ -9,7 +12,20 @@ var strings: Array[String] = [
 ]
 
 func _ready() -> void:
-	%OBreadCrumbs.path.clear()
+	%OBreadCrumbs.breadcrumb_pressed.connect(_on_breadcrumb_pressed)
+	
+	%OBreadCrumbs.clear_elements()
+	var f = func(string): print(string)
 	for string in strings:
-		%OBreadCrumbs.path.append(string)
-		#%OBreadCrumbs.update_breadcrumbs()
+		%OBreadCrumbs.add_element_(string, f.bind(string))
+
+
+func action() -> void:
+	%OBreadCrumbs.clear_elements()
+	var f = func(string): print(string)
+	for string in strings:
+		%OBreadCrumbs.add_element_(string, f.bind(string))
+
+
+func _on_breadcrumb_pressed(index) -> void:
+	pass

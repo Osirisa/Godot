@@ -32,10 +32,10 @@ func _gui_input(event: InputEvent):
 		#grab_focus()
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_WM_WINDOW_FOCUS_OUT and not hide_on_unfocus:
-		print("disabled")
+	#if what == NOTIFICATION_WM_WINDOW_FOCUS_OUT and not hide_on_unfocus:
+		#print("disabled")
 	if what == NOTIFICATION_WM_WINDOW_FOCUS_OUT and hide_on_unfocus:
-		print("hide")
+		#print("hide")
 		hide()
 	if what == NOTIFICATION_WM_WINDOW_FOCUS_IN:
 		focused.emit()
