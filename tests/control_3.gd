@@ -29,3 +29,7 @@ func action() -> void:
 
 func _on_breadcrumb_pressed(index) -> void:
 	pass
+
+
+func _on_button_pressed() -> void:
+	ToastManager.show("this is a toast")

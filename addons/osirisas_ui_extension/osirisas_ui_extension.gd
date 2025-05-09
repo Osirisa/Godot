@@ -29,6 +29,10 @@ func _enter_tree():
 	add_custom_type("ODragComponent", "Control",
 					preload("res://addons/osirisas_ui_extension/container/Draggable_Container/o_dragable_component.gd"),
 					preload("res://icon.svg"))
+	
+	add_autoload_singleton("ToastManager", "res://addons/osirisas_ui_extension/toast_message/toast_manager.gd")
+	
+	__OProjectSettings__.create_settings()
 
 func _exit_tree():
 	remove_custom_type("OTableNode")
@@ -38,3 +42,4 @@ func _exit_tree():
 	remove_custom_type("ODateSelectLineEdit")
 	remove_custom_type("ODragContainer")
 	remove_custom_type("ODragComponent")
+	remove_autoload_singleton("ToastManager")

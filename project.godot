@@ -15,6 +15,10 @@ run/main_scene="res://tests/control.tscn"
 config/features=PackedStringArray("4.4", "GL Compatibility")
 config/icon="res://icon.svg"
 
+[autoload]
+
+ToastManager="*res://addons/osirisas_ui_extension/toast_message/toast_manager.gd"
+
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/osirisas_ui_extension/plugin.cfg", "res://addons/script-ide/plugin.cfg")

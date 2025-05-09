@@ -22,3 +22,13 @@ offset_bottom = 36.0
 script = ExtResource("1_2ylja")
 trim_after_click = true
 metadata/_custom_type_script = "uid://bcnph6sxy7m8u"
+
+[node name="Button" type="Button" parent="."]
+layout_mode = 0
+offset_left = 385.0
+offset_top = 156.0
+offset_right = 433.0
+offset_bottom = 187.0
+text = "toast"
+
+[connection signal="pressed" from="Button" to="." method="_on_button_pressed"]
