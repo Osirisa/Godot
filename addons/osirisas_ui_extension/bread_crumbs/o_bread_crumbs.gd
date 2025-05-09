@@ -4,6 +4,10 @@ extends Control
 
 signal breadcrumb_pressed(index: int)
 
+
+const LIST_ITEM_HEIGHT: int = 30
+
+
 @export var spacing: int = 8
 
 @export var custom_separator: Control = null
@@ -29,12 +33,14 @@ func _ready():
 	resized.connect(_on_resize)
 	_update_breadcrumbs()
 	
-	_popup.hide_on_unfocus = false
+	_popup.hide_on_unfocus = true
 	_popup.borderless = true
 	
+	_list.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	#_list.item_selected.connect(_on_path_button_pressed)
+	_list.item_selected.connect(_on_list_item_pressed)
+	
 	_popup.add_child(_list)
 	add_child(_popup)
 	#_popup.hide()
@@ -101,8 +107,11 @@ func get_last_element() -> OBreadCumbElement:
 #region private
 func _update_breadcrumbs():
 	for child in get_children():
-		remove_child(child)
-		child.queue_free()
+		if child is not OPopup:
+			remove_child(child)
+			child.queue_free()
+	
+	_list.clear()
 	
 	if _path.is_empty():
 		return
@@ -139,6 +148,9 @@ func _update_breadcrumbs():
 				breadcrumbs_vis_idx.append(i)
 				available_width -= cost
 			else:
+				for u in range(i, -1, -1):
+					_list.add_item(_path[u].element_name)
+					_list.set_item_metadata(_list.item_count - 1, u)
 				break
 		
 		breadcrumbs_vis_idx.append(-1)
@@ -243,4 +255,13 @@ func _on_path_button_pressed(index: int) -> void:
 
 func _on_placeholder_pressed():
 	_popup.show()
-	_popup.open_popup(Vector2i(global_position.x, global_position.y + size.y))
+	
+	_popup.open_popup(Vector2i(global_position.x, global_position.y + size.y), Vector2i(min(200, size.x), LIST_ITEM_HEIGHT * _list.item_count))
+	_popup.grab_focus()
+
+
+func _on_list_item_pressed(index: int) -> void:
+	var element_index = _list.get_item_metadata(index)
+	
+	_on_path_button_pressed(element_index)
+	_popup.hide()
