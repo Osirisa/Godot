@@ -17,5 +17,5 @@ func _ready() -> void:
 	toast.position = Vector2(0, safe.position.y + 20)
 
 
-func show(msg: String, duration := 1.8) -> void:
-	toast.popup(msg, duration)
+func show(msg: String, toast_settings: ToastSettings) -> void:
+	toast.popup(msg, toast_settings.hold_time)
