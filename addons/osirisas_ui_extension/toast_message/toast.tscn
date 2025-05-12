@@ -4,16 +4,17 @@
 
 [node name="Toast" type="Control"]
 layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+anchors_preset = 0
 script = ExtResource("1_qjlr5")
 
 [node name="P_Background" type="Panel" parent="."]
 unique_name_in_owner = true
 layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="L_Toast_Message" type="Label" parent="P_Background"]
 unique_name_in_owner = true
@@ -25,3 +26,4 @@ grow_horizontal = 2
 grow_vertical = 2
 horizontal_alignment = 1
 vertical_alignment = 1
+autowrap_mode = 2

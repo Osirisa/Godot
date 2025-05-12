@@ -7,6 +7,7 @@ enum Toast_Position {
 	TOP_CENTER,
 	TOP_RIGHT,
 	RIGHT_CENTER,
+	CENTER_CENTER,
 	BOTTOM_LEFT,
 	BOTTOM_CENTER,
 	BOTTOM_RIGHT,
@@ -23,7 +24,9 @@ enum Toast_Animation {
 	SHADOW_FLASH,
 }
 
+
 @export_group("Appearance")
+## -1 = Automatic | < 0 = "Manual" Size
 @export var size: Vector2i = Vector2i(-1,-1)
 @export var max_size: Vector2i = Vector2i(350, 200)
 @export var toast_position: Toast_Position = Toast_Position.BOTTOM_CENTER 
@@ -36,6 +39,7 @@ enum Toast_Animation {
 @export var anim_ease_type: Tween.EaseType = Tween.EaseType.EASE_OUT
 @export var animation_time: Vector2 = Vector2(0.35, 0.35)
 @export var hold_time: float = 1.8
+
 
 func resolve_position(screen_size: Vector2, toast_size: Vector2) -> Vector2:
 	var pos := Vector2()
@@ -51,10 +55,10 @@ func resolve_position(screen_size: Vector2, toast_size: Vector2) -> Vector2:
 		Toast_Position.BOTTOM_RIGHT:
 			pos = Vector2(screen_size.x - toast_size.x, screen_size.y - toast_size.y)
 		Toast_Position.BOTTOM_CENTER:
-			pos = Vector2((screen_size.x - toast_size.x)/2, screen_size.y - toast_size.y)
+			pos = Vector2((screen_size.x - toast_size.x) / 2, screen_size.y - toast_size.y)
 		Toast_Position.BOTTOM_LEFT:
 			pos = Vector2(0, screen_size.y - toast_size.y)
 		Toast_Position.LEFT_CENTER:
-			pos = Vector2(0, (screen_size.y - toast_size.y)/2)
+			pos = Vector2(0, (screen_size.y - toast_size.y) / 2)
 
 	return pos + Vector2(position_offset)

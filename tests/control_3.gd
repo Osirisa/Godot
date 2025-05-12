@@ -11,6 +11,8 @@ var strings: Array[String] = [
 	"fasef",
 ]
 
+var toast_settings: ToastSettings = preload("res://addons/osirisas_ui_extension/toast_message/standard_toast.tres")
+
 func _ready() -> void:
 	%OBreadCrumbs.breadcrumb_pressed.connect(_on_breadcrumb_pressed)
 	
@@ -32,4 +34,4 @@ func _on_breadcrumb_pressed(index) -> void:
 
 
 func _on_button_pressed() -> void:
-	ToastManager.show("this is a toast")
+	ToastManager.show("this is a toast", toast_settings, get_window(), false)
