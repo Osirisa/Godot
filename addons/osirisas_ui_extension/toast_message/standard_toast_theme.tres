@@ -1,4 +1,8 @@
-[gd_resource type="Theme" load_steps=2 format=3 uid="uid://fmvdhrd7yk7j"]
+[gd_resource type="Theme" load_steps=3 format=3 uid="uid://fmvdhrd7yk7j"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mg3ak"]
+bg_color = Color(0.0588235, 0.0588235, 0.0588235, 0)
+shadow_size = 5
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6j1sa"]
 content_margin_left = 20.0
@@ -12,4 +16,5 @@ corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
 [resource]
+Label/styles/normal = SubResource("StyleBoxFlat_mg3ak")
 Panel/styles/panel = SubResource("StyleBoxFlat_6j1sa")

@@ -33,6 +33,8 @@ func _enter_tree():
 	add_autoload_singleton("ToastManager", "res://addons/osirisas_ui_extension/toast_message/toast_manager.gd")
 	
 	__OProjectSettings__.create_settings()
+	
+	add_inspector_plugin(preload("res://addons/osirisas_ui_extension/toast_message/toast_setting_inspector_plugin.gd").new())
 
 func _exit_tree():
 	remove_custom_type("OTableNode")
@@ -43,3 +45,4 @@ func _exit_tree():
 	remove_custom_type("ODragContainer")
 	remove_custom_type("ODragComponent")
 	remove_autoload_singleton("ToastManager")
+	remove_inspector_plugin(preload("res://addons/osirisas_ui_extension/toast_message/toast_setting_inspector_plugin.gd").new())

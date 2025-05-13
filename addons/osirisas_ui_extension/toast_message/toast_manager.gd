@@ -11,7 +11,7 @@ func _ready() -> void:
 	print(DisplayServer.get_window_list())
 
 
-func show(msg: String, toast_settings: ToastSettings, window: Window = null, use_safe_area := false) -> void:
+func show(msg: String, toast_settings: OToastSettings, window: Window = null, use_safe_area := false) -> void:
 	
 	toast.size = toast.get_theme_font("font").get_multiline_string_size(msg, HORIZONTAL_ALIGNMENT_CENTER, toast_settings.max_size.x, toast.get_theme_font_size("font_size"))
 	
@@ -48,9 +48,10 @@ func show(msg: String, toast_settings: ToastSettings, window: Window = null, use
 	else:
 		get_tree().root.add_child(toast)
 	
-	toast.popup(msg, toast_settings)
 	
 	if use_safe_area:
 		toast.position = toast_settings.resolve_position(DisplayServer.get_display_safe_area().size, toast.size) + Vector2(DisplayServer.get_display_safe_area().position)
 	else:
 		toast.position = toast_settings.resolve_position(window.size, toast.size)
+	
+		toast.popup(msg, toast_settings)

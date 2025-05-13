@@ -1,6 +1,5 @@
-class_name ToastSettings
+class_name OToastSettings
 extends Resource
-
 
 enum Toast_Position {
 	TOP_LEFT,
@@ -35,6 +34,7 @@ enum Toast_Animation {
 
 @export_group("Behaviour")
 @export var toast_animation: Toast_Animation = Toast_Animation.FADE_SLIDE
+@export var toast_animation_settings := {}
 @export var anim_transition_type: Tween.TransitionType = Tween.TransitionType.TRANS_SINE
 @export var anim_ease_type: Tween.EaseType = Tween.EaseType.EASE_OUT
 @export var animation_time: Vector2 = Vector2(0.35, 0.35)
@@ -52,6 +52,8 @@ func resolve_position(screen_size: Vector2, toast_size: Vector2) -> Vector2:
 			pos = Vector2(screen_size.x - toast_size.x, 0)
 		Toast_Position.RIGHT_CENTER:
 			pos = Vector2(screen_size.x - toast_size.x, (screen_size.y - toast_size.y)/2)
+		Toast_Position.CENTER_CENTER:
+			pos = Vector2((screen_size.x - toast_size.x) / 2, (screen_size.y - toast_size.y) / 2)
 		Toast_Position.BOTTOM_RIGHT:
 			pos = Vector2(screen_size.x - toast_size.x, screen_size.y - toast_size.y)
 		Toast_Position.BOTTOM_CENTER:

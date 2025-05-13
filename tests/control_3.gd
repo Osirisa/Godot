@@ -11,7 +11,7 @@ var strings: Array[String] = [
 	"fasef",
 ]
 
-var toast_settings: ToastSettings = preload("res://addons/osirisas_ui_extension/toast_message/standard_toast.tres")
+var toast_settings: OToastSettings = preload("res://addons/osirisas_ui_extension/toast_message/standard_toast.tres")
 
 func _ready() -> void:
 	%OBreadCrumbs.breadcrumb_pressed.connect(_on_breadcrumb_pressed)
