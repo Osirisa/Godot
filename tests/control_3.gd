@@ -35,3 +35,7 @@ func _on_breadcrumb_pressed(index) -> void:
 
 func _on_button_pressed() -> void:
 	ToastManager.show("this is a toast", toast_settings, get_window(), false)
+
+
+func _on_area_2d_mouse_entered() -> void:
+	print("help")

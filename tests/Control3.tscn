@@ -1,8 +1,22 @@
-[gd_scene load_steps=4 format=3 uid="uid://d3f1ifamgjnj7"]
+[gd_scene load_steps=6 format=3 uid="uid://d3f1ifamgjnj7"]
 
 [ext_resource type="Script" uid="uid://bcnph6sxy7m8u" path="res://addons/osirisas_ui_extension/bread_crumbs/o_bread_crumbs.gd" id="1_2ylja"]
 [ext_resource type="Script" uid="uid://d3mp10b2wioms" path="res://tests/control_3.gd" id="1_l0i2l"]
 [ext_resource type="Script" uid="uid://cen57hlqot5nk" path="res://addons/osirisas_ui_extension/charts/pie_chart/o_pie_chart.gd" id="3_dmoqs"]
+[ext_resource type="Script" uid="uid://emmirc5iq4k6" path="res://addons/osirisas_ui_extension/charts/o_chart_data.gd" id="4_k0yx5"]
+
+[sub_resource type="Resource" id="Resource_k0yx5"]
+script = ExtResource("4_k0yx5")
+data_type = 0
+data_name = ""
+data = [30.0, 50.0, 80.0, 80.0]
+labels = Array[String]([])
+colors = Array[Color]([Color(0, 0.756863, 0, 1), Color(0, 0.941176, 0, 1), Color(0, 0.413466, 9.62615e-08, 1), Color(0.355855, 0.159515, 0.140363, 1)])
+value_unit = ""
+category = ""
+tags = Array[String]([])
+visible = true
+metadata/_custom_type_script = "uid://emmirc5iq4k6"
 
 [node name="Control3" type="Control"]
 layout_mode = 3
@@ -12,6 +26,11 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_l0i2l")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+layout_mode = 0
+offset_right = 1195.0
+offset_bottom = 681.0
 
 [node name="OBreadCrumbs" type="Control" parent="."]
 unique_name_in_owner = true
@@ -32,32 +51,15 @@ offset_right = 433.0
 offset_bottom = 187.0
 text = "toast"
 
-[node name="SubViewportContainer" type="SubViewportContainer" parent="."]
-custom_minimum_size = Vector2(220, 220)
-layout_mode = 0
-offset_left = 781.0
-offset_top = 242.0
-offset_right = 1001.0
-offset_bottom = 462.0
-
-[node name="SubViewport" type="SubViewport" parent="SubViewportContainer"]
-disable_3d = true
-handle_input_locally = false
-msaa_2d = 2
-size = Vector2i(220, 220)
-render_target_update_mode = 4
-
-[node name="OPieChart" type="Control" parent="SubViewportContainer/SubViewport"]
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="OPieChart" type="Control" parent="."]
+anchors_preset = 0
+offset_left = 229.0
+offset_top = 62.0
+offset_right = 995.0
+offset_bottom = 612.0
 script = ExtResource("3_dmoqs")
-data = Array[float]([12.0, 33.0, 55.0, 4.0])
-colors = Array[Color]([Color(0.376471, 0.658824, 0.984314, 1), Color(0.145098, 0.388235, 0.921569, 1), Color(0.231373, 0.52549, 0.968627, 1), Color(0.745098, 0.862745, 0.996078, 1)])
-animation_time = 3.0
+datasets = Array[ExtResource("4_k0yx5")]([SubResource("Resource_k0yx5")])
+highlite_type = 11
 metadata/_custom_type_script = "uid://cen57hlqot5nk"
 
 [connection signal="pressed" from="Button" to="." method="_on_button_pressed"]
