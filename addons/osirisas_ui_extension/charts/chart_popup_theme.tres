@@ -1,0 +1,32 @@
+[gd_resource type="Theme" load_steps=2 format=3 uid="uid://dnkdho12md2nm"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qkthr"]
+bg_color = Color(0.0352941, 0.0352941, 0.0431373, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.366595, 0.366595, 0.366594, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[resource]
+Color_MarginContainer/base_type = &"MarginContainer"
+Color_MarginContainer/constants/margin_bottom = 5
+Color_MarginContainer/constants/margin_left = 5
+Color_MarginContainer/constants/margin_right = 5
+Color_MarginContainer/constants/margin_top = 5
+Label/colors/font_color = Color(0.720467, 0.720468, 0.720467, 1)
+Label/font_sizes/font_size = 13
+Label_Data/base_type = &"Label"
+Label_Data/colors/font_color = Color(1, 1, 1, 1)
+Label_Title/base_type = &"Label"
+Label_Title/colors/font_color = Color(1, 1, 1, 1)
+Label_Title/font_sizes/font_size = 19
+MarginContainer/constants/margin_bottom = 6
+MarginContainer/constants/margin_left = 10
+MarginContainer/constants/margin_right = 10
+MarginContainer/constants/margin_top = 6
+Panel/styles/panel = SubResource("StyleBoxFlat_qkthr")

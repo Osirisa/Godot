@@ -19,15 +19,29 @@ enum HighliteType {
 
 @export var datasets: Array[OChartData]
 @export var highlite_type: HighliteType = HighliteType.EXPAND
+@export var show_popup := true
+@export var popup := preload("res://addons/osirisas_ui_extension/charts/chart_popup.tscn")
 
 var hovered_segment := -1
 var segment_polygons: Array[PackedVector2Array] = []
 
+var _popup_instance: OChartPopup
+
 func _ready():
-	pass
+	focus_mode = Control.FOCUS_ALL
+	_popup_instance = popup.instantiate() as OChartPopup
+	
+	add_child(_popup_instance)
+	_popup_instance.data_title = "test"
+	var test := _popup_instance.OChartPopupData.new()
+	
+	_popup_instance.unfocusable = true
+	_popup_instance.hide()
+	
 
 
 func _draw() -> void:
+	
 	if datasets.is_empty() or datasets[0].data.is_empty():
 		return
 	
@@ -71,6 +85,7 @@ func _draw() -> void:
 
 		draw_pie_segment(center, radius, start_angle, end_angle, color, true)
 
+
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion or event is InputEventMouseButton:
 		var mouse_pos := get_local_mouse_position()
@@ -88,6 +103,7 @@ func _input(event: InputEvent) -> void:
 		if hovered_segment != -1:
 			hovered_segment = -1
 			queue_redraw()
+			_popup_instance.hide()
 
 
 func draw_pie_segment(center: Vector2, radius: float, start_angle: float, end_angle: float, color: Color, highlited: bool = false) -> void:
@@ -123,6 +139,15 @@ func draw_pie_segment(center: Vector2, radius: float, start_angle: float, end_an
 			_draw_basic_pie(center, radius, start_angle, end_angle, color.lightened(0.2))
 		HighliteType.DARKER:
 			_draw_basic_pie(center, radius, start_angle, end_angle, color.darkened(0.2))
+			_draw_basic_pie(center, radius, start_angle, end_angle, color)
+		
+	if highlited and show_popup:
+		_show_popup(center, radius, angle_middle(start_angle, end_angle))
+
+
+func angle_middle(start_angle: float, end_angle: float) -> float:
+	var delta = fmod((end_angle - start_angle + TAU), TAU)
+	return fmod(start_angle + delta * 0.5, TAU)
 
 
 func point_in_polygon(point: Vector2, polygon: PackedVector2Array) -> bool:
@@ -238,4 +263,16 @@ func _draw_scale_up(center: Vector2, radius: float, start_angle: float, end_angl
 		var dir := Vector2(cos(t), sin(t))
 		points.append(center + dir * radius * scale)
 	draw_colored_polygon(points, color)
+	
+func _show_popup(center: Vector2, radius: float, angle: float) -> void:
+	var offset := Vector2(cos(angle), sin(angle)) * (radius * 0.5)
+	var popup_position := center + offset
+	
+	if not _popup_instance.visible:
+		_popup_instance.position = popup_position + global_position
+		_popup_instance.show()
+		
+	else:
+		var tween = create_tween()
+		tween.tween_property(_popup_instance, "position", Vector2i(popup_position + global_position), 0.35)
 	

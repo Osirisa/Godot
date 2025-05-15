@@ -1,0 +1,46 @@
+[gd_scene load_steps=4 format=3 uid="uid://conhlhmvmtn7h"]
+
+[ext_resource type="Theme" uid="uid://dnkdho12md2nm" path="res://addons/osirisas_ui_extension/charts/chart_popup_theme.tres" id="1_gmeop"]
+[ext_resource type="Script" uid="uid://cp0uk1xl5jpwq" path="res://addons/osirisas_ui_extension/charts/chart_popup.gd" id="2_gmeop"]
+[ext_resource type="PackedScene" uid="uid://54xjy1iqd1rm" path="res://addons/osirisas_ui_extension/charts/chart_popup_data_row.tscn" id="3_kd2lv"]
+
+[node name="ChartPopup" type="Window"]
+size = Vector2i(166, 75)
+unresizable = true
+borderless = true
+always_on_top = true
+theme = ExtResource("1_gmeop")
+script = ExtResource("2_gmeop")
+base_height = 15
+title_height = 31
+data_row_height = 28
+metadata/_custom_type_script = "uid://dxjec80sac0sn"
+
+[node name="P_Background" type="Panel" parent="."]
+offset_right = 166.0
+offset_bottom = 75.0
+
+[node name="MC_Body" type="MarginContainer" parent="."]
+offset_right = 129.0
+offset_bottom = 75.0
+
+[node name="VB_Body" type="VBoxContainer" parent="MC_Body"]
+layout_mode = 2
+
+[node name="VB_Title" type="VBoxContainer" parent="MC_Body/VB_Body"]
+layout_mode = 2
+
+[node name="L_Title" type="Label" parent="MC_Body/VB_Body/VB_Title"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 27)
+layout_mode = 2
+theme_type_variation = &"Label_Title"
+text = "April"
+
+[node name="C_spacer" type="Control" parent="MC_Body/VB_Body/VB_Title"]
+layout_mode = 2
+
+[node name="HB_Data_Row" parent="MC_Body/VB_Body" instance=ExtResource("3_kd2lv")]
+layout_mode = 2
+
+[connection signal="resized" from="MC_Body" to="." method="_on_mc_body_resized"]

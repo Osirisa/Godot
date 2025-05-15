@@ -1,0 +1,33 @@
+[gd_scene load_steps=3 format=3 uid="uid://54xjy1iqd1rm"]
+
+[ext_resource type="Script" uid="uid://dvibl2lk83fdw" path="res://addons/osirisas_ui_extension/charts/chart_popup_data_row.gd" id="1_s4pdx"]
+[ext_resource type="StyleBox" uid="uid://dml47bfimsjrp" path="res://addons/osirisas_ui_extension/charts/chart_popup_data_row_ColorPanel.tres" id="2_2nrka"]
+
+[node name="HB_Data_Row" type="HBoxContainer"]
+custom_minimum_size = Vector2(0, 28)
+size_flags_vertical = 3
+script = ExtResource("1_s4pdx")
+
+[node name="MC_Data_Color" type="MarginContainer" parent="."]
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+theme_type_variation = &"Color_MarginContainer"
+
+[node name="P_Data_Color" type="Panel" parent="MC_Data_Color"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_styles/panel = ExtResource("2_2nrka")
+
+[node name="L_Data_Name" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Chrome"
+
+[node name="L_Data_Value" type="Label" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"Label_Data"
+text = "240"
+horizontal_alignment = 2
