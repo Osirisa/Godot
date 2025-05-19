@@ -4,6 +4,7 @@ extends Control
 enum HighliteType {
 	NONE,
 	EXPAND,
+	EXPAND_DIM_OTHERS,
 	SHRINK,
 	RAISE,
 	SCALE_UP,
@@ -32,12 +33,13 @@ func _ready():
 	_popup_instance = popup.instantiate() as OChartPopup
 	
 	add_child(_popup_instance)
-	_popup_instance.data_title = "test"
+	
+	#if datasets.size() > 0:
+	_popup_instance.data_title = datasets[0].data_name
 	var test := _popup_instance.OChartPopupData.new()
 	
 	_popup_instance.unfocusable = true
 	_popup_instance.hide()
-	
 
 
 func _draw() -> void:
@@ -72,7 +74,7 @@ func _draw() -> void:
 
 		var color = colors[i % colors.size()] if (colors.size() > 0) else Color.GRAY
 
-		if highlite_type == HighliteType.DIM_OTHERS and hovered_segment != -1:
+		if highlite_type == HighliteType.DIM_OTHERS or highlite_type == HighliteType.EXPAND_DIM_OTHERS and hovered_segment != -1:
 			color = color.darkened(0.4)
 
 		draw_pie_segment(center, radius, start_angle, end_angle, color, false)
@@ -82,7 +84,7 @@ func _draw() -> void:
 		var color = colors[hovered_segment] if (hovered_segment < colors.size()) else Color.GRAY
 		var start_angle = segment_angles[hovered_segment][0]
 		var end_angle = segment_angles[hovered_segment][1]
-
+		
 		draw_pie_segment(center, radius, start_angle, end_angle, color, true)
 
 
@@ -114,6 +116,8 @@ func draw_pie_segment(center: Vector2, radius: float, start_angle: float, end_an
 	match highlite_type:
 		HighliteType.EXPAND:
 			_draw_expand(center, radius, start_angle, end_angle, color)
+		HighliteType.EXPAND_DIM_OTHERS:
+			_draw_expand(center, radius, start_angle, end_angle, color)
 		HighliteType.SHRINK:
 			_draw_basic_pie(center, radius * 0.92, start_angle, end_angle, color)
 		HighliteType.RAISE:
@@ -142,6 +146,15 @@ func draw_pie_segment(center: Vector2, radius: float, start_angle: float, end_an
 			_draw_basic_pie(center, radius, start_angle, end_angle, color)
 		
 	if highlited and show_popup:
+		_popup_instance.clear_popup()
+		
+		var data: OChartPopup.OChartPopupData = OChartPopup.OChartPopupData.new()
+		data.data_color = color
+		data.data_value = datasets[0].data[hovered_segment]
+		data.data_name = datasets[0].labels[hovered_segment]
+		
+		
+		_popup_instance.add_data(data)
 		_show_popup(center, radius, angle_middle(start_angle, end_angle))
 
 
@@ -217,22 +230,6 @@ func _draw_raise(center: Vector2, radius: float, start_angle: float, end_angle: 
 	_draw_basic_pie(center, radius, start_angle, end_angle, color)
 
 
-#func _draw_glow(center: Vector2, radius: float, start_angle: float, end_angle: float, color: Color):
-	## Erst normales Segment zeichnen
-	#_draw_basic_pie(center, radius, start_angle, end_angle, color)
-#
-	## Dann Glow auf dem Rand
-	#var glow_color := Color(1, 1, 1, 0.2)  # Weiß mit Alpha, alternativ z. B. `color.lightened(0.4)`
-	#var glow_width := 2.0                 # Breite der "Leuchtkante"
-	#var glow_steps := 8                  # Weiche Kanten durch mehrere Layer
-#
-	#for i in range(glow_steps):
-		#var alpha := glow_color.a * (1.0 - float(i) / glow_steps)
-		#var width := glow_width - i * 2.0
-		#glow_color.a = alpha
-		#draw_arc(center, radius, start_angle, end_angle, 64, glow_color, width, true)
-
-
 func _draw_glow(center: Vector2, radius: float, start_angle: float, end_angle: float, color: Color):
 	for i in range(3):
 		var alpha = 0.2 - i * 0.05
@@ -263,7 +260,8 @@ func _draw_scale_up(center: Vector2, radius: float, start_angle: float, end_angl
 		var dir := Vector2(cos(t), sin(t))
 		points.append(center + dir * radius * scale)
 	draw_colored_polygon(points, color)
-	
+
+
 func _show_popup(center: Vector2, radius: float, angle: float) -> void:
 	var offset := Vector2(cos(angle), sin(angle)) * (radius * 0.5)
 	var popup_position := center + offset
@@ -275,4 +273,3 @@ func _show_popup(center: Vector2, radius: float, angle: float) -> void:
 	else:
 		var tween = create_tween()
 		tween.tween_property(_popup_instance, "position", Vector2i(popup_position + global_position), 0.35)
-	

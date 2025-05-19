@@ -8,9 +8,9 @@
 [sub_resource type="Resource" id="Resource_k0yx5"]
 script = ExtResource("4_k0yx5")
 data_type = 0
-data_name = ""
+data_name = "User"
 data = [20.0, 40.0, 80.0, 5.0]
-labels = Array[String]([])
+labels = Array[String](["Samstag", "Montag", "Dienstag", "Mittwoch"])
 colors = Array[Color]([Color(0, 0, 0.831373, 1), Color(0.00947945, 0.22032, 0.925643, 1), Color(0.178607, 0.410125, 1, 1), Color(0.66459, 0.775854, 1, 1)])
 value_unit = ""
 category = ""
@@ -31,14 +31,15 @@ script = ExtResource("1_l0i2l")
 layout_mode = 0
 offset_right = 1195.0
 offset_bottom = 681.0
+color = Color(0, 0, 0, 1)
 
 [node name="OBreadCrumbs" type="Control" parent="."]
 unique_name_in_owner = true
 clip_contents = true
 custom_minimum_size = Vector2(30, 0)
 anchors_preset = 0
-offset_right = 164.0
-offset_bottom = 36.0
+offset_right = 183.0
+offset_bottom = 35.0
 script = ExtResource("1_2ylja")
 trim_after_click = true
 metadata/_custom_type_script = "uid://bcnph6sxy7m8u"
@@ -55,10 +56,11 @@ text = "toast"
 anchors_preset = 0
 offset_left = 491.0
 offset_top = 129.0
-offset_right = 776.0
-offset_bottom = 347.0
+offset_right = 761.0
+offset_bottom = 373.0
 script = ExtResource("3_dmoqs")
 datasets = Array[ExtResource("4_k0yx5")]([SubResource("Resource_k0yx5")])
+highlite_type = 2
 metadata/_custom_type_script = "uid://cen57hlqot5nk"
 
 [connection signal="pressed" from="Button" to="." method="_on_button_pressed"]

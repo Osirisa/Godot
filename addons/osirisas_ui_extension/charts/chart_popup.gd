@@ -42,14 +42,14 @@ func _build_popup() -> void:
 	
 	for d in _data_arr:
 		var data_row = load("res://addons/osirisas_ui_extension/charts/chart_popup_data_row.tscn")
-		var data_row_instance = data_row.instantiate()
+		var data_row_instance = data_row.instantiate() 
 		
 		data_row_instance.data_color = d.data_color
 		data_row_instance.data_name = d.data_name
-		data_row_instance.data_value = d.data_value
+		data_row_instance.data_value = d.data_value as int
 		
 		$MC_Body/VB_Body.add_child(data_row_instance)
-		
+
 
 class OChartPopupData:
 	var data_color := Color.GRAY

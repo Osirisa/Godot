@@ -1,4 +1,3 @@
-@tool
 extends HBoxContainer
 
 var data_color: Color = Color.GRAY:
@@ -18,5 +17,7 @@ var data_value = 0:
 		data_value = value
 		if data_value is int:
 			%L_Data_Value.text = str(data_value)
-		if data_value is Vector2 or data_value is Vector2i:
+		elif data_value is Vector2 or data_value is Vector2i:
 			%L_Data_Value.text = str("(", data_value.x," | " ,data_value.y, ")")
+		else:
+			print("no data?")
