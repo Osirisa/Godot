@@ -41,7 +41,7 @@ func _build_popup() -> void:
 		$MC_Body/VB_Body/VB_Title.hide()
 	
 	for d in _data_arr:
-		var data_row = load("res://addons/osirisas_ui_extension/charts/chart_popup_data_row.tscn")
+		var data_row = load("uid://54xjy1iqd1rm")
 		var data_row_instance = data_row.instantiate() 
 		
 		data_row_instance.data_color = d.data_color

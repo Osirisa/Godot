@@ -1,8 +1,8 @@
 [gd_scene load_steps=4 format=3 uid="uid://conhlhmvmtn7h"]
 
-[ext_resource type="Theme" uid="uid://dnkdho12md2nm" path="res://addons/osirisas_ui_extension/charts/chart_popup_theme.tres" id="1_gmeop"]
-[ext_resource type="Script" uid="uid://cp0uk1xl5jpwq" path="res://addons/osirisas_ui_extension/charts/chart_popup.gd" id="2_gmeop"]
-[ext_resource type="PackedScene" uid="uid://54xjy1iqd1rm" path="res://addons/osirisas_ui_extension/charts/chart_popup_data_row.tscn" id="3_kd2lv"]
+[ext_resource type="Theme" uid="uid://dnkdho12md2nm" path="res://addons/osirisas_ui_extension/charts/chart_popup/chart_popup_theme.tres" id="1_gmeop"]
+[ext_resource type="Script" uid="uid://cp0uk1xl5jpwq" path="res://addons/osirisas_ui_extension/charts/chart_popup/chart_popup.gd" id="2_gmeop"]
+[ext_resource type="PackedScene" uid="uid://54xjy1iqd1rm" path="res://addons/osirisas_ui_extension/charts/chart_popup/chart_popup_data_row.tscn" id="3_kd2lv"]
 
 [node name="ChartPopup" type="Window"]
 size = Vector2i(166, 75)

@@ -60,7 +60,6 @@ offset_right = 761.0
 offset_bottom = 373.0
 script = ExtResource("3_dmoqs")
 datasets = Array[ExtResource("4_k0yx5")]([SubResource("Resource_k0yx5")])
-highlite_type = 2
 metadata/_custom_type_script = "uid://cen57hlqot5nk"
 
 [connection signal="pressed" from="Button" to="." method="_on_button_pressed"]
