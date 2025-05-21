@@ -1,9 +1,10 @@
-[gd_scene load_steps=6 format=3 uid="uid://d3f1ifamgjnj7"]
+[gd_scene load_steps=7 format=3 uid="uid://d3f1ifamgjnj7"]
 
 [ext_resource type="Script" uid="uid://bcnph6sxy7m8u" path="res://addons/osirisas_ui_extension/bread_crumbs/o_bread_crumbs.gd" id="1_2ylja"]
 [ext_resource type="Script" uid="uid://d3mp10b2wioms" path="res://tests/control_3.gd" id="1_l0i2l"]
 [ext_resource type="Script" uid="uid://cen57hlqot5nk" path="res://addons/osirisas_ui_extension/charts/pie_chart/o_pie_chart.gd" id="3_dmoqs"]
 [ext_resource type="Script" uid="uid://emmirc5iq4k6" path="res://addons/osirisas_ui_extension/charts/o_chart_data.gd" id="4_k0yx5"]
+[ext_resource type="Script" uid="uid://dojb3ntpdmnxu" path="res://addons/osirisas_ui_extension/fancy_ui/fancy_switch_button/o_fancy_switch_button.gd" id="5_qn7jl"]
 
 [sub_resource type="Resource" id="Resource_k0yx5"]
 script = ExtResource("4_k0yx5")
@@ -56,10 +57,19 @@ text = "toast"
 anchors_preset = 0
 offset_left = 491.0
 offset_top = 129.0
-offset_right = 761.0
-offset_bottom = 373.0
+offset_right = 722.0
+offset_bottom = 333.0
 script = ExtResource("3_dmoqs")
 datasets = Array[ExtResource("4_k0yx5")]([SubResource("Resource_k0yx5")])
 metadata/_custom_type_script = "uid://cen57hlqot5nk"
+
+[node name="OFancySwitchButton" type="Control" parent="."]
+anchors_preset = 0
+offset_left = 154.0
+offset_top = 363.0
+offset_right = 244.0
+offset_bottom = 391.0
+script = ExtResource("5_qn7jl")
+metadata/_custom_type_script = "uid://dojb3ntpdmnxu"
 
 [connection signal="pressed" from="Button" to="." method="_on_button_pressed"]

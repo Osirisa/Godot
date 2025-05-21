@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3 uid="uid://ddqm1q63l53as"]
 
 [ext_resource type="Script" uid="uid://dx12ilp5qiaw1" path="res://tests/test scenes/fancy_test.gd" id="1_1jy5l"]
-[ext_resource type="Script" uid="uid://ofy75rl0evt7" path="res://addons/osirisas_ui_extension/fancy_ui/fancy_le/o_fancy_container.gd" id="1_oq7my"]
+[ext_resource type="Script" uid="uid://ofy75rl0evt7" path="res://addons/osirisas_ui_extension/fancy_ui/fancy_containter/o_fancy_container.gd" id="1_oq7my"]
 
 [sub_resource type="SystemFont" id="SystemFont_1jy5l"]
 

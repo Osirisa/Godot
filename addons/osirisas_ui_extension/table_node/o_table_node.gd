@@ -1624,11 +1624,27 @@ class Sorter:
 		self.ascending = ascending
 	
 	func _sort(a, b):
-		var node_a = a.nodes[column]
-		var node_b = b.nodes[column]
+		var node_a: Control = a.nodes[column]
+		var node_b: Control = b.nodes[column]
 		
-		var text_a: String = node_a.text if node_a.text != null else ""
-		var text_b: String = node_b.text if node_b.text != null else ""
+		var text_a: String 
+		var text_b: String
+		
+		if node_a is Label or node_a is LineEdit or node_a is Button:
+			text_a = node_a.text if node_a.text != null else ""
+		else:
+			if node_a is Container:
+				text_a = str(node_a.get_child_count())
+			else:
+				return
+		
+		if  node_b is Label or node_b is LineEdit or node_b is Button:
+			text_b = node_b.text if node_b.text != null else ""
+		else:
+			if node_b is Container:
+				text_b = str(node_b.get_child_count())
+			else:
+				return
 		
 		if ascending == E_Sorting.ASCENDING:
 			return text_a.naturalcasecmp_to(text_b) < 0

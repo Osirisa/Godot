@@ -18,11 +18,15 @@ enum HighliteType {
 	DARKER,
 }
 
+@export_group("Data")
 @export var datasets: Array[OChartData]
+
+@export_group("Visual")
 @export var highlite_type: HighliteType = HighliteType.EXPAND
 @export var show_popup := true
 @export var popup := preload("uid://conhlhmvmtn7h")
 
+@export_group("Parameters")
 @export var center := size/2
 @export var radius: float = min(size.x/2, size.y/2) * 0.9
 
@@ -80,37 +84,27 @@ func _draw() -> void:
 	var values: Array[float] 
 	for data in datasets[0].data:
 		values.append(data)
-
-	#var segment_angles := _get_segment_angles(values)
 	
-	# 1. Alle normalen Segmente zuerst (ohne Hover)
 	for i in values.size():
 		
 		if i == hovered_segment or i == last_hovered_segment and highlite_states[last_hovered_segment].seg_offset > 0.01:
-			continue  # wird später separat gezeichnet
+			continue # gets drawn later
 		
 		var color = colors[i % colors.size()] if (colors.size() > 0) else Color.GRAY
 		
-		if highlite_type == HighliteType.DIM_OTHERS or highlite_type == HighliteType.EXPAND_DIM_OTHERS and hovered_segment != -1:
+		if (highlite_type == HighliteType.DIM_OTHERS or highlite_type == HighliteType.EXPAND_DIM_OTHERS) and hovered_segment != -1:
 			color = color.darkened(0.4)
 		
-		#draw_pie_segment(center, radius, segment_angles[i].x, segment_angles[i].y, color, i, false)
 		draw_pie_segment(i, color, false)
 	
+	#Draw last hovered separate for animation purposes
 	if last_hovered_segment != -1 and highlite_states[last_hovered_segment].seg_offset > 0.01:
 			var color = colors[last_hovered_segment] if (last_hovered_segment < colors.size()) else Color.GRAY
-			#var start_angle = segment_angles[last_hovered_segment].x
-			#var end_angle = segment_angles[last_hovered_segment].y
-			
-			#draw_pie_segment(center, radius, start_angle, end_angle, color, last_hovered_segment, true)
 			draw_pie_segment(last_hovered_segment, color, true)
 	
+	#Draw hovered segment last, so it stays infront
 	if hovered_segment >= 0 and hovered_segment < values.size():
 		var color = colors[hovered_segment] if (hovered_segment < colors.size()) else Color.GRAY
-		#var start_angle = segment_angles[hovered_segment].x
-		#var end_angle = segment_angles[hovered_segment].y
-		
-		#draw_pie_segment(center, radius, start_angle, end_angle, color, hovered_segment, true)
 		draw_pie_segment(hovered_segment, color, true)
 
 
@@ -157,7 +151,7 @@ func draw_pie_segment(index: int, color: Color, highlited: bool = false) -> void
 		HighliteType.SCALE_UP:
 			_draw_custom_segment_with_border(index, color, start_angle, end_angle, center, radius * 1.1)
 		HighliteType.GLOW:
-			_draw_glow(index, start_angle, end_angle, color)
+			_draw_glow(index, start_angle, end_angle, color, highlite_states[index])
 		HighliteType.DIM_OTHERS:
 			_draw_basic_segment_with_border(index, color)
 		HighliteType.BORDER:
@@ -197,11 +191,6 @@ func point_in_polygon(point: Vector2, polygon: PackedVector2Array) -> bool:
 	return inside
 
 
-#func _draw_basic_pie(center: Vector2, radius: float, start_angle: float, end_angle: float, color: Color):
-	#_draw_segment_with_border(center, radius, start_angle, end_angle, color)
-
-
-#func _draw_segment_with_border(center: Vector2, radius: float, start_angle: float, end_angle: float, color: Color, inner_radius_factor := 1):
 func _draw_custom_segment_with_border(index: int, color: Color, start_angle: float, end_angle: float, custom_center: Vector2 = Vector2(-1,-1), custom_radius: float = -1):
 	var points: PackedVector2Array = [custom_center]
 	var segments = 24
@@ -238,7 +227,8 @@ func _draw_custom_segment_with_border(index: int, color: Color, start_angle: flo
 	
 	draw_line(start_from, start_pos, outline_color, line_width, true)
 	draw_line(end_from, end_pos, outline_color, line_width, true)
-	
+
+
 func _draw_basic_segment_with_border(index: int, color: Color):
 	#_draw_custom_segment_with_border(index, color, segment_angles[index].x, segment_angles[index].y)
 	draw_colored_polygon(segment_polygons[index], color)
@@ -280,13 +270,14 @@ func _draw_raise(index: int, color: Color):
 	_draw_basic_segment_with_border(index, color)
 
 
-func _draw_glow(index: int, start_angle: float, end_angle: float, color: Color):
+func _draw_glow(index: int, start_angle: float, end_angle: float, color: Color, highlitestate: HighlightState):
 	for i in range(3):
-		var alpha = 0.2 - i * 0.05
-		var scale = 1.05 + i * 0.05
+		var alpha = 0.2 - i * 0.05 * highlitestate.glow_alpha
+		var scale = 1.05 + i * 0.05 * highlitestate.glow_strength
 		color.a = alpha
 		_draw_custom_segment_with_border(index, color, start_angle, end_angle, center, radius * scale)
 	_draw_basic_segment_with_border(index, color)
+
 
 
 func _draw_border(center: Vector2, radius: float, start_angle: float, end_angle: float):
@@ -316,8 +307,6 @@ func _show_popup(center: Vector2, radius: float, angle: float) -> void:
 	var offset := Vector2(cos(angle), sin(angle)) * (radius * 0.5)
 	var popup_position := center + offset
 	
-	#_popup_instance.modulate.a = 1.0
-	
 	if not _popup_instance.visible:
 		_popup_instance.position = popup_position + global_position
 		_popup_instance.show()
@@ -337,8 +326,6 @@ func _update_segment_polygons():
 	for data in datasets[0].data:
 		values.append(data)
 	
-	#var segment_angles := _get_segment_angles(values)
-	
 	for index in range(values.size()):
 		var points: PackedVector2Array = [center]
 		var segments = 24
@@ -349,9 +336,11 @@ func _update_segment_polygons():
 		
 		segment_polygons.append(points)
 
+
 func _update_segment_angles(values: Array[float]) -> void:
 	segment_angles.clear()
 	segment_angles = _get_segment_angles(values)
+
 
 func _get_segment_angles(values: Array[float]) -> Array[Vector2]:
 	var angles: Array[Vector2]
@@ -363,6 +352,7 @@ func _get_segment_angles(values: Array[float]) -> Array[Vector2]:
 		angle_offset += angle
 	return angles
 
+
 func _on_segment_hover(index: int) -> void:
 	if hovered_segment != index:
 		last_hovered_segment = hovered_segment
@@ -372,11 +362,17 @@ func _on_segment_hover(index: int) -> void:
 			match highlite_type:
 				HighliteType.EXPAND:
 					animation_manager[last_hovered_segment].animate_expand_reverse()
+				_:
+					queue_redraw()
 		
 		if hovered_segment != -1 and hovered_segment < animation_manager.size():
 			match highlite_type:
 				HighliteType.EXPAND:
 					animation_manager[hovered_segment].animate_expand()
+				HighliteType.GLOW:
+					animation_manager[hovered_segment].animate_glow()
+				_:
+					queue_redraw()
 			
 			var values: Array[float]
 			for data in datasets[0].data:
@@ -429,6 +425,7 @@ class HighlightState:
 			glow_strength = value
 			update_seg.emit()
 
+
 class AnimationManager:
 	var tween: Tween
 	#var tween_reverse: Tween
@@ -446,16 +443,18 @@ class AnimationManager:
 		
 		tween.tween_property(state, "seg_offset", 1.0, 0.5)
 	
+	
 	func animate_expand_reverse() -> void:
 		if tween:
 			tween.kill()
 		tween = chart.create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 		
 		tween.tween_property(state, "seg_offset", 0.0, 0.5)
-
+	
 	
 	func animate_glow() -> void:
-		tween.kill()
+		if tween:
+			tween.kill()
 		tween = chart.create_tween()
 		
 		tween.tween_property(state, "glow_alpha", 0.2, 0.35)
