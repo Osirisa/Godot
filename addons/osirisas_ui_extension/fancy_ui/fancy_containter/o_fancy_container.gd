@@ -60,7 +60,7 @@ enum LabelPosition {
 		border_radius_bottom_left = value
 		queue_redraw()
 
-@export var border_width: int = 1:
+@export var border_width: float = 1.0:
 	set(value):
 		border_width = value
 		queue_redraw()
@@ -226,7 +226,7 @@ func _draw() -> void:
 		if mitred_top_left:
 			draw_corner_beveled(corner_top_left, Vector2(1, 0), Vector2(0, 1), border_radius_top_left)
 		else:
-			draw_arc(corner_top_left + Vector2(border_radius_top_left, border_radius_top_left), border_radius_top_left, PI, 3 * PI / 2, 12, border_color, border_width, false)
+			draw_arc(corner_top_left + Vector2(border_radius_top_left, border_radius_top_left), border_radius_top_left, PI, 3 * PI / 2, 24, border_color, border_width, true)
 	
 	
 	# --- Label ---
@@ -260,13 +260,13 @@ func _draw() -> void:
 		var label_right = label_pos.x + label_width + label_spacing
 		
 		if not pos_label:
-			draw_line(Vector2(left_x, top_y), Vector2(right_x, top_y), border_color, border_width, false)
+			draw_line(Vector2(left_x, top_y), Vector2(right_x, top_y), border_color, border_width, true)
 		else:
 			if label_left > left_x:
-				draw_line(Vector2(left_x, top_y), Vector2(label_left, top_y), border_color, border_width, false)
+				draw_line(Vector2(left_x, top_y), Vector2(label_left, top_y), border_color, border_width, true)
 			
 			if right_x > label_right:
-				draw_line(Vector2(label_right, top_y), Vector2(right_x, top_y), border_color, border_width, false)
+				draw_line(Vector2(label_right, top_y), Vector2(right_x, top_y), border_color, border_width, true)
 
 
 	# --- Top Right Arc / Mitred ---
@@ -276,7 +276,7 @@ func _draw() -> void:
 		if mitred_top_right:
 			draw_corner_beveled(corner_top_right, Vector2(-1, 0), Vector2(0, 1), border_radius_top_right)
 		else:
-			draw_arc(corner_top_right + Vector2(-border_radius_top_right, border_radius_top_right), border_radius_top_right, 0, -PI / 2, 12, border_color, border_width, false)
+			draw_arc(corner_top_right + Vector2(-border_radius_top_right, border_radius_top_right), border_radius_top_right, 0, -PI / 2, 12, border_color, border_width, true)
 
 
 	# --- Right Line ---
@@ -286,7 +286,7 @@ func _draw() -> void:
 		draw_line(
 			Vector2(size.x - border_width, top_offset + top_y),
 			Vector2(size.x - border_width, bottom_y - bottom_offset),
-			border_color, border_width, false
+			border_color, border_width, true
 		)
 
 
@@ -296,7 +296,7 @@ func _draw() -> void:
 		if mitred_bottom_right:
 			draw_corner_beveled(corner_bottom_right, Vector2(-1, 0), Vector2(0, -1), border_radius_bottom_right)
 		else:
-			draw_arc(corner_bottom_right + Vector2(-border_radius_bottom_right, -border_radius_bottom_right), border_radius_bottom_right, 0, PI / 2, 12, border_color, border_width, false)
+			draw_arc(corner_bottom_right + Vector2(-border_radius_bottom_right, -border_radius_bottom_right), border_radius_bottom_right, 0, PI / 2, 12, border_color, border_width, true)
 
 	# --- Bottom Line ---
 	if draw_bottom:
@@ -308,13 +308,13 @@ func _draw() -> void:
 		var label_left = label_pos.x - label_spacing
 		var label_right = label_pos.x + label_width + label_spacing
 		if pos_label:
-			draw_line(Vector2(right_x, bottom_y), Vector2(left_x, bottom_y), border_color, border_width, false)
+			draw_line(Vector2(right_x, bottom_y), Vector2(left_x, bottom_y), border_color, border_width, true)
 		else:
 			if label_left > left_x:
-				draw_line(Vector2(label_left, bottom_y), Vector2(left_x, bottom_y), border_color, border_width, false)
+				draw_line(Vector2(label_left, bottom_y), Vector2(left_x, bottom_y), border_color, border_width, true)
 			
 			if right_x > label_right:
-				draw_line(Vector2(right_x, bottom_y), Vector2(label_right, bottom_y), border_color, border_width, false)
+				draw_line(Vector2(right_x, bottom_y), Vector2(label_right, bottom_y), border_color, border_width, true)
 	
 	
 	# --- Bottom Left Arc / Mitred ---
@@ -323,7 +323,7 @@ func _draw() -> void:
 		if mitred_bottom_left:
 			draw_corner_beveled(corner_bottom_left, Vector2(1, 0), Vector2(0, -1), border_radius_bottom_left)
 		else:
-			draw_arc(corner_bottom_left + Vector2(border_radius_bottom_left, -border_radius_bottom_left), border_radius_bottom_left, PI, PI / 2, 12, border_color, border_width, false)
+			draw_arc(corner_bottom_left + Vector2(border_radius_bottom_left, -border_radius_bottom_left), border_radius_bottom_left, PI, PI / 2, 12, border_color, border_width, true)
 
 	# --- Left Line ---
 	if draw_left:
@@ -332,14 +332,14 @@ func _draw() -> void:
 		draw_line(
 			Vector2(border_width, top_y + top_offset),
 			Vector2(border_width, bottom_y - bottom_offset),
-			border_color, border_width, false
+			border_color, border_width, true
 		)
 
 
 func draw_corner_beveled(pos: Vector2, dir1: Vector2, dir2: Vector2, length: float) -> void:
 	var p1 = pos + dir1.normalized() * length
 	var p2 = pos + dir2.normalized() * length
-	draw_line(p1, p2, border_color, border_width, false)
+	draw_line(p1, p2, border_color, border_width, true)
 
 
 
