@@ -2660,6 +2660,7 @@ offset_bottom = 373.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_a5pb4")
 
 [node name="ColorRect10" type="Panel" parent="Panel7"]
+layout_mode = 0
 offset_left = 737.956
 offset_top = 106.0
 offset_right = 747.956
@@ -2668,6 +2669,7 @@ rotation = 0.406672
 theme_override_styles/panel = SubResource("StyleBoxFlat_yyndk")
 
 [node name="ColorRect11" type="Panel" parent="Panel7"]
+layout_mode = 0
 offset_left = 758.0
 offset_top = 106.0
 offset_right = 768.0
@@ -2676,6 +2678,7 @@ rotation = 0.406672
 theme_override_styles/panel = SubResource("StyleBoxFlat_d1vcs")
 
 [node name="ColorRect12" type="Panel" parent="Panel7"]
+layout_mode = 0
 offset_left = 778.0
 offset_top = 106.0
 offset_right = 788.0
@@ -2684,6 +2687,7 @@ rotation = 0.406672
 theme_override_styles/panel = SubResource("StyleBoxFlat_aml86")
 
 [node name="ColorRect13" type="Panel" parent="Panel7"]
+layout_mode = 0
 offset_left = 799.0
 offset_top = 106.0
 offset_right = 809.0
@@ -2692,6 +2696,7 @@ rotation = 0.406672
 theme_override_styles/panel = SubResource("StyleBoxFlat_hfkyj")
 
 [node name="ColorRect14" type="Panel" parent="Panel7"]
+layout_mode = 0
 offset_left = 732.956
 offset_top = 118.0
 offset_right = 742.956
@@ -2700,6 +2705,7 @@ rotation = 0.406672
 theme_override_styles/panel = SubResource("StyleBoxFlat_yyndk")
 
 [node name="ColorRect15" type="Panel" parent="Panel7"]
+layout_mode = 0
 offset_left = 753.0
 offset_top = 118.0
 offset_right = 763.0
@@ -2708,6 +2714,7 @@ rotation = 0.406672
 theme_override_styles/panel = SubResource("StyleBoxFlat_d1vcs")
 
 [node name="ColorRect16" type="Panel" parent="Panel7"]
+layout_mode = 0
 offset_left = 773.0
 offset_top = 118.0
 offset_right = 783.0
@@ -2716,6 +2723,7 @@ rotation = 0.406672
 theme_override_styles/panel = SubResource("StyleBoxFlat_aml86")
 
 [node name="ColorRect17" type="Panel" parent="Panel7"]
+layout_mode = 0
 offset_left = 794.0
 offset_top = 118.0
 offset_right = 804.0

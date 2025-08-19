@@ -1,4 +1,4 @@
-[gd_scene load_steps=32 format=3 uid="uid://bwwfei0xtaahp"]
+[gd_scene load_steps=34 format=3 uid="uid://bwwfei0xtaahp"]
 
 [ext_resource type="Script" uid="uid://cehq6pb83g8np" path="res://tests/test.gd" id="1_ipyfc"]
 [ext_resource type="Script" uid="uid://bkvnkwnbjpluy" path="res://addons/osirisas_ui_extension/table_node/o_table_node.gd" id="3_eoo3w"]
@@ -12,6 +12,7 @@
 [ext_resource type="Texture2D" uid="uid://cnoa0qbbooyk3" path="res://addons/osirisas_ui_extension/shared_ressources/arrow_drop_down.svg" id="8_c535y"]
 [ext_resource type="Texture2D" uid="uid://bcv3d5v1jtpna" path="res://addons/osirisas_ui_extension/shared_ressources/arrow_right.svg" id="9_d1x8j"]
 [ext_resource type="Texture2D" uid="uid://c4o8uw22kt4ev" path="res://addons/osirisas_ui_extension/shared_ressources/arrow_left.svg" id="10_wnsor"]
+[ext_resource type="Script" uid="uid://censho06xr5at" path="res://addons/osirisas_ui_extension/CodeInput/o_code_input.gd" id="13_wnsor"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5gbcg"]
 bg_color = Color(0.462745, 0.670588, 0.278431, 0)
@@ -50,11 +51,11 @@ bg_color = Color(0.53422, 0.702955, 0.528986, 1)
 [sub_resource type="Theme" id="Theme_eh8fq"]
 Label/styles/normal = SubResource("StyleBoxFlat_f7wrf")
 
-[sub_resource type="Resource" id="Resource_d1x8j"]
+[sub_resource type="Resource" id="Resource_24chr"]
 script = ExtResource("4_pfhxr")
 year = 2025
-month = 5
-day = 12
+month = 8
+day = 19
 
 [sub_resource type="Resource" id="Resource_edug8"]
 script = ExtResource("4_pfhxr")
@@ -106,6 +107,10 @@ id = 0
 disabled = false
 is_separator = false
 metadata/_custom_type_script = "uid://cf00ryk5s0v35"
+
+[sub_resource type="Theme" id="Theme_p4feh"]
+LineEdit/constants/minimum_character_width = 1
+LineEdit/constants/outline_size = 0
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -208,7 +213,7 @@ custom_minimum_size = Vector2(92, 31)
 layout_mode = 2
 script = ExtResource("7_h6amr")
 date_select_size = Vector2i(240, 220)
-starting_date = SubResource("Resource_d1x8j")
+starting_date = SubResource("Resource_24chr")
 max_date = SubResource("Resource_edug8")
 min_date = SubResource("Resource_kl2hs")
 date_select_theme = ExtResource("5_d1x8j")
@@ -235,6 +240,14 @@ button_icon_down = ExtResource("8_c535y")
 button_icon_right = ExtResource("9_d1x8j")
 button_icon_left = ExtResource("10_wnsor")
 metadata/_custom_type_script = "uid://c3mxe8tu8opqk"
+
+[node name="OCodeInput" type="Control" parent="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme = SubResource("Theme_p4feh")
+script = ExtResource("13_wnsor")
+format = "XXX-XX"
+metadata/_custom_type_script = "uid://censho06xr5at"
 
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_next_page" to="." method="_on_debug_next_page_pressed"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_previous_page" to="." method="_on_debug_previous_page_pressed"]
