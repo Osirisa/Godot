@@ -130,6 +130,52 @@ func to_string_formatted(format: String) -> String:
 	
 	return format
 
+func get_month_string() -> String:
+	match month:
+		E_MONTHS.JANUARY:
+			return "January"
+		E_MONTHS.FEBRUARY:
+			return "February"
+		E_MONTHS.MARCH:
+			return "March"
+		E_MONTHS.APRIL:
+			return "April"
+		E_MONTHS.MAY:
+			return "May"
+		E_MONTHS.JUNE:
+			return "June"
+		E_MONTHS.JULY:
+			return "July"
+		E_MONTHS.AUGUST:
+			return "August"
+		E_MONTHS.SEPTEMBER:
+			return "September"
+		E_MONTHS.OCTOBER:
+			return "October"
+		E_MONTHS.NOVEMBER:
+			return "November"
+		E_MONTHS.DECEMBER:
+			return "December"
+		_:
+			return "Unknown"
+
+func to_offset_iso(tz_shift_minutes: int = 0, use_own_tz_shift: bool = false) -> String:
+	var sys = Time.get_time_zone_from_system()
+	var total := tz_shift_minutes if use_own_tz_shift else int(sys["bias"])
+	
+	var sign := "+"
+	if total < 0:
+		sign = "-"
+		total = -total
+	
+	var hours: int = total / 60               # <- gefixt
+	var minutes: int = total % 60             # <- gefixt
+	
+	var iso := self.to_string_formatted("YYYY-MM-DDT00:00:00")
+	iso += "%s%02d:%02d" % [sign, hours, minutes]
+	return iso
+
+
 ## Method to set the date
 func set_date(i_year: int, i_month: int, i_day: int) -> void:
 	year = i_year

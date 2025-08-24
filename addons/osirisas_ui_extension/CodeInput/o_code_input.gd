@@ -34,6 +34,10 @@ signal code_input_finished(code: String)
 		custom_control = value
 		_generate_code_input()
 
+
+@export var auto_check: bool = true
+
+
 var _line_edits: Array[LineEdit] = []
 var _hb_input_container: HBoxContainer = null
 
@@ -53,19 +57,27 @@ func _ready() -> void:
 	_refresh_regex()
 
 
-func code_valid(is_valid: bool) -> void:
-	if is_valid:
-		# TBD: Animation
-		pass
-	else:
-		
-		# TBD: Animation
-		for i in range(_line_edits.size()):
-			_line_edits[i].text = ""
-			if i > 0:
-				_line_edits[i].editable = false
-		pass
+#func code_valid(is_valid: bool) -> void:
+	#if is_valid:
+		## TBD: Animation
+		#pass
+	#else:
+		#
+		## TBD: Animation
+		#for i in range(_line_edits.size()):
+			#_line_edits[i].text = ""
+			#if i > 0:
+				#_line_edits[i].editable = false
+		#pass
 
+func clear_code_input() -> void:
+	for i in range(_line_edits.size()):
+		var line_edit = _line_edits[i]
+		line_edit.text = false
+		if i == 0:
+			line_edit.editable = true
+		else:
+			line_edit.editable = false
 
 func _generate_code_input() -> void:
 	if not _hb_input_container:
@@ -84,6 +96,7 @@ func _generate_code_input() -> void:
 			pos_le.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			pos_le.size_flags_vertical = Control.SIZE_EXPAND_FILL
 			pos_le.select_all_on_focus = true
+			pos_le.alignment = HORIZONTAL_ALIGNMENT_CENTER
 			
 			if code_position > 0:
 				pos_le.editable = false
@@ -137,9 +150,13 @@ func _refresh_regex() -> void:
 
 
 func _check_code_complete() -> bool:
+	var code: String = ""
 	for code_le in _line_edits:
 		if code_le.text.is_empty():
+			_code = ""
 			return false
+		else:
+			_code += code_le.text.strip_edges()
 	return true
 
 func _on_code_pasted(code: String) -> void:
@@ -150,17 +167,18 @@ func _on_code_pasted(code: String) -> void:
 	_line_edits.back().grab_focus()
 	_line_edits.back().caret_column = 1
 	
-	code_input_finished.emit()
+	if auto_check:
+		code_input_finished.emit()
 
 func _on_le_gui_input(event: InputEvent, pos) -> void:
 	if event is InputEventKey and event.pressed:
-		if event.keycode == KEY_V and (event.ctrl_pressed or event.meta_pressed):
-			print("Paste via shortcut")
+		#if event.keycode == KEY_V and (event.ctrl_pressed or event.meta_pressed):
+			#print("Paste via shortcut")
 		if event.keycode == KEY_BACKSPACE:
-			print("c")
 			if _line_edits[pos].text.is_empty():
 				if pos > 0:
 					_line_edits[pos].editable = false
+					_line_edits[pos-1].editable = true
 					_line_edits[pos-1].text = ""
 					_line_edits[pos-1].grab_focus()
 
@@ -182,10 +200,11 @@ func _on_le_text_changed(new_text: String, pos: int) -> void:
 		return
 	
 	if new_text.length() == 1 and pos < _line_edits.size() - 1:
+		_line_edits[pos].editable = false
 		_line_edits[pos + 1].editable = true
 		_line_edits[pos + 1].grab_focus()
 		if not _line_edits[pos + 1].text.is_empty():
 			_line_edits[pos + 1].caret_column = 1
 	
-	if _check_code_complete():
-		code_input_finished.emit()
+	if auto_check and _check_code_complete():
+		code_input_finished.emit(_code)

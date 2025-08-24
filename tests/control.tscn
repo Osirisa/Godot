@@ -55,7 +55,7 @@ Label/styles/normal = SubResource("StyleBoxFlat_f7wrf")
 script = ExtResource("4_pfhxr")
 year = 2025
 month = 8
-day = 19
+day = 24
 
 [sub_resource type="Resource" id="Resource_edug8"]
 script = ExtResource("4_pfhxr")
@@ -143,7 +143,7 @@ custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-size_flags_stretch_ratio = 5.0
+size_flags_stretch_ratio = 2.43
 script = ExtResource("3_eoo3w")
 header_titles = Array[String](["header0", "header1", "header2", "header3", "header4", "header5", "header6"])
 column_widths = Array[int]([150, 300, 300, 70, 150, 150, 150])
@@ -246,7 +246,7 @@ custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 theme = SubResource("Theme_p4feh")
 script = ExtResource("13_wnsor")
-format = "XXX-XX"
+format = "XXX-XXX-XX-XX"
 metadata/_custom_type_script = "uid://censho06xr5at"
 
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_next_page" to="." method="_on_debug_next_page_pressed"]
@@ -260,3 +260,4 @@ metadata/_custom_type_script = "uid://censho06xr5at"
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_remove_col" to="." method="_on_debug_remove_col_pressed"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_insert_col" to="." method="_on_debug_insert_col_pressed"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_insert_row" to="." method="_on_debug_insert_row_pressed"]
+[connection signal="code_input_finished" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/OCodeInput" to="." method="_on_o_code_input_code_input_finished"]

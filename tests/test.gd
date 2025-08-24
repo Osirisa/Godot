@@ -8,7 +8,8 @@ var input: LineEdit = %debug_LE
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	
+	var dt = Time.get_time_zone_from_system()
+	print(dt["bias"]," ", dt["name"])
 	var arr := []
 	
 	for i in 1001:
@@ -127,3 +128,7 @@ func _on_debug_insert_row_pressed():
 
 func _on_o_date_select_date_selected(date):
 	print(date)
+
+
+func _on_o_code_input_code_input_finished(code: String) -> void:
+	print(code)

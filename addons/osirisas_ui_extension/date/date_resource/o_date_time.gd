@@ -87,19 +87,54 @@ func to_string_formatted(format: String) -> String:
 	
 	return format
 
+func to_offset_iso(tz_shift_minutes: int = 0, use_own_tz_shift: bool = false) -> String:
+	var sys = Time.get_time_zone_from_system()
+	var total := tz_shift_minutes if use_own_tz_shift else int(sys["bias"])
+	
+	var sign := "+"
+	if total < 0:
+		sign = "-"
+		total = -total
+	
+	var hours: int = total / 60               
+	var minutes: int = total % 60            
+	
+	var iso := self.to_string_formatted("YYYY-MM-DDThh:mm:ss")
+	iso += "%s%02d:%02d" % [sign, hours, minutes]
+	return iso
+
+func to_utc_iso(tz_shift_minutes: int = 0, use_own_tz_shift: bool = false) -> String:
+	var sys = Time.get_time_zone_from_system()
+	var total := tz_shift_minutes if use_own_tz_shift else int(sys["bias"])
+	
+	var shifted_time: ODateTime = self.duplicate()
+	
+	shifted_time.minute -= total
+	
+	var sign := "+"
+	if total < 0:
+		sign = "-"
+		total = -total
+	
+	var hours := total / 60
+	var minutes := total % 60
+	
+	var iso := shifted_time.to_string_formatted("YYYY-MM-DDThh:mm:ss") + "z"
+	
+	return iso
+
+
 ## Takes in a string containing a date and a time and a format to show where the numbers are[br]
 ## Example: "2024-07-08|8:7:06" and "YYYY-MM-DD|hh:mm:ss"
 static func from_string(time_date_str: String, format: String) -> ODateTime:
 	var regex_pattern := format
 	
 	regex_pattern = regex_pattern.replace("YYYY", "(?<year>[0-9]+)")
-	regex_pattern = regex_pattern.replace("MM", "(?<month>[0-1]?[0-9])")
+	regex_pattern = regex_pattern.replace("MM", "(?<month>0[1-9]|1[0-2])")
 	regex_pattern = regex_pattern.replace("DD", "(?<day>[0-3]?[0-9])")
 	regex_pattern = regex_pattern.replace("hh", "(?<hour>[0-2]?[0-9])")
 	regex_pattern = regex_pattern.replace("mm", "(?<minute>[0-5]?[0-9])")
 	regex_pattern = regex_pattern.replace("ss", "(?<second>[0-5]?[0-9])")
-	#print(date_str)
-	#print(regex_pattern)
 	
 	var regex := RegEx.new()
 	var error := regex.compile(regex_pattern)
@@ -147,4 +182,3 @@ func to_julian() -> float:
 
 static func to_julian_st(day: int = 1, month: int = 1, year: int = 1, hour: int = 0, minute: int = 0, second: int = 0) -> float:
 	return OTimeUtil.calc_jd(year, month, day, hour, minute, second)
-
