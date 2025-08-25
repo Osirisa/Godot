@@ -194,6 +194,7 @@ func _on_le_text_changed(new_text: String, pos: int) -> void:
 	if convert_lower_case:
 		new_text = new_text.to_upper()
 		_line_edits[pos].text = new_text
+		_line_edits[pos].caret_column = 1
 	
 	if new_text != "" and _char_regex.search(new_text) == null:
 		_line_edits[pos].text = ""

@@ -177,6 +177,12 @@ func set_date_time(i_year: int, i_month: int, i_day: int,
 	minute = i_minute
 	second = i_second
 
+## Own Date - Other Date
+func get_difference_dt(other: ODateTime) -> int:
+	var jd1: float = self.to_julian()
+	var jd2: float = other.to_julian()
+	return jd1 - jd2
+
 func to_julian() -> float:
 	return OTimeUtil.calc_jd(year, month, day, hour, minute, second)
 

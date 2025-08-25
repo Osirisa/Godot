@@ -8,7 +8,7 @@ class_name ODate
 #-----------------------------------------Signals--------------------------------------------------#
 #-----------------------------------------Enums----------------------------------------------------#
 
-enum E_WEEKDAYS {
+enum Weekdays {
 	MONDAY = 1,
 	TUESDAY = 2,
 	WEDNESDAY = 3,
@@ -18,7 +18,7 @@ enum E_WEEKDAYS {
 	SUNDAY = 7
 }
 
-enum E_MONTHS {
+enum Months {
 	JANUARY = 1,
 	FEBRUARY = 2,
 	MARCH = 3,
@@ -132,29 +132,29 @@ func to_string_formatted(format: String) -> String:
 
 func get_month_string() -> String:
 	match month:
-		E_MONTHS.JANUARY:
+		Months.JANUARY:
 			return "January"
-		E_MONTHS.FEBRUARY:
+		Months.FEBRUARY:
 			return "February"
-		E_MONTHS.MARCH:
+		Months.MARCH:
 			return "March"
-		E_MONTHS.APRIL:
+		Months.APRIL:
 			return "April"
-		E_MONTHS.MAY:
+		Months.MAY:
 			return "May"
-		E_MONTHS.JUNE:
+		Months.JUNE:
 			return "June"
-		E_MONTHS.JULY:
+		Months.JULY:
 			return "July"
-		E_MONTHS.AUGUST:
+		Months.AUGUST:
 			return "August"
-		E_MONTHS.SEPTEMBER:
+		Months.SEPTEMBER:
 			return "September"
-		E_MONTHS.OCTOBER:
+		Months.OCTOBER:
 			return "October"
-		E_MONTHS.NOVEMBER:
+		Months.NOVEMBER:
 			return "November"
-		E_MONTHS.DECEMBER:
+		Months.DECEMBER:
 			return "December"
 		_:
 			return "Unknown"
@@ -230,7 +230,7 @@ static func current_date() -> ODate:
 	var curr_date_dict := Time.get_datetime_dict_from_system()
 	return ODate.new(curr_date_dict.year, curr_date_dict.month, curr_date_dict.day)
 
-func get_weekday() -> E_WEEKDAYS:
+func get_weekday() -> Weekdays:
 	var A := year
 	var M := month
 	var D := day
@@ -249,7 +249,7 @@ func get_weekday() -> E_WEEKDAYS:
 	
 	match weekday:
 		0:
-			return E_WEEKDAYS.SUNDAY
+			return Weekdays.SUNDAY
 		_:
 			return weekday
 	return weekday

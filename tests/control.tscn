@@ -1,4 +1,4 @@
-[gd_scene load_steps=34 format=3 uid="uid://bwwfei0xtaahp"]
+[gd_scene load_steps=38 format=3 uid="uid://bwwfei0xtaahp"]
 
 [ext_resource type="Script" uid="uid://cehq6pb83g8np" path="res://tests/test.gd" id="1_ipyfc"]
 [ext_resource type="Script" uid="uid://bkvnkwnbjpluy" path="res://addons/osirisas_ui_extension/table_node/o_table_node.gd" id="3_eoo3w"]
@@ -13,6 +13,7 @@
 [ext_resource type="Texture2D" uid="uid://bcv3d5v1jtpna" path="res://addons/osirisas_ui_extension/shared_ressources/arrow_right.svg" id="9_d1x8j"]
 [ext_resource type="Texture2D" uid="uid://c4o8uw22kt4ev" path="res://addons/osirisas_ui_extension/shared_ressources/arrow_left.svg" id="10_wnsor"]
 [ext_resource type="Script" uid="uid://censho06xr5at" path="res://addons/osirisas_ui_extension/CodeInput/o_code_input.gd" id="13_wnsor"]
+[ext_resource type="Shader" uid="uid://c8qs7j0qk1wdp" path="res://addons/osirisas_ui_extension/Skeleton/color_switch.gdshader" id="15_05n2r"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5gbcg"]
 bg_color = Color(0.462745, 0.670588, 0.278431, 0)
@@ -55,7 +56,7 @@ Label/styles/normal = SubResource("StyleBoxFlat_f7wrf")
 script = ExtResource("4_pfhxr")
 year = 2025
 month = 8
-day = 24
+day = 25
 
 [sub_resource type="Resource" id="Resource_edug8"]
 script = ExtResource("4_pfhxr")
@@ -111,6 +112,41 @@ metadata/_custom_type_script = "uid://cf00ryk5s0v35"
 [sub_resource type="Theme" id="Theme_p4feh"]
 LineEdit/constants/minimum_character_width = 1
 LineEdit/constants/outline_size = 0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_24chr"]
+shader = ExtResource("15_05n2r")
+shader_parameter/color_a = Color(0.22, 0.22, 0.24, 1)
+shader_parameter/color_b = Color(0, 0, 0, 1)
+shader_parameter/speed = 0.594
+shader_parameter/duty = 0.417
+shader_parameter/shape = 2.137
+shader_parameter/phase = 0.0
+shader_parameter/mix_min = 0.0
+shader_parameter/mix_max = 1.0
+shader_parameter/alpha_mul = 1.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8j6vy"]
+bg_color = Color(0, 0, 0, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_05n2r"]
+shader = ExtResource("15_05n2r")
+shader_parameter/color_a = Color(0, 0, 0, 1)
+shader_parameter/color_b = Color(0.309539, 0.309534, 0.320881, 1)
+shader_parameter/speed = 0.553
+shader_parameter/duty = 0.223
+shader_parameter/shape = 1.351
+shader_parameter/phase = 0.0
+shader_parameter/mix_min = 0.331
+shader_parameter/mix_max = 0.802
+shader_parameter/alpha_mul = 1.0
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -248,6 +284,16 @@ theme = SubResource("Theme_p4feh")
 script = ExtResource("13_wnsor")
 format = "XXX-XXX-XX-XX"
 metadata/_custom_type_script = "uid://censho06xr5at"
+
+[node name="Panel" type="Panel" parent="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
+material = SubResource("ShaderMaterial_24chr")
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_8j6vy")
+
+[node name="ColorRect" type="ColorRect" parent="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
+material = SubResource("ShaderMaterial_05n2r")
+layout_mode = 2
 
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_next_page" to="." method="_on_debug_next_page_pressed"]
 [connection signal="pressed" from="HBoxContainer/VBoxContainer/HBoxContainer/VBoxContainer/debug_previous_page" to="." method="_on_debug_previous_page_pressed"]
