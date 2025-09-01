@@ -65,7 +65,7 @@ placeholder_text = "DD.MM.YYYY"
 script = ExtResource("1_2rfh1")
 min_date = SubResource("Resource_u7g4b")
 max_date = SubResource("Resource_new70")
-regex_validator = "(?<day>0[1-9]|[12][0-9]|3[01])?\\.?(?<month>0[1-9]|1[0-2])?\\.?(?<year>[0-9]+)?"
+regex_validator = "[0-9..]*"
 
 [node name="Date_select_Button" type="Button" parent="HBoxContainer"]
 unique_name_in_owner = true
@@ -87,4 +87,5 @@ texture = ExtResource("3_orugd")
 expand_mode = 1
 stretch_mode = 5
 
+[connection signal="valid_text_changed" from="HBoxContainer/ODateLineEdit" to="." method="_on_o_date_line_edit_valid_text_changed"]
 [connection signal="pressed" from="HBoxContainer/Date_select_Button" to="." method="_on_date_select_button_pressed"]

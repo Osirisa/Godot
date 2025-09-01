@@ -27,6 +27,7 @@ enum Toast_Animation {
 @export_group("Appearance")
 ## -1 = Automatic | < 0 = "Manual" Size
 @export var size: Vector2i = Vector2i(-1,-1)
+## The Toasts Maximum Displayed Size
 @export var max_size: Vector2i = Vector2i(350, 200)
 @export var toast_position: Toast_Position = Toast_Position.BOTTOM_CENTER 
 @export var position_offset: Vector2i = Vector2i(0,0)

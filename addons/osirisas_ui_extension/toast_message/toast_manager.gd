@@ -52,6 +52,9 @@ func show(msg: String, toast_settings: OToastSettings, window: Window = null, us
 	if use_safe_area:
 		toast.position = toast_settings.resolve_position(DisplayServer.get_display_safe_area().size, toast.size) + Vector2(DisplayServer.get_display_safe_area().position)
 	else:
-		toast.position = toast_settings.resolve_position(window.size, toast.size)
+		if window:
+			toast.position = toast_settings.resolve_position(window.size, toast.size)
+		else:
+			toast.position = toast_settings.resolve_position(get_window().size, toast.size)
 	
 		toast.popup(msg, toast_settings)

@@ -99,7 +99,7 @@ func _ready() -> void:
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	button.size_flags_stretch_ratio = 0.15
-	button.pressed.connect(_toggle_popup)
+	button.pressed.connect(_on_dropdown_btn_pressed)
 	
 	_tr_button_icon.layout_mode = 1
 	_tr_button_icon.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -349,7 +349,10 @@ func remove_item(idx: int, unfiltered: bool = false) -> void:
 
 
 func select(idx: int) -> void:
-	if _filtered_items.size() > idx:
+	if idx < 0:
+		_input_le.text = ""
+	
+	elif _filtered_items.size() > idx:
 		_list.select(idx)
 		current_index = idx
 		item_selected.emit(idx, _filtered_items[idx])
@@ -472,6 +475,7 @@ func _update_list() -> void:
 	
 		if item.is_separator:
 			_list.add_item("---" + item.label + "---", item.icon)
+			_list.set_item_disabled(item_idx, true)
 		else:
 			_list.add_item(item.label, item.icon)
 		
@@ -487,16 +491,21 @@ func _toggle_popup() -> void:
 		_popup_rect = get_popup_position_and_size()
 		_popup_rect.size.y = min(max_visible_items, _filtered_items.size()) * ITEM_SIZE_HEIGHT - 8 * max (0 ,min(max_visible_items, _filtered_items.size()) - 1)
 		_popup.open_popup(_popup_rect.position, _popup_rect.size)
+		_popup.unfocusable = false
 
 func _on_filter_changed(new_text: String) -> void:
 	if not _popup.unfocusable and behaviour_type:
 		_popup.unfocusable = true
 	
 	if new_text.is_empty():
-		_filtered_items = items.duplicate()
+		_filtered_items = items.duplicate(true)
 	else:
 		_filtered_items = _filter_items(new_text)
+	current_index = -1
+	
+	_list.deselect_all()
 	_update_list()
+	
 	if auto_open_popup:
 		_show_popup_if_needed()
 
@@ -530,6 +539,9 @@ func _show_popup_if_needed() -> void:
 		if not behaviour_type:
 			_popup.unfocusable = false
 
+func _on_dropdown_btn_pressed() -> void:
+	_show_popup_if_needed()
+	_input_le.grab_focus()
 
 func _on_item_selected(index: int) -> void:
 	var selected_item: OAdvancedOptionBtnItem = _filtered_items[index]

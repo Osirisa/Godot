@@ -105,7 +105,7 @@ func _init() -> void:
 	custom_minimum_size = custom_minimum_size if Vector2i(80, 31) < Vector2i(custom_minimum_size) else Vector2i(92, 31) 
 
 # Called when the node enters the scene tree for the first time.
-func _ready():
+func _ready() -> void:
 	add_child(_date_select_instance)
 	_date_select_instance.hide()
 	add_child(_date_select_line_edit_instance)
@@ -118,6 +118,13 @@ func _ready():
 	_date_select_line_edit_instance.connect("date_btn_pressed" ,Callable(self,"_on_date_select_btn_pressed"))
 	_date_select_line_edit_instance.switch_btn_icon_direction(popup_direction)
 
+func set_date(date: ODate) -> void:
+	_date_select_line_edit_instance.set_date_le_text(date.to_string_formatted(format))
+	current_date = date
+
+func clear() -> void:
+	current_date = null
+	_date_select_line_edit_instance.set_date_le_text("")
 
 func _on_date_select_btn_pressed()-> void:
 	var date_pos: Vector2i
@@ -145,8 +152,7 @@ func _on_date_select_btn_pressed()-> void:
 	_date_select_instance.popup(Rect2i(date_pos, date_size))
 
 func _on_date_selected(date: ODate) -> void:
-	_date_select_line_edit_instance.set_date_le_text(date.to_string_formatted(format))
-	current_date = date
+	set_date(date)
 	
 	if close_on_select:
 		_date_select_instance.hide()

@@ -119,7 +119,7 @@ func to_utc_iso(tz_shift_minutes: int = 0, use_own_tz_shift: bool = false) -> St
 	var hours := total / 60
 	var minutes := total % 60
 	
-	var iso := shifted_time.to_string_formatted("YYYY-MM-DDThh:mm:ss") + "z"
+	var iso := shifted_time.to_string_formatted("YYYY-MM-DDThh:mm:ss") + "Z"
 	
 	return iso
 
@@ -185,6 +185,33 @@ func get_difference_dt(other: ODateTime) -> int:
 
 func to_julian() -> float:
 	return OTimeUtil.calc_jd(year, month, day, hour, minute, second)
+
+static func from_utc_iso(iso: String, tz_shift_minutes: int = 0, use_own_tz_shift: bool = false) -> ODateTime:
+	# Accepts: "YYYY-MM-DDThh:mm:ssZ" (optionally with fractional seconds)
+	var re := RegEx.new()
+	re.compile(r"^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2}):(\d{2})(?:\.\d+)?Z$")
+	var m := re.search(iso)
+	if not m:
+		push_error("from_utc_iso: invalid UTC ISO string: %s" % iso)
+		return null
+
+	var y := int(m.get_string(1))
+	var mo := int(m.get_string(2))
+	var d := int(m.get_string(3))
+	var h := int(m.get_string(4))
+	var mi := int(m.get_string(5))
+	var s := int(m.get_string(6))
+
+	# Create UTC time first
+	var dt := ODateTime.new(y, mo, d, h, mi, s)
+	print("DATETIME BEFORE CONVERSION", dt.to_string())
+	# Convert UTC -> local by ADDING the bias (inverse of your to_utc_iso which subtracted it)
+	var sys := Time.get_time_zone_from_system()
+	var total := tz_shift_minutes if use_own_tz_shift else int(sys["bias"])
+	dt.minute += total  # your setters + julian conversion will normalize overflow
+	print("DATETIME AFTER CONVERSION", dt.to_string())
+	return dt
+
 
 static func to_julian_st(day: int = 1, month: int = 1, year: int = 1, hour: int = 0, minute: int = 0, second: int = 0) -> float:
 	return OTimeUtil.calc_jd(year, month, day, hour, minute, second)

@@ -84,3 +84,7 @@ func switch_btn_icon_direction(direction: PopupSpawnDirection) -> void:
 			date_select_icon.texture = button_icon_left
 		_:
 			printerr("unknown direction")
+
+
+#func _on_o_date_line_edit_valid_text_changed(new_text: String) -> void:
+	#if Odate.new_text

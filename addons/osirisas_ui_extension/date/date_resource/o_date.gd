@@ -255,19 +255,27 @@ func get_weekday() -> Weekdays:
 	return weekday
 
 func get_week() -> int:
-	var jan_first := ODate.new(year,1,1)
-	var jan_first_wd := jan_first.get_weekday()
-	var days_passed := get_day_of_year()
+	# Weekdate from this date
+	var wd := get_weekday()
 	
-	var offset: int = (8 - jan_first_wd) % 7
-	var week_number: int = ((days_passed - (offset + 1)) / 7) + 1
+	# calculate thursday this week
+	var this_thu := ODate.new(year, month, day)
+	this_thu.day += (4 - wd)
 	
-	var first_day_of_first_week := ODate.new(year, 1, 1 + offset)
-	if get_difference(first_day_of_first_week) < 0:
-		var last_day_prev_year := ODate.new(year - 1, 12, 31)
-		week_number = last_day_prev_year.get_week()
+	var week_year := this_thu.year
 	
-	return week_number
+	# 4. Januar -> always kw1
+	var jan4 := ODate.new(week_year, 1, 4)
+	var jan4_wd := jan4.get_weekday()
+	
+	# get monday of the first CW
+	var week1_mon := ODate.new(week_year, 1, 4)
+	week1_mon.day += (1 - jan4_wd)
+	
+	var diff_days := this_thu.get_difference(week1_mon)
+	
+	# CW = Count Weeks + 1
+	return int(diff_days / 7) + 1
 
 func get_day_of_year() -> int:
 	var days_passed: int = 0 
