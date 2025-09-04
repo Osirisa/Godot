@@ -160,19 +160,19 @@ func get_month_string() -> String:
 			return "Unknown"
 
 func to_offset_iso(tz_shift_minutes: int = 0, use_own_tz_shift: bool = false) -> String:
-	var sys = Time.get_time_zone_from_system()
+	var sys := Time.get_time_zone_from_system()
 	var total := tz_shift_minutes if use_own_tz_shift else int(sys["bias"])
 	
-	var sign := "+"
+	var sign_ := "+"
 	if total < 0:
-		sign = "-"
+		sign_ = "-"
 		total = -total
 	
 	var hours: int = total / 60               # <- gefixt
 	var minutes: int = total % 60             # <- gefixt
 	
 	var iso := self.to_string_formatted("YYYY-MM-DDT00:00:00")
-	iso += "%s%02d:%02d" % [sign, hours, minutes]
+	iso += "%s%02d:%02d" % [sign_, hours, minutes]
 	return iso
 
 
@@ -184,7 +184,7 @@ func set_date(i_year: int, i_month: int, i_day: int) -> void:
 
 ## Method to create a Date object from a string and a format using regex
 static func from_string(date_str: String, format: String) -> ODate:
-	var regex_pattern = format
+	var regex_pattern := format
 	
 	regex_pattern = regex_pattern.replace("YYYY", "(?<year>[0-9]+)")
 	regex_pattern = regex_pattern.replace("MM", "(?<month>[0-1]?[0-9])")
@@ -209,21 +209,21 @@ static func from_string(date_str: String, format: String) -> ODate:
 	#print(matches.names)
 	#print(matches.strings)
 	
-	var year_s = int(matches.get_string("year"))
-	var month_s = int(matches.get_string("month"))
-	var day_s = int(matches.get_string("day"))
+	var year_s := int(matches.get_string("year"))
+	var month_s := int(matches.get_string("month"))
+	var day_s := int(matches.get_string("day"))
 	
 	return ODate.new(year_s, month_s, day_s)
 
 ## Method to create a Date object from a amount of days
 static func from_days_since_epoch(days: int) -> ODate:
-	var jd_epoch_start = to_julian_st(1,1,1)
-	var jd = jd_epoch_start + days
+	var jd_epoch_start := to_julian_st(1,1,1)
+	var jd := jd_epoch_start + days
 	
 	return from_julian(jd)
 
 static func from_julian(julian_date: float) -> ODate:
-	var date_arr = OTimeUtil.calc_from_jd(julian_date)
+	var date_arr := OTimeUtil.calc_from_jd(julian_date)
 	return ODate.new(date_arr[0], date_arr[1], date_arr[2])
 
 static func current_date() -> ODate:
@@ -277,7 +277,8 @@ func get_week() -> int:
 	# CW = Count Weeks + 1
 	return int(diff_days / 7) + 1
 
-func get_day_of_year() -> int:
+## Returns the count of Days of that year
+func get_days_of_year() -> int:
 	var days_passed: int = 0 
 	for i in month - 1:
 		if is_leap_year():

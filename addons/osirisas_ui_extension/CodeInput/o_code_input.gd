@@ -168,7 +168,7 @@ func _on_code_pasted(code: String) -> void:
 	_line_edits.back().caret_column = 1
 	
 	if auto_check:
-		code_input_finished.emit()
+		code_input_finished.emit(code)
 
 func _on_le_gui_input(event: InputEvent, pos) -> void:
 	if event is InputEventKey and event.pressed:

@@ -152,12 +152,12 @@ static func from_string(time_date_str: String, format: String) -> ODateTime:
 	#print(matches.names)
 	#print(matches.strings)
 	
-	var year_s = int(matches.get_string("year"))
-	var month_s = int(matches.get_string("month"))
-	var day_s = int(matches.get_string("day"))
-	var hour_s = int(matches.get_string("hour"))
-	var minute_s = int(matches.get_string("minute"))
-	var second_s = int(matches.get_string("second"))
+	var year_s := int(matches.get_string("year"))
+	var month_s := int(matches.get_string("month"))
+	var day_s := int(matches.get_string("day"))
+	var hour_s := int(matches.get_string("hour"))
+	var minute_s := int(matches.get_string("minute"))
+	var second_s := int(matches.get_string("second"))
 	
 	return ODateTime.new(year_s, month_s, day_s, hour_s, minute_s, second_s)
 
@@ -204,12 +204,12 @@ static func from_utc_iso(iso: String, tz_shift_minutes: int = 0, use_own_tz_shif
 
 	# Create UTC time first
 	var dt := ODateTime.new(y, mo, d, h, mi, s)
-	print("DATETIME BEFORE CONVERSION", dt.to_string())
+#	print("DATETIME BEFORE CONVERSION", dt.to_string())
 	# Convert UTC -> local by ADDING the bias (inverse of your to_utc_iso which subtracted it)
 	var sys := Time.get_time_zone_from_system()
 	var total := tz_shift_minutes if use_own_tz_shift else int(sys["bias"])
 	dt.minute += total  # your setters + julian conversion will normalize overflow
-	print("DATETIME AFTER CONVERSION", dt.to_string())
+#	print("DATETIME AFTER CONVERSION", dt.to_string())
 	return dt
 
 
