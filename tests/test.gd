@@ -12,6 +12,14 @@ func _ready():
 	print(dt["bias"]," ", dt["name"])
 	var arr := []
 	
+	%OAdvancedOptionButton.add_item("test")
+	%OAdvancedOptionButton.add_item("test2")
+	%OAdvancedOptionButton.add_item("test3")
+	%OAdvancedOptionButton.add_item("test4")
+	%OAdvancedOptionButton.add_item("test5")
+	%OAdvancedOptionButton.add_item("test6")
+	%OAdvancedOptionButton.add_item("test7")
+	
 	for i in 1001:
 		
 		var label := Label.new()

@@ -55,7 +55,8 @@ var current_index: int = -1
 
 var _filtered_items: Array[OAdvancedOptionBtnItem] = []
 
-var _popup: OPopup
+#var _popup: OPopup
+var _popup: Control
 var _popup_rect := Rect2i()
 
 var _scroll_container := ScrollContainer.new()
@@ -88,6 +89,11 @@ func _ready() -> void:
 	_input_le.text_changed.connect(_on_filter_changed)
 	_input_le.select_all_on_focus = true
 	
+	_input_le.focus_entered.connect(func(): 
+		if auto_open_popup: _show_popup_if_needed()
+	)
+	
+	
 	if not enable_search:
 		_input_le.editable = false
 		_input_le.placeholder_text = ""
@@ -111,27 +117,26 @@ func _ready() -> void:
 	_hbox.add_child(button)
 	
 	# Popup (Dropdown-Menu)
-	_popup = OPopup.new()
-	_popup.borderless = true
-	_popup.hide_on_unfocus = true
-	_popup.hide()
+	#_popup = OPopup.new()
+	#_popup.borderless = true
+	#_popup.hide_on_unfocus = true
+	#_popup.hide()
 	#_popup.focused.connect(_on_popup_focused)
+	
+	_popup = Control.new()
+	get_window().add_child.call_deferred(_popup)
+	
+	_popup.hide()
 	_popup_rect = get_popup_position_and_size()
 	
-	add_child(_popup)
+	#add_child(_popup)
 	
-	# VBox für Liste
-	var vbox = VBoxContainer.new()
-	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_popup.add_child(vbox)
-
 	# ScrollContainer für die Liste
+	_scroll_container.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_scroll_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_scroll_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_scroll_container.custom_minimum_size.y = min(max_visible_items, items.size()) * ITEM_SIZE_HEIGHT  # Größe begrenzen
-	vbox.add_child(_scroll_container)
+	_popup.add_child(_scroll_container)
 
 	# Liste mit Items
 	_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -154,8 +159,8 @@ func _gui_input(event):
 
 
 func _input(event: InputEvent) -> void:
-	if event is InputEventMouseMotion and (event.relative.x + event.relative.y) > 0 and _popup.visible and _popup_rect.has_point(event.global_position):
-		_popup.grab_focus()
+	#if event is InputEventMouseMotion and (event.relative.x + event.relative.y) > 0 and _popup.visible and _popup_rect.has_point(event.global_position):
+		#_popup.grab_focus()
 	if event is InputEventKey and event.pressed:
 		if event.key_label == KEY_ESCAPE:
 			_popup.hide()
@@ -271,8 +276,9 @@ func get_item_text(idx: int, get_unfiltered: bool = false) -> String:
 	return ""
 
 
-func get_popup() -> OPopup:
-	return _popup
+#HACK:
+#func get_popup() -> OPopup:
+	#return _popup
 
 
 func get_selectable_item(from_last: bool = false, get_unfiltered: bool = false) -> int:
@@ -434,7 +440,7 @@ func get_popup_icon() -> Texture2D:
 
 func get_popup_position_and_size() -> Rect2i:
 	var pop_size = Vector2i(size.x, _popup.size.y)
-	var pop_pos = get_screen_position()
+	var pop_pos = global_position
 	match popup_direction:
 		PopupSpawnDirection.TOP: pop_pos.y -= pop_size.y + 2
 		PopupSpawnDirection.BOTTOM: pop_pos.y += size.y + 2
@@ -490,12 +496,17 @@ func _toggle_popup() -> void:
 	elif _filtered_items.size() > 0:
 		_popup_rect = get_popup_position_and_size()
 		_popup_rect.size.y = min(max_visible_items, _filtered_items.size()) * ITEM_SIZE_HEIGHT - 8 * max (0 ,min(max_visible_items, _filtered_items.size()) - 1)
-		_popup.open_popup(_popup_rect.position, _popup_rect.size)
-		_popup.unfocusable = false
+		#_popup.open_popup(_popup_rect.position, _popup_rect.size)
+		
+		_popup.position = _popup_rect.position
+		_popup.size = _popup_rect.size
+		_popup.show()
+		
+		#_popup.unfocusable = false
 
 func _on_filter_changed(new_text: String) -> void:
-	if not _popup.unfocusable and behaviour_type:
-		_popup.unfocusable = true
+	#if not _popup.unfocusable and behaviour_type:
+		#_popup.unfocusable = true
 	
 	if new_text.is_empty():
 		_filtered_items = items.duplicate(true)
@@ -531,13 +542,13 @@ func _fuzzy_match(query: String, text: String) -> bool:
 
 func _show_popup_if_needed() -> void:
 	if not _popup.visible and _filtered_items.size() > 0:
-		if not behaviour_type:
-			_popup.unfocusable = true
+		#if not behaviour_type:
+			#_popup.unfocusable = true
 		
 		_toggle_popup()
 		
-		if not behaviour_type:
-			_popup.unfocusable = false
+		#if not behaviour_type:
+			#_popup.unfocusable = false
 
 func _on_dropdown_btn_pressed() -> void:
 	_show_popup_if_needed()
